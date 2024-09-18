@@ -1,0 +1,72 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\SiteRepresentation $site
+ * @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig
+ * @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchPage Alias of $searchConfig
+ * @var \AdvancedSearch\Query $query
+ * @var \AdvancedSearch\Response $response
+ * @var string $title
+ * @var string $resourceName
+ */
+
+$resources = $response->getResources($resourceName);
+// A check is done: when page is not first, the resources may be empty even with results.
+if (!$resources) return;
+
+$plugins = $this->getHelperPluginManager();
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+$hyperlink = $plugins->get('hyperlink');
+$thumbnail = $plugins->get('thumbnail');
+
+// Can be simplified in a public theme.
+$setting = $plugins->get(isset($site) ? 'siteSetting' : 'setting');
+
+$siteSlug = isset($site) ? $site->slug() : null;
+
+$filterLocale = (bool) $setting('filter_locale_values');
+$siteLang = $plugins->get('lang')();
+$lang = $filterLocale ? $siteLang : null;
+$langValue = $filterLocale ? [$siteLang, ''] : null;
+$untitled = $translate('[Untitled]');
+
+$headingTerm = $setting('browse_heading_property_term');
+$bodyTerm = $setting('browse_body_property_term');
+
+$gridListMode = $searchConfig ? $searchConfig->subSetting('display', 'grid_list_mode', 'auto') : 'auto';
+
+$defaultThumbnail = '<img src="' . $assetUrl('thumbnails/default.png', 'Omeka', true) . '" title="' . $translate('No media') . '"/>';
+?>
+
+<?php if ($title): ?>
+<h3><?= $escape($title) ?></h3>
+<?php endif; ?>
+<ul class="resource-list search-results-list<?= $gridListMode === 'list_only' ? ' list' : ($gridListMode === 'grid_only' ? ' grid' : '') ?>">
+    <?php /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource */
+    foreach ($resources as $resource):
+        // Can be simplified in the public theme.
+        $resourceUrl = $site ? $resource->siteUrl($siteSlug) : $resource->adminUrl($siteSlug);
+        $resourceType = $resource->resourceName();
+        $resourceThumbnail = $thumbnail($resource, 'medium') ?: $defaultThumbnail;
+        $heading = $headingTerm ? $resource->value($headingTerm, ['lang' => $langValue]) : null;
+        $heading = $heading ? $heading->asHtml() : $escape($resource->displayTitle($untitled, $lang));
+        $body = $bodyTerm ? $resource->value($bodyTerm, ['lang' => $langValue]) : null;
+        $body = $body ? $body->asHtml() : $escape($resource->displayDescription(null, $lang));
+    ?>
+
+    <li class="resource <?= $resourceType ?>">
+        <div class="resource-thumbnail">
+            <?= $hyperlink->raw($resourceThumbnail, $resourceUrl, ['class' => 'resource-link']) ?>
+        </div>
+        <div class="resource-metadata">
+            <h4><?= $resource->linkRaw($heading) ?></h4>
+            <div class="description">
+                <?= $body ?>
+            </div>
+        </div>
+    </li>
+
+    <?php endforeach; ?>
+</ul>

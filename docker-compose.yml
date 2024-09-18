@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+
+  omeka-s:
+    build: ./
+    ports:
+      - "9014:80"
+    volumes:
+      - ./files/:/var/www/html/files/
+      - ./modules/:/var/www/html/modules/
+      - ./themes/:/var/www/html/themes/
+      - ./config/:/var/www/html/config/
+    restart: "no"
