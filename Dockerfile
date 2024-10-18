@@ -41,21 +41,19 @@ RUN usermod -u 1000 www-data
 RUN wget --no-verbose "https://github.com/omeka/omeka-s/releases/download/v4.1.1/omeka-s-4.1.1.zip" -O /var/www/omeka-s.zip
 RUN unzip -q /var/www/omeka-s.zip -d /var/www/ \
 &&  rm /var/www/omeka-s.zip \
-&&  rm -rf /var/www/html/ \
-&&  mv /var/www/omeka-s /var/www/html/ \
+&&  rm -rf /var/www/html/flandrica \
+&&  mv /var/www/omeka-s /var/www/html/flandrica/ \
 &&  chown -R www-data:www-data /var/www/html/
 
 # Content
-COPY .htaccess /var/www/html/
-COPY robots.txt /var/www/html/
-COPY themes /var/www/html/themes
-COPY modules /var/www/html/modules
+COPY .htaccess /var/www/html/flandrica
+COPY robots.txt /var/www/html/flandrica
 
 # Cron
-COPY import-cron /etc/cron.d/import-cron
-RUN chmod 0744 /etc/cron.d/import-cron
+#COPY import-cron /etc/cron.d/import-cron
+#RUN chmod 0744 /etc/cron.d/import-cron
 
-RUN touch /var/log/cron.log
+#RUN touch /var/log/cron.log
 
 # PHP settings
 COPY extra.ini /usr/local/etc/php/conf.d/
