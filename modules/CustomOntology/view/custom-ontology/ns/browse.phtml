@@ -1,0 +1,40 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\VocabularyRepresentation[] $ontologies
+ */
+
+$plugins = $this->getHelperPluginManager();
+$url = $plugins->get('url');
+$translate = $plugins->get('translate');
+
+$this->headLink()->prependStylesheet($this->assetUrl('css/custom-ontology.css', 'CustomOntology'));
+?>
+
+<h3><?= $translate('List of custom ontologies') ?></h3>
+<?php if (!count($ontologies)): ?>
+<p><?= $translate('There are no custom ontology.') ?></p>
+<?php else: ?>
+<ul>
+<?php foreach ($ontologies as $ontology):
+    $uri = $ontology->namespaceUri();
+    $prefix = $ontology->prefix();
+    ?>
+    <li>
+        <dt><?= $ontology->label() ?></dt>
+        <dd><?= sprintf($translate('Namespace uri: %s'), $uri) ?></dd>
+        <dd><?= sprintf($translate('Recommended prefix: %s'), '<strong>' . $prefix . '</strong>') ?></dd>
+        <dd><?= sprintf($translate('%1$shuman%2$s | %3$sturtle%2$s | %4$sjson-ld%2$s | %5$sn3%2$s | %6$sn-triples%2$s | %7$srdf-xml%2$s'),
+            '<a href="' . $url('ns/prefix', ['prefix' => $prefix]) . '">',
+            '</a>',
+            '<a href="' . $uri . '?format=turtle" download="' . $prefix . '.turtle" type="text/turtle">',
+            '<a href="' . $uri . '?format=json-ld" download="' . $prefix . '.json-ld" type="application/ld+json">',
+            '<a href="' . $uri . '?format=n3" download="' . $prefix . '.n3" type="text/n3">',
+            '<a href="' . $uri . '?format=n-triples" download="' . $prefix . '.nt" type="application/n-triples">',
+            '<a href="' . $uri . '?format=rdf-xml" download="' . $prefix . '.rdf.xml" type="application/rdf+xml">'
+        ) ?></dd>
+    </li>
+<?php endforeach; ?>
+</ul>
+<p><?= $translate('HTTP Content-Negociation is supported.') ?></p>
+<?php endif;

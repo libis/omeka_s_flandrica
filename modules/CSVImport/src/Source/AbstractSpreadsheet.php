@@ -6,10 +6,10 @@ namespace CSVImport\Source;
  * Nevertheless, the library is quick and efficient and the module uses it only
  * as recommended (as stream ahead).
  */
-use Box\Spout\Common\Type;
-use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
-use Box\Spout\Reader\ReaderInterface;
 use Omeka\Stdlib\Message;
+use OpenSpout\Common\Type;
+use OpenSpout\Reader\Common\Creator\ReaderEntityFactory;
+use OpenSpout\Reader\ReaderInterface;
 
 abstract class AbstractSpreadsheet extends AbstractSource
 {
@@ -50,7 +50,7 @@ abstract class AbstractSpreadsheet extends AbstractSource
         $result = true;
         $headers = $this->getHeaders();
         $number = count($headers);
-        /** @var \Box\Spout\Common\Entity\Row $row */
+        /** @var \OpenSpout\Common\Entity\Row $row */
         foreach ($iterator as $row) {
             if ($row && $row->getNumCells() !== $number) {
                 $result = false;
@@ -83,6 +83,7 @@ abstract class AbstractSpreadsheet extends AbstractSource
         if (empty($limit)) {
             return null;
         }
+
         if ($offset < $this->position) {
             $this->reset();
         }
@@ -96,10 +97,14 @@ abstract class AbstractSpreadsheet extends AbstractSource
         $rowOffset = $offset;
         $hasRows = false;
         while ($iterator->valid()) {
-            /** @var \Box\Spout\Common\Entity\Row $row */
-            $row = $iterator->current();
-            if (is_null($row)) {
-                $iterator->next();
+            // Account for the iterator being used without first being rewound
+            // (OpenSpout returns null in this case against its own type
+            // hint, causing a TypeError)
+            try {
+                /** @var \OpenSpout\Common\Entity\Row $row */
+                $row = $iterator->current();
+            } catch (\TypeError $e) {
+                $iterator->rewind();
                 continue;
             }
             if ($rowOffset == $this->position) {
@@ -154,7 +159,7 @@ abstract class AbstractSpreadsheet extends AbstractSource
         }
         try {
             $this->reader->open($this->source);
-        } catch (\Box\Spout\Common\Exception\IOException $e) {
+        } catch (\OpenSpout\Common\Exception\IOException $e) {
             return null;
         }
 

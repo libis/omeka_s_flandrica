@@ -273,7 +273,6 @@ class MappingForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'multivalue_separator',
-                    'class' => 'input-body',
                     'value' => $userSettings->get(
                         'csv_import_multivalue_separator',
                         $default['csv_import_multivalue_separator']),
@@ -289,7 +288,7 @@ class MappingForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'global_language',
-                    'class' => 'input-body value-language',
+                    'class' => 'validate-language',
                     'value' => $userSettings->get(
                         'csv_import_global_language',
                         $default['csv_import_global_language']),
@@ -308,12 +307,12 @@ class MappingForm extends Form
             $advancedSettingsFieldset = $this->get('advanced-settings');
 
             $valueOptions = [
-                Import::ACTION_CREATE => 'Create a new resource', // @translate
-                Import::ACTION_APPEND => 'Append data to the resource', // @translate
-                Import::ACTION_REVISE => 'Revise data of the resource', // @translate
-                Import::ACTION_UPDATE => 'Update data of the resource', // @translate
-                Import::ACTION_REPLACE => 'Replace all data of the resource', // @translate
-                Import::ACTION_DELETE => 'Delete the resource', // @translate
+                Import::ACTION_CREATE => 'Create (Each row in the CSV will become a new resource)', // @translate
+                Import::ACTION_APPEND => 'Append (Add new data to the resource, based on an identifier for an existing resource)', // @translate
+                Import::ACTION_REVISE => 'Revise (Replace existing fields of the resource with data from the CSV, except if the corresponding cell in the CSV is empty)', // @translate
+                Import::ACTION_UPDATE => 'Update (Replace existing fields of the resource with data from the CSV, even when the corresponding cell in the CSV is empty)', // @translate
+                Import::ACTION_REPLACE => 'Replace (Remove all properties of the resource, then add new information from the CSV)', // @translate
+                Import::ACTION_DELETE => 'Delete (Delete any resources matched by the identifiers)', // @translate
             ];
 
             $advancedSettingsFieldset->add([
@@ -321,8 +320,9 @@ class MappingForm extends Form
                 'type' => 'select',
                 'options' => [
                     'label' => 'Action', // @translate
-                    'info' => 'By default, an import creates new resources. Select from this dropdown to choose an alternate action for the import. For more information on each action, see the documentation.', // @translate
+                    'info' => 'By default, an import creates new resources. Select from this dropdown to choose an alternate action for the import. For more information on each action, see <a href="https://omeka.org/s/docs/user-manual/modules/csvimport/#media-import-advanced-settings" target="_blank">the documentation</a>.', // @translate
                     'value_options' => $valueOptions,
+                    'escape_info' => false,
                 ],
                 'attributes' => [
                     'id' => 'action',

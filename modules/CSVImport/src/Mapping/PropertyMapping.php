@@ -1,12 +1,22 @@
 <?php
 namespace CSVImport\Mapping;
 
+use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Stdlib\Message;
 
 class PropertyMapping extends AbstractMapping
 {
     protected $label = 'Properties'; // @translate
     protected $name = 'property-selector';
+    protected $findResourceFromIdentifier;
+
+    public function init(array $args, ServiceLocatorInterface $serviceLocator)
+    {
+        parent::init($args, $serviceLocator);
+        $this->findResourceFromIdentifier = $serviceLocator->get('ControllerPluginManager')
+            ->get('findResourceFromIdentifier');
+    }
 
     public function getSidebar(PhpRenderer $view)
     {
@@ -52,6 +62,10 @@ class PropertyMapping extends AbstractMapping
 
         $multivalueMap = isset($this->args['column-multivalue']) ? $this->args['column-multivalue'] : [];
         $multivalueSeparator = $this->args['multivalue_separator'];
+
+        $resourceIdentifierPropertyMap = isset($this->args['column-resource-identifier-property']) ? $this->args['column-resource-identifier-property'] : [];
+        $findResourceFromIdentifier = $this->findResourceFromIdentifier;
+
         foreach ($row as $index => $values) {
             if (empty($multivalueMap[$index])) {
                 $values = [trim($values)];
@@ -76,6 +90,14 @@ class PropertyMapping extends AbstractMapping
 
                 $privateValues = !empty($privateValuesMap[$index]);
 
+                $language = null;
+                if ($globalLanguage !== '') {
+                    $language = $globalLanguage;
+                }
+                if (isset($languageMap[$index])) {
+                    $language = $languageMap[$index];
+                }
+
                 foreach ($propertyMap[$index] as $propertyTerm => $propertyId) {
                     foreach ($values as $value) {
                         $valueData = [];
@@ -96,9 +118,24 @@ class PropertyMapping extends AbstractMapping
                                     'type' => $type,
                                     'o:label' => $valueLabel,
                                 ];
+                                if ($language) {
+                                    $valueData['o:lang'] = $language;
+                                }
                                 break;
 
                             case 'resource':
+                                if (isset($resourceIdentifierPropertyMap[$index])) {
+                                    $identifierProperty = $resourceIdentifierPropertyMap[$index];
+                                    $resourceId = $findResourceFromIdentifier($value, $identifierProperty);
+                                    if ($resourceId) {
+                                        $value = $resourceId;
+                                    } else {
+                                        $this->logger->err(new Message('"%s" (%s) is not a valid resource.', // @translate
+                                            $value, $identifierProperty));
+                                        $this->setHasErr(true);
+                                        break;
+                                    }
+                                }
                                 $valueData = [
                                     'value_resource_id' => $value,
                                     'property_id' => $propertyId,
@@ -107,18 +144,14 @@ class PropertyMapping extends AbstractMapping
                                 break;
 
                             case 'literal':
-                                $literalPropertyJson = [
+                                $valueData = [
                                     '@value' => $value,
                                     'property_id' => $propertyId,
                                     'type' => $type,
                                 ];
-                                if ($globalLanguage !== '') {
-                                    $literalPropertyJson['@language'] = $globalLanguage;
+                                if ($language) {
+                                    $valueData['@language'] = $language;
                                 }
-                                if (isset($languageMap[$index])) {
-                                    $literalPropertyJson['@language'] = $languageMap[$index];
-                                }
-                                $valueData = $literalPropertyJson;
                                 break;
                         }
 

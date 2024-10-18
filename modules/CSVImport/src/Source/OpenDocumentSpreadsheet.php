@@ -1,7 +1,7 @@
 <?php
 namespace CSVImport\Source;
 
-use Box\Spout\Common\Type;
+use OpenSpout\Common\Type;
 
 class OpenDocumentSpreadsheet extends AbstractSpreadsheet
 {
@@ -19,8 +19,9 @@ class OpenDocumentSpreadsheet extends AbstractSpreadsheet
         $result = true;
         $headers = $this->getHeaders();
         $number = count($headers);
-        /** @var \Box\Spout\Common\Entity\Row $row */
-        foreach ($iterator as $row) {
+        while ($iterator->valid()) {
+            /** @var \OpenSpout\Common\Entity\Row $row */
+            $row = $iterator->current();
             if ($row && $row->getNumCells() !== $number) {
                 // When old columns are removed on the right, the flag may not
                 // have been reset, so the default number of columns is always
@@ -32,6 +33,7 @@ class OpenDocumentSpreadsheet extends AbstractSpreadsheet
                     break;
                 }
             }
+            $iterator->next();
         }
 
         $this->reset();

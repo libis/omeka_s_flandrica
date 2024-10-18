@@ -66,7 +66,6 @@
 
         $('.column-header + .actions a').on('click', function(e) {
             e.preventDefault();
-            $('.property-mapping input.value-language').val('');
             if (activeElement !== null) {
                 activeElement.removeClass('active');
             }
@@ -106,8 +105,7 @@
         function populateSidebar() {
             $('.active.element .options :input:not(:disabled)').each(function() {
                 var optionInput = $(this);
-                var optionName = optionInput.parents('.option').attr('class');
-                optionName = optionName.replace(' option', '').replace('column-', '');
+                var optionName = optionInput.data('optionName');
                 var sidebarOptionInput = $('#column-options .' + optionName + ' :input');
                 if (sidebarOptionInput.attr('type') == "checkbox") {
                     sidebarOptionInput.prop('checked', true);
@@ -296,12 +294,10 @@
             activeElements.each(function() {
                 activeElement = $(this);
                 if (languageTextInput.hasClass('touched')) {
-                    var languageHiddenInput = activeElement.find('.column-language');
                     if (languageValue !== '') {
                         setLanguage(languageValue, languageTextInput);
                     } else {
-                        activeElement.find('li.column-language').hide();
-                        languageHiddenInput.prop('disabled', true);
+                        setOptionStatus(activeElement.find('li.column-language'));
                     }
                 }
 
@@ -310,13 +306,7 @@
                     if (checkboxInput.hasClass('touched')) {
                         var optionClass = '.' + checkboxInput.data('column-option');
                         var optionLi = activeElement.find($(optionClass));
-                        if (checkboxInput.is(':checked')) {
-                            optionLi.show();
-                            optionLi.find('input[type="hidden"]').prop('disabled', false);
-                        } else {
-                            optionLi.hide();
-                            optionLi.find('input[type="hidden"]').prop('disabled', true);
-                        }
+                        setOptionStatus(optionLi, checkboxInput.is(':checked'));
                     }
                 });
 
@@ -328,11 +318,12 @@
                         var optionClass = '.' + selectInput.data('column-option');
                         var optionLi = activeElement.find(optionClass);
                         optionLi.find('input[type="hidden"]').val(selectedOptionValue);
-                        if (selectedOptionValue !== 'literal') {
-                            optionLi.show();
+                        if (selectedOptionValue !== '') {
                             optionLi.find('.option-label').text(selectedOption.text());
+                            setOptionStatus(optionLi, true);
                         } else {
-                            optionLi.hide();
+                            optionLi.find('.option-label').text('');
+                            setOptionStatus(optionLi, false);
                         }
                     }
                 });
@@ -359,20 +350,6 @@
             e.preventDefault();
             e.stopPropagation();
             $(this).parents('li.mapping').remove();
-        });
-
-        /*
-         * Modified from resource-form.js in core
-         */
-
-        $(document).on('keyup', 'input.value-language', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if ('' === this.value || Omeka.langIsValid(this.value)) {
-                this.setCustomValidity('');
-            } else {
-                this.setCustomValidity(Omeka.jsTranslate('Please enter a valid language tag'));
-            }
         });
 
         function applyMappings(flagName, flagValue, flagLiClass, flagLabel) {
@@ -407,6 +384,10 @@
             }
         };
 
+        function setOptionStatus(optionLi, active) {
+            optionLi.toggleClass('active', active);
+            optionLi.find('input[type="hidden"]').prop('disabled', !active);
+        }
 
         function setLanguage(lang) {
             var valueLanguageElement = document.getElementById('value-language');
@@ -423,11 +404,10 @@
             }
 
             if (valid && lang != '') {
-                var languageInput = activeElement.find('input.column-language');
+                var languageInput = activeElement.find('li.column-language input');
                 languageInput.val(lang);
-                activeElement.find('li.column-language').show();
+                setOptionStatus(activeElement.find('li.column-language'), true);
                 activeElement.find('span.column-language').html(lang);
-                languageInput.prop('disabled', false);
             }
         }
 

@@ -6,6 +6,7 @@ use CSVImport\Mvc\Controller\Plugin\FindResourcesFromIdentifiers;
 use CSVImport\Source\SourceInterface;
 use finfo;
 use Omeka\Api\Manager;
+use Omeka\Entity;
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 use Laminas\Log\Logger;
@@ -97,9 +98,13 @@ class Import extends AbstractJob
      */
     protected $emptyLines;
 
+    /**
+     * @var array
+     */
+    protected $originalIdentityMap;
+
     public function perform()
     {
-        ini_set('auto_detect_line_endings', '1');
         $services = $this->getServiceLocator();
         $this->api = $services->get('Omeka\ApiManager');
         $this->logger = $services->get('Omeka\Logger');
@@ -177,6 +182,12 @@ class Import extends AbstractJob
         ) {
             $this->rowsByBatch = 1;
         }
+
+        // Detach entities that can cause problems with the flush-detach cycle later
+        // in the import. This is currently only relevant for import jobs run with
+        // the Synchronous strategy
+        $this->detachProblematicEntities();
+        $this->originalIdentityMap = $this->getServiceLocator()->get('Omeka\EntityManager')->getUnitOfWork()->getIdentityMap();
 
         $this->emptyLines = 0;
 
@@ -259,8 +270,6 @@ class Import extends AbstractJob
             case self::ACTION_REVISE:
             case self::ACTION_UPDATE:
             case self::ACTION_REPLACE:
-                $originalIdentityMap = $this->getServiceLocator()->get('Omeka\EntityManager')->getUnitOfWork()->getIdentityMap();
-
                 $findResourcesFromIdentifiers = $this->findResourcesFromIdentifiers;
                 $identifiers = $this->extractIdentifiers($data);
                 $ids = $findResourcesFromIdentifiers($identifiers, $this->identifierPropertyId, $this->resourceType);
@@ -294,7 +303,7 @@ class Import extends AbstractJob
                     $dataToProcess = $this->identifyMedias($dataToProcess, $idsToProcess);
                 }
                 $this->update($dataToProcess, $idsToProcess, $args['action']);
-                $this->detachAllNewEntities($originalIdentityMap);
+                $this->detachAllNewEntities();
                 break;
 
             case self::ACTION_DELETE:
@@ -555,10 +564,9 @@ class Import extends AbstractJob
         foreach ($resources as $resource) {
             // "Batch Create" returns a reference and "Create" a representation.
             if ($resource->resourceName() === 'media') {
-                $mediaIds[] = $resource->id();
+                $mediaIds[] = (int) $resource->id();
             }
         }
-        $mediaIds = array_map('intval', $mediaIds);
         if (empty($mediaIds)) {
             return;
         }
@@ -566,7 +574,7 @@ class Import extends AbstractJob
         $services = $this->getServiceLocator();
         $conn = $services->get('Omeka\Connection');
 
-        // Get the item ids first to avoid a sort issue with the subquery below.
+        // Get the item ids first to avoid a sort issue with the subquery below
         $qb = $conn->createQueryBuilder();
         $qb
             ->select('media.item_id')
@@ -574,34 +582,46 @@ class Import extends AbstractJob
             ->where($qb->expr()->in('id', $mediaIds))
             ->groupBy('media.item_id')
             ->orderBy('media.item_id', 'ASC');
-        $stmt = $conn->executeQuery($qb, $qb->getParameters());
-        $itemIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $itemIds = $qb->execute()->fetchFirstColumn();
 
-        // Get the media rank by item in one query even when position is set.
-        // Note: in the subquery, the variable item_id should be set after rank.
-        // If the media ids are used, a sort issue appears:
-        // WHERE item_id IN (SELECT item_id FROM `media` WHERE id IN (%s) GROUP BY item_id ORDER BY item_id ASC)
-        $conn->exec('SET @item_id = 0; SET @rank = 1;');
-        $query = <<<'SQL'
-SELECT id, `rank` FROM (
-    SELECT id, @rank := IF(@item_id = item_id, @rank + 1, 1) AS `rank`, @item_id := item_id AS item
-    FROM media
-    WHERE item_id IN (%s)
-    ORDER BY item_id ASC, -position DESC, id ASC
-) AS media_rank;
-SQL;
-        $stmt = $conn->query(sprintf($query, implode(',', $itemIds)));
-        $mediaRanks = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+        // Get all media IDs for the affected items in the proper order
+        $qb = $conn->createQueryBuilder();
+        $qb
+            ->select('item_id', 'id')
+            ->from('media')
+            ->where($qb->expr()->in('item_id', $itemIds))
+            ->orderBy('item_id', 'ASC')
+            ->addOrderBy('-position', 'DESC')
+            ->addOrderBy('id', 'ASC');
+        $mediaInOrder = $qb->execute()->fetchAllAssociative();
+
+        // Get correct position for each media
+        $mediaRanks = [];
+        $currentItemId = null;
+        $position = null;
+        foreach ($mediaInOrder as $mediaData) {
+            if ($mediaData['item_id'] !== $currentItemId) {
+                $position = 1;
+                $currentItemId = $mediaData['item_id'];
+            } else {
+                $position++;
+            }
+
+            $mediaRanks[$mediaData['id']] = $position;
+        }
 
         // Update positions of the updated media.
-        $entityManager = $services->get('Omeka\EntityManager');
-        $mediaRepository = $entityManager->getRepository(\Omeka\Entity\Media::class);
-        $medias = $mediaRepository->findById(array_keys($mediaRanks));
-        foreach ($medias as $media) {
-            $rank = $mediaRanks[$media->getId()];
-            $media->setPosition($rank);
+        $conn->beginTransaction();
+        try {
+            $updateQuery = 'UPDATE media SET position = ? WHERE id = ?';
+            foreach ($mediaRanks as $id => $rank) {
+                $conn->executeQuery($updateQuery, [$rank, $id], ['integer', 'integer']);
+            }
+            $conn->commit();
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            throw $e;
         }
-        $entityManager->flush();
     }
 
     /**
@@ -1219,18 +1239,53 @@ SQL;
      * did not exist in the prior state.
      *
      * @internal This is a copy-paste of the functionality from the abstract entity adapter
-     *
-     * @param array $oldIdentityMap
      */
-    protected function detachAllNewEntities(array $oldIdentityMap)
+    protected function detachAllNewEntities()
     {
         $entityManager = $this->getServiceLocator()->get('Omeka\EntityManager');
-        $identityMap = $entityManager->getUnitOfWork()->getIdentityMap();
+        $uow = $entityManager->getUnitOfWork();
+        $identityMap = $uow->getIdentityMap();
         foreach ($identityMap as $entityClass => $entities) {
             foreach ($entities as $idHash => $entity) {
-                if (!isset($oldIdentityMap[$entityClass][$idHash])) {
+                if (!isset($this->originalIdentityMap[$entityClass][$idHash])) {
                     $entityManager->detach($entity);
                 }
+            }
+        }
+        $scheduledInsertions = $uow->getScheduledEntityInsertions();
+        foreach ($scheduledInsertions as $entity) {
+            $entityManager->detach($entity);
+        }
+    }
+
+    /**
+     * Detach entities that cause issues with imports due to later detachments
+     *
+     * Currently this is Resource and ResourceTemplate entities: when running
+     * synchronously there are templates and resources loaded to build the
+     * import form elements for item set and template selection, and because
+     * the templates reference template properties (and the resources reference
+     * the templates), having them initially in the EM before the process starts
+     * causes "new entity found" errors, and sometimes unique constraint
+     * violations.
+     *
+     * To prevent this, we can detach all these before the job starts, so any
+     * resources, templates, template properties loaded during the import will
+     * be periodically detached more similarly to the usual situation with a
+     * job running in the background.
+     */
+    protected function detachProblematicEntities()
+    {
+        $problematicEntities = [Entity\Resource::class, Entity\ResourceTemplate::class];
+        $entityManager = $this->getServiceLocator()->get('Omeka\EntityManager');
+        $uow = $entityManager->getUnitOfWork();
+        $identityMap = $uow->getIdentityMap();
+        foreach ($problematicEntities as $entityClass) {
+            if (!isset($identityMap[$entityClass])) {
+                continue;
+            }
+            foreach ($identityMap[$entityClass] as $entity) {
+                $entityManager->detach($entity);
             }
         }
     }
