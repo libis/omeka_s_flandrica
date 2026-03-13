@@ -68,7 +68,10 @@ $thumbnailType = $searchConfig->subSetting('display', 'thumbnail_type', 'medium'
         <div class="card-body resource-list-card">
             <div class="type">
                 <?php 
-                    echo $resource->resourceClass()->label();
+                    $class = $resource->resourceClass();
+                    if($class):
+                        echo $class->label();
+                    endif;
                 ?>
             </div>
             <?= $hyperlink->raw($escapeValueOrGetHtml($heading), $resourceUrl, ['class' => 'resource-link']) ?>

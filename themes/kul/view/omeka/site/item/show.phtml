@@ -44,7 +44,12 @@ $second = $this->resourcePageBlocks($item, 'second')->hasBlocks();
         </span>
       </div>
       <div class="type">
-          <?php echo $resource->resourceClass()->label();?>
+          <?php 
+              $class = $resource->resourceClass();
+              if($class):
+                  echo $class->label();
+              endif;
+          ?>
       </div>    
       <div class="item-information-top">
         <h2 class="title"><?php echo $item->displayTitle(); ?></h2>
@@ -186,6 +191,7 @@ $second = $this->resourcePageBlocks($item, 'second')->hasBlocks();
               <div class="col-xs-12 col-md-4">
                 <div class="card card-undefined">
                   <div class="card-body">
+                    
                     <h5><a href="<?php $resource->url();?>"><?php echo $resource->displayTitle();?></a></h5>
                     <div class="information" style="font-style:italic">
                       <?php 
