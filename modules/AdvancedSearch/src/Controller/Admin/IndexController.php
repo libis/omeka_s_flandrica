@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2020-2023
+ * Copyright Daniel Berthereau, 2020-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -30,6 +30,7 @@
 
 namespace AdvancedSearch\Controller\Admin;
 
+use Common\Stdlib\PsrMessage;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 
@@ -37,23 +38,99 @@ class IndexController extends AbstractActionController
 {
     public function browseAction()
     {
+        $this->warnOverriddenSearch();
+
         $api = $this->api();
-        $engines = $api->search('search_engines', ['sort_by' => 'name'])->getContent();
+        $searchEngines = $api->search('search_engines', ['sort_by' => 'name'])->getContent();
         $searchConfigs = $api->search('search_configs', ['sort_by' => 'name'])->getContent();
         $suggesters = $api->search('search_suggesters', ['sort_by' => 'name'])->getContent();
 
-        // For simplicity in settings management, the list of all search configs
-        // is stored one time here.
-        $searchConfigPaths = [];
-        foreach ($searchConfigs as $searchConfig) {
-            $searchConfigPaths[$searchConfig->id()] = $searchConfig->path();
-        }
-        $this->settings()->set('advancedsearch_all_configs', $searchConfigPaths);
+        $this->updateListSearchSlugs($searchConfigs);
 
         return new ViewModel([
-            'engines' => $engines,
+            'searchEngines' => $searchEngines,
             'searchConfigs' => $searchConfigs,
             'suggesters' => $suggesters,
         ]);
+    }
+
+    /**
+     * Store all slugs in settings.
+     *
+     * This setting "advancedsearch_all_configs" simplifies settings management.
+     */
+    protected function updateListSearchSlugs(array $searchConfigs): void
+    {
+        $searchConfigSlugs = [];
+        foreach ($searchConfigs as $searchConfig) {
+            $searchConfigSlugs[$searchConfig->id()] = $searchConfig->slug();
+        }
+        $this->settings()->set('advancedsearch_all_configs', $searchConfigSlugs);
+    }
+
+    /**
+     * Adapted:
+     * @see \AdvancedSearch\Module::warnOverriddenSearch()
+     * @see \AdvancedSearch\Controller\Admin\IndexController::warnOverriddenSearch()
+     *
+     * @todo Identify modules, blocks and queries that use old features.
+     */
+    protected function warnOverriddenSearch(): bool
+    {
+        $api = $this->plugins->get('api');
+        $settings = $this->plugins->get('settings')();
+        $siteSettings = $this->plugins->get('siteSettings')();
+        $messenger = $this->plugins->get('messenger');
+
+        /*
+        $improvedTemplates = [
+            'common/advanced-search/properties-improved'
+            'common/advanced-search/resource-class-improved',
+            'common/advanced-search/resource-template-improved',
+            'common/advanced-search/item-sets-improved',
+            'common/advanced-search/site-improved',
+            'common/advanced-search/media-type-improved',
+            'common/advanced-search/owner-improved',
+        ];
+        */
+
+        $results = [];
+        $searchFields = $settings->get('advancedsearch_search_fields') ?: [];
+        // foreach ($searchFields as $searchField) {
+        //     if (substr($searchField, -9) === '-improved') {
+        //         $results[0] = 'admin';
+        //         break;
+        //     }
+        // }
+        if (in_array('common/advanced-search/properties-improved', $searchFields)) {
+            $results[0] = 'admin';
+        }
+
+        $siteSlugs = $api->search('sites', [], ['returnScalar' => 'slug'])->getContent();
+        foreach ($siteSlugs as $siteId => $siteSlug) {
+            $searchFields = $siteSettings->get('advancedsearch_search_fields', null, $siteId) ?: [];
+            // foreach ($searchFields as $searchField) {
+            //     if (substr($searchField, -9) === '-improved') {
+            //         $results[$siteId] = $siteSlug;
+            //         break;
+            //     }
+            // }
+            if (in_array('common/advanced-search/properties-improved', $searchFields)) {
+                $results[$siteId] = $siteSlug;
+            }
+        }
+
+        if (!count($results)) {
+            return false;
+        }
+
+        $message = new PsrMessage(
+            'The setting to override search element "property" is enabled. This feature will be removed in a future version and should be {link}replaced by the search element "filter"{link_end}. Check your pages and settings. Matching sites: {json}', // @translate
+            ['link' => '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-AdvancedSearch#deprecated-improvements-of-the-advanced-search-elements" target="_blank" rel="noopener">', 'link_end' => '</a>', 'json' => json_encode($results, 448)]
+        );
+        $message->setEscapeHtml(false);
+        $messenger->addWarning($message);
+
+        return true;
     }
 }

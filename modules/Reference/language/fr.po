@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Reference\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-07 00:00+0000\n"
-"PO-Revision-Date: 2022-03-07 00:00+0000\n"
+"POT-Creation-Date: 2026-01-12 00:00+0000\n"
+"PO-Revision-Date: 2026-01-12 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -15,104 +15,76 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 3.6\n"
+
+#: data/scripts/upgrade.php:34 Module.php:55
+#, php-format
+msgid "The module %1$s should be upgraded to version %2$s or later."
+msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
 
 #: src/Controller/ApiController.php:143
 msgid "Method Not Allowed"
 msgstr "Méthode non autorisée"
 
-#: src/Generic/AbstractModule.php:66 src/Generic/AbstractModule.php:740
-#, php-format
-msgid "This module requires the module \"%s\"."
-msgstr "Ce module requiert le module « %s »."
-
-#: src/Generic/AbstractModule.php:73
-#, php-format
-msgid "This module requires modules \"%s\"."
-msgstr "Ce module requiert les modules « %s »."
-
-#: src/Generic/AbstractModule.php:80
-msgid "This module has resources that cannot be installed."
-msgstr "Ce module a des ressources qui ne peuvent pas être installées."
-
-#: src/Generic/AbstractModule.php:87
-msgid ""
-"This module cannot install its tables, because they exist already. Try to "
-"remove them first."
-msgstr ""
-"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
-"de les supprimer manuellement."
-
-#: src/Generic/AbstractModule.php:328
-#, php-format
-msgid "The module removed tables \"%s\" from a previous broken install."
-msgstr ""
-"Le module a supprimé les tables \"%s\" depuis une installation échouée."
-
-#: src/Generic/AbstractModule.php:735
-#, php-format
-msgid "This module requires the module \"%s\", version %s or above."
-msgstr "Ce module requiert le module \"%s\", version \"%s\" ou supérieure."
-
-#: src/Generic/AbstractModule.php:832
-#, php-format
-msgid ""
-"The module \"%s\" was automatically deactivated because the dependencies are "
-"unavailable."
-msgstr ""
-"Le module « %s » a été automatiquement désactivé car ses dépendances ne sont "
-"plus disponibles."
-
-#: src/Mvc/Controller/Plugin/References.php:2180
-msgid "Owners"
-msgstr "Propriétaires"
-
-#: src/Mvc/Controller/Plugin/References.php:2216
-msgid "[Unknown]"
-msgstr "[Inconnu]"
-
-#: src/Site/BlockLayout/Reference.php:147
+#: src/Site/BlockLayout/Reference.php:131
 msgid "Choose one or more properties or one or more resource classes."
 msgstr "Choisir une propriété ou une classe de ressource."
 
-#: src/Site/BlockLayout/ReferenceIndex.php:142
-msgid "Choose a list of property or resource class."
-msgstr "Choisir une liste de propriêtés ou de classes."
-
-#: src/Site/BlockLayout/ReferenceIndex.php:143
+#: src/Site/BlockLayout/Reference.php:132
 msgid ""
-"The pages for the selected terms should be created manually with the terms "
-"as slug, with the \":\" replaced by a \"-\"."
+"With the layout template \"Reference Index\", the pages for the selected "
+"terms should be created manually with the terms as slug, with the \":\" "
+"replaced by a \"-\"."
 msgstr ""
-"Les pages pour les termes choisis doivent être créées manuellement avec le "
-"terme en tant que chemin, avec le \":\" remplacé par un \"-\"."
+"Avec le gabarit « Index des références  », les pages pour les termes choisis "
+"doivent être créées manuellement avec le terme en tant que chemin, avec le "
+"« : » remplacé par un « - »."
 
-#: view/common/block-layout/reference-index.phtml:19
-#: view/common/block-layout/reference-tree.phtml:26
+#: view/common/block-layout/reference-tree.phtml:20
 #: view/common/block-layout/reference.phtml:23
+#: view/common/block-template/reference-grid.phtml:23
+#: view/common/block-template/reference-index.phtml:16
 msgid "There is no references."
 msgstr "Il n’y a aucune référence."
 
-#: view/common/reference-index.phtml:29
+#: view/common/reference-grid.phtml:86 view/common/reference.phtml:74
+msgid "See all…"
+msgstr "Tout voir…"
+
+#: view/common/reference-grid.phtml:87 view/common/reference.phtml:75
+#, php-format
+msgid "And %d more."
+msgstr "Et %d de plus."
+
+#: view/common/reference-grid.phtml:130
+msgid "See resources"
+msgstr "Voir les ressources"
+
+#: view/common/reference-grid.phtml:136 view/common/reference-grid.phtml:146
+#, php-format
+msgid "(%d resources)"
+msgstr "(%d ressources)"
+
+#: view/common/reference-grid.phtml:137 view/common/reference-grid.phtml:147
+#, php-format
+msgid "(%d resource)"
+msgstr "(%d ressource)"
+
+#: view/common/reference-grid.phtml:251
+msgid "List"
+msgstr "Liste"
+
+#: view/common/reference-index.phtml:30
 #, php-format
 msgid "%s (%d)"
 msgstr "%s (%d)"
 
-#: view/common/reference-index.phtml:32 view/common/reference-index.phtml:41
+#: view/common/reference-index.phtml:34
 #: view/reference/site/reference/browse.phtml:38
 #: view/reference/site/reference/browse.phtml:67
 #, php-format
 msgid "Browse %s"
 msgstr "Parcourir %s"
-
-#: view/common/reference.phtml:69
-msgid "See all…"
-msgstr "Tout voir…"
-
-#: view/common/reference.phtml:70
-#, php-format
-msgid "And %d more."
-msgstr "Et %d de plus."
 
 #: view/reference/site/reference/browse.phtml:28
 msgid "No references available."
@@ -132,7 +104,7 @@ msgstr "Parcourir les documents par \"%s\" (%d index)"
 msgid "There is no references for \"%s\"."
 msgstr "Il n’y a aucune référence pour \"%s\"."
 
-#: data/scripts/upgrade.php:355
+#: data/scripts/upgrade.php:385
 msgid ""
 "It is possible now to limit the list of references, for example only the of "
 "subjects starting with \"a\" with argument \"filters[begin]=a\"."
@@ -141,7 +113,7 @@ msgstr ""
 "seulement la liste des sujets commençant avec un \"a\" avec l’argument "
 "\"filters[begin]=a\"."
 
-#: data/scripts/upgrade.php:360
+#: data/scripts/upgrade.php:390
 msgid ""
 "It is possible now to list not only references, but resources by reference, "
 "for example all documents of an author or all items with each subject."
@@ -150,26 +122,26 @@ msgstr ""
 "les ressources par référence, par exemple tous les documents d’un auteur ou "
 "tous les contenus avec chaque sujet."
 
-#: data/scripts/upgrade.php:368
+#: data/scripts/upgrade.php:397
 msgid "It is possible now to aggregate properties (api and helper)."
 msgstr "Il est désormais possible d’agréger des propriétés (api et vues)."
 
-#: data/scripts/upgrade.php:376
+#: data/scripts/upgrade.php:404
 msgid "It is possible now to filter references by data types."
 msgstr ""
 "Il est désormais possible de filtrer les références par type de données."
 
-#: data/scripts/upgrade.php:386
+#: data/scripts/upgrade.php:413
 msgid "It is possible now to get translated linked resource."
 msgstr "Il est désormais possible de disposer des ressources liées traduites."
 
-#: data/scripts/upgrade.php:391 Module.php:58
+#: data/scripts/upgrade.php:418
 msgid "Translated linked resource metadata should be indexed in main settings."
 msgstr ""
 "Les métadonnées des ressources liées et traduites doivent être indexées dans "
 "les paramètres généraux."
 
-#: data/scripts/upgrade.php:431
+#: data/scripts/upgrade.php:459
 msgid ""
 "It is possible now to aggregate properties in references, for example to get "
 "list of people from properties dcterms:creator and dcterms:contributor."
@@ -178,7 +150,7 @@ msgstr ""
 "exemple pour lister les personnes à partir des propriétés créateurs et "
 "contributeurs."
 
-#: data/scripts/upgrade.php:435
+#: data/scripts/upgrade.php:463
 msgid ""
 "Warning: the name of the source properties or classes \"term\" has been "
 "replace by \"fields\" in pages, so check your theme templates if you updated "
@@ -188,7 +160,7 @@ msgstr ""
 "remplacé par \"fields\" dans les pages. Il convient de vérifier les thèmes "
 "si les gabarits du module ont été personnalisés."
 
-#: data/scripts/upgrade.php:439
+#: data/scripts/upgrade.php:467
 msgid ""
 "It is possible now to get a specific number of initials, for example to get "
 "the list of years from standard dates."
@@ -196,43 +168,167 @@ msgstr ""
 "Il est désormais possible de récupérer un nombre déterminé d’initiales, par "
 "exemple pour récupérer la liste des années à partir de dates standard."
 
-#: Module.php:54
-msgid "The translated and linked resource metadata are currently indexing."
-msgstr ""
-"Les métadonnées des ressources liées et traduites sont en cours d’indexation."
-
-#: Module.php:159
-#, php-format
+#: data/scripts/upgrade.php:474
 msgid ""
-"Another job is running for the same process (job %1$s#%2$d%3$s, "
-"%4$slogs%3$s)."
+"Many improvements were done to output references and facets a lot more "
+"quickly, in particular for big bases."
 msgstr ""
-"Une autre tâche est en cours pour le même traitement (job %1$s#%2$d%3$s, "
-"%4$sjournaux%3$s)."
+"De nombreuses améliorations ont été réalisées pour créer les références et "
+"les facettes plus rapidement, en particulier pour les grandes bases."
 
-#: Module.php:184
-#, php-format
+#: data/scripts/upgrade.php:517
 msgid ""
-"Indexing translated and linked resource metadata in background (job "
-"%1$s#%2$d%3$s, %4$slogs%3$s)."
+"Because of the integration of block templates in Omeka S v4.1, you should "
+"move custom templates before upgrading the module: move following files from "
+"directory \"view/common/block-layout/\" to \"view/common/block-template/\" "
+"of each theme, except the default files \"reference.phtml\" and \"reference-"
+"tree.phtml\". Then, you should add all templates from the directory \"view/"
+"common/block-template/\" at the bottom of the file \"config/theme.ini\" of "
+"each theme, for example `block_templates.reference.reference-index = "
+"\"Reference index custom\"`. Matching files: {json}"
 msgstr ""
-"Indexation des métadonnées des traductions et des ressources liées en "
-"arrière-plan (tâche %1$s#%2$d%3$s, %4$sjournaux%3$s)."
+"En raison de l’intégration des gabarits de blocs dans Omeka S v4.1, vous "
+"devez déplacer les modèles personnalisés avant de mettre à jour le module : "
+"déplacer les fichiers suivant du dossier « view/common/block-layout/ » au "
+"dossier « view/common/block-template/ » pour chaque thème, sauf les fichiers "
+"par défaut of each theme, except the default files « reference.phtml » et "
+"« reference-tree.phtml ». Ensuite, vous devez ajouter tous les gabarits du "
+"dossier« view/common/block-template/ » en bas du fichier « config/"
+"theme.ini » de chaque thème, par exemple "
+"`block_templates.reference.reference-index = \"Référence index custom\"`. "
+"Fichiers correspondant : {json}"
 
-#: src/Form/ReferenceTreeFieldset.php:18
-msgid "Block title"
-msgstr "Titre du bloc"
+#: data/scripts/upgrade.php:556
+msgid ""
+"The block Reference Index was replaced by a template layout of block "
+"Reference. You may check pages: {json}"
+msgstr ""
+"Le bloc Référence (Index) a été remplacé par un gabarit du bloc Référence. "
+"Vous pouvez vérifier les pages : {json}"
 
-#: src/Form/ReferenceTreeFieldset.php:37 src/Form/ReferenceIndexFieldset.php:36
-#: src/Form/ReferenceFieldset.php:35
+#: data/scripts/upgrade.php:573
+msgid ""
+"The default heading is now <h2>. Check your theme if you customized it. You "
+"may check pages: {json}"
+msgstr ""
+"Le titre Html par défaut est désormais <h2>. Vérifiez votre thème si vous "
+"l’avez personnalisé. Vous pouvez vérifier les pages : {json}"
+
+#: data/scripts/upgrade.php:622
+msgid ""
+"The option \"heading\" was removed from block Reference and replaced by a "
+"block Heading (if module Block Plus is present) or Html. Remove it in the "
+"following files before upgrade and automatic conversion: {json}"
+msgstr ""
+"L’option « heading » a été supprimée du bloc Référence et remplacée par un "
+"bloc « Html Heading » (si le module Block Plus est installé) ou « Html ». "
+"Supprimez-le dans les fichiers suivants avant la mise à jour et la "
+"conversion automatique des blocs : {json}"
+
+#: data/scripts/upgrade.php:726
+msgid ""
+"The setting \"template\" was moved to the new block layout settings "
+"available since Omeka S v4.1. You may check pages for styles: {json}"
+msgstr ""
+"Le paramètre « template » a été déplacé dans les nouveaux paramètres de bloc "
+"depuis Omeka S v4.1. Vous pouvez vérifier les pages pour les styles : {json}"
+
+#: data/scripts/upgrade.php:736
+msgid ""
+"The option \"heading\" was removed from block Reference. New block "
+"\"Heading\" (if module Block Plus is present) or \"Html\" was prepended to "
+"all blocks that had a filled heading. You may check pages for styles: {json}"
+msgstr ""
+"L’option « heading » a été supprimée du bloc Référence. Un nouveau bloc "
+"« Html Heading » (si le module Block Plus est installé) ou « Html » a été "
+"ajouté à tous les blocs qui avaient un titre. Vous pouvez vérifier les "
+"styles : {json}"
+
+#: data/scripts/upgrade.php:746
+msgid "A template has been added to display references as list/grid (mansory)."
+msgstr ""
+"Un gabarit a été ajouté pour afficher les références en liste/grille "
+"(maçonnerie)."
+
+#: data/scripts/upgrade.php:760
+msgid ""
+"The references with single or fallback locales was removed for now due to "
+"complex maintainability. The listing of existing references may be different "
+"when values have multiple languages. The feature could be reimplemented in a "
+"future version."
+msgstr ""
+"Les références avec des traductions multiples ont été supprimées pour "
+"réduire la complexité de la maintenance. Les listes de références avec des "
+"valeurs avec plusieurs langues peuvent désormais être différentes. La "
+"fonctionnalité sera réintroduite dans une version ultérieure."
+
+#: Module.php:69
+msgid ""
+"The php extension \"intl\" is recommended to fix issues with diacritic "
+"letters."
+msgstr ""
+"L’extension php « intl » est recommandé pour éviter les problèmes avec les "
+"caractères diacritiques."
+
+#: src/Form/SiteSettingsFieldset.php:15 src/Site/BlockLayout/Reference.php:35
+msgid "Reference"
+msgstr "Référence"
+
+#: src/Form/SiteSettingsFieldset.php:31
+msgid "Title of the page [deprecated: use page block]"
+msgstr "Titre de la page (obsolète : utiliser un bloc de page)"
+
+#: src/Form/SiteSettingsFieldset.php:43
+msgid "Resources to link [deprecated: use page block]"
+msgstr "Ressources à lier (obsolète : utiliser un bloc de page)"
+
+#: src/Form/SiteSettingsFieldset.php:44 src/Form/ReferenceTreeFieldset.php:71
+#: src/Form/ReferenceFieldset.php:69
+msgid "value_options"
+msgstr "value_options"
+
+#: src/Form/SiteSettingsFieldset.php:63
+msgid "Display [deprecated: use page block]"
+msgstr "Affichage (obsolète : utiliser un bloc de page)"
+
+#: src/Form/SiteSettingsFieldset.php:66
+msgid "Headings"
+msgstr "Entêtes"
+
+#: src/Form/SiteSettingsFieldset.php:67
+msgid "Skip links"
+msgstr "Raccourcis"
+
+#: src/Form/SiteSettingsFieldset.php:68
+msgid "Individual total"
+msgstr "Total individuel"
+
+#: src/Form/SiteSettingsFieldset.php:69
+msgid "Link to single records"
+msgstr "Lien vers les documents isolés"
+
+#: src/Form/SiteSettingsFieldset.php:70 src/Form/ReferenceTreeFieldset.php:151
+#: src/Form/ReferenceFieldset.php:201
+msgid "Custom url for single records"
+msgstr "Url personnalisée pour les références uniques"
+
+#: src/Form/SiteSettingsFieldset.php:84
+msgid ""
+"Reference pages for selected classes and properties [deprecated: use page "
+"block]"
+msgstr ""
+"Pages Références pour les classes et les propriétés sélectionnées "
+"(obsolète : utiliser les blocs de page)"
+
+#: src/Form/ReferenceTreeFieldset.php:35 src/Form/ReferenceFieldset.php:40
 msgid "Select properties…"
 msgstr "Choisir des propriétés…"
 
-#: src/Form/ReferenceTreeFieldset.php:44
+#: src/Form/ReferenceTreeFieldset.php:42
 msgid "Static tree of references"
 msgstr "Arborescence statique des références"
 
-#: src/Form/ReferenceTreeFieldset.php:45
+#: src/Form/ReferenceTreeFieldset.php:43
 msgid ""
 "Format is: one reference by line, preceded by zero, one or more \"-\" to "
 "indicate the hierarchy level.\n"
@@ -248,7 +344,7 @@ msgstr ""
 "Note : la base sql réalise des recherches sans tenir compte de la casse ; "
 "les références doivent donc être unique de façon insensible à la casse."
 
-#: src/Form/ReferenceTreeFieldset.php:54
+#: src/Form/ReferenceTreeFieldset.php:52
 msgid ""
 "Europe\n"
 "- France\n"
@@ -268,23 +364,18 @@ msgstr ""
 "Asie\n"
 "- Japon\n"
 
-#: src/Form/ReferenceTreeFieldset.php:73 src/Form/ReferenceIndexFieldset.php:63
-#: src/Form/SiteSettingsFieldset.php:25 src/Form/ReferenceFieldset.php:62
-msgid "value_options"
-msgstr "value_options"
-
-#: src/Form/ReferenceTreeFieldset.php:92 src/Form/ReferenceFieldset.php:97
+#: src/Form/ReferenceTreeFieldset.php:90 src/Form/ReferenceFieldset.php:88
 msgid "Search pool query"
 msgstr "Requête de recherche"
 
-#: src/Form/ReferenceTreeFieldset.php:93 src/Form/ReferenceFieldset.php:98
+#: src/Form/ReferenceTreeFieldset.php:91 src/Form/ReferenceFieldset.php:89
 msgid ""
 "Restrict references to a particular subset of resources, for example a site."
 msgstr ""
 "Limiter les références à un lot spécifique de ressources, par exemple un "
 "site."
 
-#: src/Form/ReferenceTreeFieldset.php:108
+#: src/Form/ReferenceTreeFieldset.php:106
 msgid ""
 "The type of query defines how elements are regrouped (see the advanced "
 "search)."
@@ -292,20 +383,31 @@ msgstr ""
 "Le type de requête définit comment les éléments sont regroupés (voir la "
 "recherche avancée)."
 
-#: src/Form/ReferenceTreeFieldset.php:110
+#: src/Form/ReferenceTreeFieldset.php:108
 msgid "Is Exactly"
 msgstr "Est exactement"
 
-#: src/Form/ReferenceTreeFieldset.php:111
+#: src/Form/ReferenceTreeFieldset.php:109
 msgid "Contains"
 msgstr "Contient"
 
-#: src/Form/ReferenceTreeFieldset.php:124 src/Form/SiteSettingsFieldset.php:48
-#: src/Form/ReferenceFieldset.php:155
-msgid "Link to single records"
-msgstr "Lien vers les documents isolés"
+#: src/Form/ReferenceTreeFieldset.php:122 src/Form/ReferenceFieldset.php:170
+msgid "Link to browse or search engine"
+msgstr "Lien à la navigation ou au moteur de recherche"
 
-#: src/Form/ReferenceTreeFieldset.php:125 src/Form/ReferenceFieldset.php:156
+#: src/Form/ReferenceTreeFieldset.php:123 src/Form/ReferenceFieldset.php:171
+msgid "This option is useful when the module Advanced Search is used."
+msgstr "Cette option est utile quand le module Recherche Avancée est installé."
+
+#: src/Form/ReferenceTreeFieldset.php:125 src/Form/ReferenceFieldset.php:173
+msgid "Search config of the site"
+msgstr "Configuration de la recherche du site"
+
+#: src/Form/ReferenceTreeFieldset.php:137 src/Form/ReferenceFieldset.php:186
+msgid "Direct link for single records"
+msgstr "Lien direct vers les documents isolés"
+
+#: src/Form/ReferenceTreeFieldset.php:138 src/Form/ReferenceFieldset.php:187
 msgid ""
 "When a reference has only one item, link to it directly instead of to the "
 "items/browse page."
@@ -313,11 +415,7 @@ msgstr ""
 "Quand une référence contient un seul document, faire le lien directement "
 "vers lui plutôt que vers la page items/browse."
 
-#: src/Form/ReferenceTreeFieldset.php:135 src/Form/ReferenceFieldset.php:166
-msgid "Custom url for single"
-msgstr "Url personnalisée pour les références uniques"
-
-#: src/Form/ReferenceTreeFieldset.php:136 src/Form/ReferenceFieldset.php:167
+#: src/Form/ReferenceTreeFieldset.php:152 src/Form/ReferenceFieldset.php:202
 msgid ""
 "May be set with modules such Clean Url or Ark. May slow the display when "
 "there are many single references."
@@ -325,20 +423,27 @@ msgstr ""
 "Peut être utilisé avec les modules tels que CleanUrl et Ark. Peut ralentir "
 "l'affichage quand les références uniques sont nombreuses."
 
-#: src/Form/ReferenceTreeFieldset.php:146
-#: src/Form/ReferenceIndexFieldset.php:143 src/Form/ReferenceFieldset.php:197
+#: src/Form/ReferenceTreeFieldset.php:165 src/Form/ReferenceFieldset.php:244
 msgid "Add the total of resources for each reference"
 msgstr "Indiquer le total de ressources pour chaque référence"
 
-#: src/Form/ReferenceTreeFieldset.php:156
+#: src/Form/ReferenceTreeFieldset.php:178 src/Form/ReferenceFieldset.php:258
+msgid "Append \"reference\" as argument to query urls for themes"
+msgstr "Ajouter l’argument « reference » aux urls pour les thèmes"
+
+#: src/Form/ReferenceTreeFieldset.php:191 src/Form/ReferenceFieldset.php:272
+msgid "Add the thumbnail of the first resource"
+msgstr "Ajouter la vignette de la première ressource"
+
+#: src/Form/ReferenceTreeFieldset.php:202
 msgid "Expand the tree"
 msgstr "Développer l’arborescence"
 
-#: src/Form/ReferenceTreeFieldset.php:166
+#: src/Form/ReferenceTreeFieldset.php:215
 msgid "Managed as branch"
 msgstr "Gérée comme branches"
 
-#: src/Form/ReferenceTreeFieldset.php:167
+#: src/Form/ReferenceTreeFieldset.php:216
 msgid ""
 "Check this box if the tree is managed as branch (the path is saved with "
 "\" :: \" between each branch)."
@@ -346,63 +451,19 @@ msgstr ""
 "Cocher cette case si l’arborescence doit être gérée comme des branches (le "
 "chemin est enregistré avec \" :: \" entre chaque branche)."
 
-#: src/Form/ReferenceTreeFieldset.php:180
-#: src/Form/ReferenceIndexFieldset.php:156 src/Form/ReferenceFieldset.php:240
-msgid "Template to display"
-msgstr "Gabarit à afficher"
-
-#: src/Form/ReferenceTreeFieldset.php:181
-msgid ""
-"Templates are in folder \"common/block-layout\" of the theme and should "
-"start with \"reference-tree\"."
-msgstr ""
-"Les gabarits sont dans le dossier \"common/block-layout\" du thème et "
-"doivent commencer avec \"reference-tree\"."
-
-#: src/Form/SettingsFieldset.php:13 src/Form/SiteSettingsFieldset.php:15
-#: src/Site/BlockLayout/Reference.php:37
-msgid "Reference"
-msgstr "Référence"
-
-#: src/Form/SettingsFieldset.php:22
-msgid "Index reference metadata"
-msgstr "Indexer les métadonnées des références"
-
-#: src/Form/SettingsFieldset.php:23
-msgid "To use some features of module Reference, an index is required."
-msgstr ""
-"Pour utiliser certaines fonctionnalités du module Référence, un index est "
-"nécessaire."
-
-#: src/Form/ReferenceIndexFieldset.php:43 src/Form/ReferenceFieldset.php:42
+#: src/Form/ReferenceFieldset.php:48
 msgid "Resource classes"
 msgstr "Classes de ressource"
 
-#: src/Form/ReferenceIndexFieldset.php:52 src/Form/ReferenceFieldset.php:51
+#: src/Form/ReferenceFieldset.php:57
 msgid "Select resource classes…"
 msgstr "Sélectionner des classes de ressource…"
 
-#: src/Form/ReferenceIndexFieldset.php:74
-msgid "chosen-select"
-msgstr "chosen-select"
-
-#: src/Form/ReferenceIndexFieldset.php:96
-msgid "Query to limit resources"
-msgstr "Requête pour limiter les ressources"
-
-#: src/Form/ReferenceIndexFieldset.php:97
-msgid ""
-"Limit the reference to a particular subset of resources, for example a site, "
-"via an advanced search query."
-msgstr ""
-"Limiter les références à un lot spécifique de ressources, par exemple un "
-"site, via une requête de type recherche avancée."
-
-#: src/Form/ReferenceIndexFieldset.php:108 src/Form/ReferenceFieldset.php:110
+#: src/Form/ReferenceFieldset.php:102
 msgid "Filter by language"
 msgstr "Filtrer par langue"
 
-#: src/Form/ReferenceIndexFieldset.php:109 src/Form/ReferenceFieldset.php:111
+#: src/Form/ReferenceFieldset.php:103
 msgid ""
 "Limit the results to the specified languages. Use \"|\" to separate multiple "
 "languages. Use \"||\" for values without language."
@@ -410,84 +471,35 @@ msgstr ""
 "Limiter les résultats aux langues indiquées. Utiliser \"|\" pour séparer "
 "plusieurs langues. Utiliser \"||\" pour les valeurs sans langue."
 
-#: src/Form/ReferenceIndexFieldset.php:122 src/Form/SiteSettingsFieldset.php:43
-#: src/Form/ReferenceFieldset.php:124
-msgid "Display"
-msgstr "Affichage"
+#: src/Form/ReferenceFieldset.php:119
+msgid "Alphabetic"
+msgstr "Alphabétique"
 
-#: src/Form/ReferenceIndexFieldset.php:157
-msgid ""
-"Templates are in folder \"common/block-layout\" of the theme and should "
-"start with \"reference-index\"."
-msgstr ""
-"Les gabarits sont dans le dossier \"common/block-layout\" du thème et "
-"doivent commencer avec \"reference-index\"."
+#: src/Form/ReferenceFieldset.php:120
+msgid "Total"
+msgstr "Total"
 
-#: src/Form/SiteSettingsFieldset.php:24
-msgid "Resources to link"
-msgstr "Ressources à lier"
-
-#: src/Form/SiteSettingsFieldset.php:45
-msgid "Headings"
-msgstr "Entêtes"
-
-#: src/Form/SiteSettingsFieldset.php:46
-msgid "Skip links"
-msgstr "Raccourcis"
-
-#: src/Form/SiteSettingsFieldset.php:47
-msgid "Individual total"
-msgstr "Total individuel"
-
-#: src/Form/SiteSettingsFieldset.php:49
-msgid "Custom url for single records"
-msgstr "Url personnalisée pour les références uniques"
-
-#: src/Form/SiteSettingsFieldset.php:62
-msgid "Reference pages for selected classes and properties"
-msgstr "Pages références pour les classes et les propriétés sélectionnées"
-
-#: src/Form/ReferenceFieldset.php:80
-msgid "Select order"
-msgstr "Choisir l’ordre"
-
-#: src/Form/ReferenceFieldset.php:82
-msgid "Alphabetic ascendant"
-msgstr "Alphabétique ascendant"
-
-#: src/Form/ReferenceFieldset.php:83
-msgid "Alphabetic descendant"
-msgstr "Alphabétique descendant"
-
-#: src/Form/ReferenceFieldset.php:84
-msgid "Total ascendant"
-msgstr "Par total croissant"
-
-#: src/Form/ReferenceFieldset.php:85
-msgid "Total descendant"
-msgstr "Par total décroissant"
-
-#: src/Form/ReferenceFieldset.php:144
+#: src/Form/ReferenceFieldset.php:155
 msgid "One page by initial"
 msgstr "Une page par initiale"
 
-#: src/Form/ReferenceFieldset.php:145
+#: src/Form/ReferenceFieldset.php:156
 msgid "This option is recommended for big lists."
 msgstr "Cette option est recommandée pour les grandes listes."
 
-#: src/Form/ReferenceFieldset.php:177
+#: src/Form/ReferenceFieldset.php:216
 msgid "Add skiplinks above and below list"
 msgstr "Ajouter des raccourcis au dessus et en dessous de la liste"
 
-#: src/Form/ReferenceFieldset.php:187
+#: src/Form/ReferenceFieldset.php:230
 msgid "Add first letter as headings between references"
 msgstr "Ajouter l’initiale comme entête entre les références"
 
-#: src/Form/ReferenceFieldset.php:207
+#: src/Form/ReferenceFieldset.php:284
 msgid "Maximum resources to display by reference"
 msgstr "Nombre de ressources maximum à afficher par référence"
 
-#: src/Form/ReferenceFieldset.php:208
+#: src/Form/ReferenceFieldset.php:285
 msgid ""
 "For example, display the items by subject. Let 0 to display a simple list. "
 "Maximum is 1024."
@@ -495,11 +507,11 @@ msgstr ""
 "Par exemple, afficher les contenus par sujet. Laisser 0 pour afficher une "
 "liste simple. Le maximum est 1024."
 
-#: src/Form/ReferenceFieldset.php:221
+#: src/Form/ReferenceFieldset.php:302
 msgid "Subject values"
 msgstr "Valeurs sujet"
 
-#: src/Form/ReferenceFieldset.php:222
+#: src/Form/ReferenceFieldset.php:303
 msgid ""
 "Allow to list related resources. For example, in a library where there are "
 "items of types \"Authors\" and \"Documents\", and if the creator of the "
@@ -513,39 +525,15 @@ msgstr ""
 "voir la liste des documents par auteur. Cette option est ignorée quand "
 "l’option \"maximum par référence\" est utilisée."
 
-#: src/Form/ReferenceFieldset.php:230
+#: src/Form/ReferenceFieldset.php:311
 msgid "Select a property…"
 msgstr "Choisir une propriété…"
 
-#: src/Form/ReferenceFieldset.php:241
-msgid ""
-"Templates are in folder \"common/block-layout\" of the theme and should "
-"start with \"reference\"."
-msgstr ""
-"Les gabarits sont dans le dossier \"common/block-layout\" du thème et "
-"doivent commencer avec \"reference\"."
+#: src/Site/BlockLayout/ReferenceTree.php:35
+msgid "Reference tree"
+msgstr "Références en arborescence"
 
-#: src/Job/UpdateReferenceMetadata.php:41
-msgid "Starting creation of reference metadata."
-msgstr "Lancement de la création des métadonnées des références."
-
-#: src/Job/UpdateReferenceMetadata.php:48
-msgid "No resource to process."
-msgstr "Aucune ressource à traiter."
-
-#: src/Job/UpdateReferenceMetadata.php:68
-msgid "{processed}/{total} resources processed."
-msgstr "{processed}/{total} ressources traitées."
-
-#: src/Job/UpdateReferenceMetadata.php:73
-msgid "The job was stopped."
-msgstr "La tâche a été arrêtée."
-
-#: src/Job/UpdateReferenceMetadata.php:105
-msgid "End of process: {processed}/{total} processed."
-msgstr "Fin du traitement : {processed}/{total} traités."
-
-#: src/Site/BlockLayout/Reference.php:56
+#: src/Site/BlockLayout/Reference.php:54
 msgid ""
 "To create references, there must be one or more properties or resource "
 "classes."
@@ -553,27 +541,7 @@ msgstr ""
 "Pour créer des références, une propriété ou une classe de ressource doit "
 "être indiquée."
 
-#: src/Site/BlockLayout/ReferenceTree.php:46
-msgid "Reference tree"
-msgstr "Références en arborescence"
-
-#: src/Site/BlockLayout/ReferenceIndex.php:37 config/module.config.php:198
-msgid "Reference index"
-msgstr "Références (index)"
-
-#: src/Site/BlockLayout/ReferenceIndex.php:66
-msgid ""
-"To create a list of references, there must be properties or resource classes."
-msgstr ""
-"Pour créer des références, une propriété ou une classe de ressource doit "
-"être définie."
-
-#: src/Mvc/Controller/Plugin/CurrentReferenceMetadata.php:170
-#, php-format
-msgid "Resource #%d has a recursive title."
-msgstr "La ressource #%d a un titre récursif."
-
-#: src/Mvc/Controller/Plugin/References.php:410
+#: src/Stdlib/References.php:433
 msgid ""
 "This output format is deprecated. Set a string key to metadata to use the "
 "new format or append option \"single_reference_format\" to remove this "
@@ -583,13 +551,188 @@ msgstr ""
 "utiliser pour utiliser le nouveau format ou ajouter l’option "
 "\"single_reference_format\" pour supprimer cet avertissement."
 
-#: config/module.config.php:174
-msgid "Subjects"
-msgstr "Sujets"
+#: src/Stdlib/References.php:926
+msgid ""
+"The order for facets is \"by a list of values\", but no values are defined."
+msgstr ""
+"Le tri des facettes est « par liste de valeurs », mais aucune valeur n’est "
+"définie."
 
-#: config/module.config.php:204
-msgid "Tree of subjects"
-msgstr "Arborescence des sujets"
+#: src/Stdlib/References.php:2785
+msgid "Owners"
+msgstr "Propriétaires"
+
+#: src/Stdlib/References.php:2787
+msgid "Access"
+msgstr "Accès"
+
+#: config/module.config.php:36
+msgid "Reference grid"
+msgstr "Références en grille"
+
+#: config/module.config.php:37
+msgid "Reference (index)"
+msgstr "Références (index)"
+
+#~ msgid "The translated and linked resource metadata are currently indexing."
+#~ msgstr ""
+#~ "Les métadonnées des ressources liées et traduites sont en cours "
+#~ "d’indexation."
+
+#~ msgid ""
+#~ "Another job is running for the same process (job {link_job}#{job_id}"
+#~ "{link_end} ({link_log}logs{link_end})."
+#~ msgstr ""
+#~ "Une autre tâche est en cours pour le même traitement (tâche {link_job}"
+#~ "#{job_id}{link_end} ({link_log}journaux{link_end})."
+
+#~ msgid ""
+#~ "Indexing translated and linked resource metadata in background (job "
+#~ "{link_job}#{job_id}{link_end} ({link_log}logs{link_end})."
+#~ msgstr ""
+#~ "Indexation des métadonnées des traductions et des ressources liées en "
+#~ "arrière-plan (tâche {link_job}#{job_id}{link_end} ({link_log}"
+#~ "journaux{link_end})."
+
+#~ msgid "Reference: Index fields"
+#~ msgstr "Référence : Index des champs"
+
+#~ msgid "Resource #{resource_id} has a recursive title."
+#~ msgstr "La ressource #{resource_id} a un titre récursif."
+
+#~ msgid "Starting creation of reference metadata."
+#~ msgstr "Lancement de la création des métadonnées des références."
+
+#~ msgid "No resource to process."
+#~ msgstr "Aucune ressource à traiter."
+
+#~ msgid "{processed}/{total} resources processed."
+#~ msgstr "{processed}/{total} ressources traitées."
+
+#~ msgid "The job was stopped."
+#~ msgstr "La tâche a été arrêtée."
+
+#~ msgid "End of process: {processed}/{total} processed."
+#~ msgstr "Fin du traitement : {processed}/{total} traités."
+
+#~ msgid "Index reference metadata"
+#~ msgstr "Indexer les métadonnées des références"
+
+#~ msgid "To use some features of module Reference, an index is required."
+#~ msgstr ""
+#~ "Pour utiliser certaines fonctionnalités du module Référence, un index est "
+#~ "nécessaire."
+
+#~ msgid "Select order"
+#~ msgstr "Choisir l’ordre"
+
+#~ msgid "Ascending"
+#~ msgstr "Croissant"
+
+#~ msgid "Descending"
+#~ msgstr "Décroissant"
+
+#, php-format
+#~ msgid "This module requires the module \"%s\"."
+#~ msgstr "Ce module requiert le module « %s »."
+
+#, php-format
+#~ msgid "This module requires modules \"%s\"."
+#~ msgstr "Ce module requiert les modules « %s »."
+
+#~ msgid "This module has resources that cannot be installed."
+#~ msgstr "Ce module a des ressources qui ne peuvent pas être installées."
+
+#~ msgid ""
+#~ "This module cannot install its tables, because they exist already. Try to "
+#~ "remove them first."
+#~ msgstr ""
+#~ "Ce module ne peut pas installer ses tables car elles existent déjà. "
+#~ "Essayez de les supprimer manuellement."
+
+#, php-format
+#~ msgid "The module removed tables \"%s\" from a previous broken install."
+#~ msgstr ""
+#~ "Le module a supprimé les tables \"%s\" depuis une installation échouée."
+
+#, php-format
+#~ msgid ""
+#~ "The module \"%s\" was automatically deactivated because the dependencies "
+#~ "are unavailable."
+#~ msgstr ""
+#~ "Le module « %s » a été automatiquement désactivé car ses dépendances ne "
+#~ "sont plus disponibles."
+
+#~ msgid "Choose a list of property or resource class."
+#~ msgstr "Choisir une liste de propriêtés ou de classes."
+
+#~ msgid "Block title"
+#~ msgstr "Titre du bloc"
+
+#~ msgid "Custom url for single"
+#~ msgstr "Url personnalisée pour les références uniques"
+
+#~ msgid "Template to display"
+#~ msgstr "Gabarit à afficher"
+
+#~ msgid ""
+#~ "Templates are in folder \"common/block-layout\" of the theme and should "
+#~ "start with \"reference-tree\"."
+#~ msgstr ""
+#~ "Les gabarits sont dans le dossier \"common/block-layout\" du thème et "
+#~ "doivent commencer avec \"reference-tree\"."
+
+#~ msgid "chosen-select"
+#~ msgstr "chosen-select"
+
+#~ msgid "Query to limit resources"
+#~ msgstr "Requête pour limiter les ressources"
+
+#~ msgid ""
+#~ "Limit the reference to a particular subset of resources, for example a "
+#~ "site, via an advanced search query."
+#~ msgstr ""
+#~ "Limiter les références à un lot spécifique de ressources, par exemple un "
+#~ "site, via une requête de type recherche avancée."
+
+#~ msgid "Display"
+#~ msgstr "Affichage"
+
+#~ msgid ""
+#~ "Templates are in folder \"common/block-layout\" of the theme and should "
+#~ "start with \"reference-index\"."
+#~ msgstr ""
+#~ "Les gabarits sont dans le dossier \"common/block-layout\" du thème et "
+#~ "doivent commencer avec \"reference-index\"."
+
+#~ msgid "Alphabetic descendant"
+#~ msgstr "Alphabétique descendant"
+
+#~ msgid ""
+#~ "Templates are in folder \"common/block-layout\" of the theme and should "
+#~ "start with \"reference\"."
+#~ msgstr ""
+#~ "Les gabarits sont dans le dossier \"common/block-layout\" du thème et "
+#~ "doivent commencer avec \"reference\"."
+
+#~ msgid ""
+#~ "To create a list of references, there must be properties or resource "
+#~ "classes."
+#~ msgstr ""
+#~ "Pour créer des références, une propriété ou une classe de ressource doit "
+#~ "être définie."
+
+#~ msgid "Subjects"
+#~ msgstr "Sujets"
+
+#~ msgid "Tree of subjects"
+#~ msgstr "Arborescence des sujets"
+
+#~ msgid "[Unknown]"
+#~ msgstr "[Inconnu]"
+
+#~ msgid "Resources to link"
+#~ msgstr "Ressources à lier"
 
 #~ msgid "Heading for the block, if any. The placeholder {total} can be used."
 #~ msgstr ""
@@ -758,9 +901,6 @@ msgstr "Arborescence des sujets"
 #~ msgstr ""
 #~ "Cliquer cette case pour développer l’arborescence. Cette option peut être "
 #~ "contournée dans le thème."
-
-#~ msgid "Reference indexes"
-#~ msgstr "Index des références"
 
 #~ msgid "Reference indexes: Resource classes"
 #~ msgstr "Index des références : Classes de ressource"

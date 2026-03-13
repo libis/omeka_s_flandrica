@@ -1,0 +1,36 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Laminas\Form\Form $form
+ * @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig
+ *
+ * The simple form is similar to the standard search form and keeps only:
+ * - the main field ("q"),
+ * - the hidden elements,
+ * - the button submit.
+ */
+
+$params = $this->params()->fromQuery() ?: [];
+$form
+    ->setData($params)
+    ->prepare();
+
+// This check is useless when the form is called with option "variant" = "simple".
+// TODO This check and this template will be removed in a future version.
+
+foreach ($form->getElements() as $name => $element) {
+    if (in_array($name, ['q', 'submit'])
+        || $element instanceof \Laminas\Form\Element\Csrf
+        || $element instanceof \Laminas\Form\Element\Hidden
+    ) {
+        continue;
+    }
+    $form->remove($name);
+}
+
+foreach ($form->getFieldsets() as $name => $fieldset) {
+    $form->remove($name);
+}
+?>
+
+<?= $this->form($form) ?>

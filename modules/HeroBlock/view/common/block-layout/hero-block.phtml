@@ -1,0 +1,52 @@
+<?php
+  $escape = $this->plugin('escapeHtml');
+  $url = '';
+  $siteTitle = $block->page()->site()->title();
+  if($attachments):
+    $media = $attachments[0]->media();
+
+    $url = '';
+    if($media):
+      $url = $media->thumbnailUrl('large');
+      $url = str_replace('http:', '', $url);
+    endif;
+  endif;
+?>
+<header>
+<?php if($url):?>
+<section class="hero is-bold" style="background:url(<?php echo $url;?>) no-repeat center center;background-size: cover;">
+<?php else:?>
+<section class="hero is-bold">
+<?php endif;?>
+  <div class="hero-overlay">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns">
+          <div class="column hero-left is-info is-12">
+            <div class="hero-text is-size-5">
+              <?php if($block->dataValue('sec_title')):?>
+                 <h2 class="subtitle is-size-6"><?php echo $block->dataValue('sec_title');?></h2>
+              <?php endif;?>
+              <h1 class="title is-family-secondary is-1"><span><?php echo $block->dataValue('title');?></span></h1>
+              <?php echo $block->dataValue('text');?>
+              <div class="link">
+                <a class="button is-primary is-inverted is-outlined is-large" href="<?php echo $block->dataValue('link');?>">
+                  <span><?php echo $block->dataValue('link_text');?></span>
+                  <span class="icon is-small">
+                    <i class="fas fa-angle-right"></i>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="column hero-right" >
+            <div class="hero-overlay"></div>
+          </div>
+        </div>
+
+      </div>
+     </div>
+   </div>
+ </section>
+
+ </header>

@@ -1,0 +1,30 @@
+<?php
+$translate = $this->plugin('translate');
+?>
+<nav class="pagination" role="navigation" aria-label="pagination">
+<?php if ($totalCount): ?>
+    <form method="GET" action="">
+        <?php echo $this->queryToHiddenInputs(['page']); ?>
+        <input type="text" name="page" class="page-input-top" style="width: 25%;" value="<?php echo $currentPage; ?>" size="1" <?php echo ($pageCount == 1) ? 'readonly' : ''; ?> aria-label="<?php echo $translate('Page'); ?>">
+        <span class="page-count"><?php echo sprintf($translate('of %s'), $pageCount); ?></span>
+        <?php
+        $from = $offset + 1;
+        $to = ($currentPage < $pageCount) ? $offset + $perPage : $totalCount;
+        ?>
+        <span class="row-count" style="color:#666;">(<?php echo sprintf($translate('%1$s–%2$s of %3$s'), $from, $to, $totalCount); ?>)</span>
+    
+    </form>
+
+
+<?php else: ?>
+    <?php echo $translate('0 results'); ?>
+<?php endif; ?>
+</nav>
+<span class="text-right">
+    <?php if ($currentPage != 1): ?>
+    <?php echo $this->hyperlink($translate('Previous'), $previousPageUrl, ['class' => 'pagination-previous btn btn-ghost-inv', 'title' => $translate('Previous'), 'style' => 'margin-right: 0;','aria-label' => $translate('Previous')]); ?>
+    <?php endif; ?>
+    <?php if ($currentPage < $pageCount): ?>
+    <?php echo $this->hyperlink($translate('Next'), $nextPageUrl, ['class' => 'pagination-next btn btn-ghost-inv', 'title' => $translate('Next'), 'style' => 'margin-right: 0;', 'aria-label' => $translate('Next')]); ?>
+    <?php endif; ?>
+    </span>

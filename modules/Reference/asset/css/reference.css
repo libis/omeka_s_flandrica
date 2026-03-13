@@ -1,4 +1,8 @@
 /* Reference pages */
+.references-list {
+    padding-left: 0;
+}
+
 .reference-pagination.pagination {
     display: inline-block;
     float: none;
@@ -64,6 +68,22 @@ ul.references li {
     margin-bottom: 12px;
 }
 
+/* Use flexbox when there is a thumbnail. */
+.reference-record {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.reference-record a {
+    display: inline-flex;
+    align-items: center;
+}
+.reference-record a img {
+    height: auto;
+    width: 36px;
+    margin-right: 6px;
+}
+
 /* Recursive list */
 .list-unstyled {
     padding-left: 0;
@@ -86,4 +106,21 @@ ul.references li {
 .recursive-list .see-all {
     font-style: italic;
     list-style: none;
+}
+
+/* Grid */
+.reference-grid {
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      gap: 12px;
+}
+.reference-grid .reference-record a {
+    display: flex;
+    flex-direction: column;
+    align-items: initial;
+}
+.reference-grid .reference-record a img {
+    height: auto;
+    width: 200px;
 }

@@ -1,0 +1,37 @@
+<!-- text/contact with border -->
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <?php $i = 1;?>
+      <?php foreach($attachments as $attachment):?>
+        <?php
+            $media = $attachment->media();
+            $url="";
+            if($media):
+              $url = $media->thumbnailUrl('square');
+              $url = str_replace('http:', '', $url);              
+            endif;
+        ?>
+        <div class="col-xs-12 col-md-10">
+          <div class="kul-card-image card card-gray card-25-75">
+            <a class="card-img-link" href="<?php echo $block->dataValue('link'.$i);?>">
+                <div class="card-img-left" style="background-image: url(<?php echo $url;?>);">&nbsp;</div>
+            </a>
+
+            <div class="card-body">
+                <h2><?php echo $block->dataValue('name'.$i);?></h2>
+                <p><strong><?php echo $block->dataValue('functie'.$i);?></strong></p>
+
+                <p>
+                  <span class="icon icon--phone"><i class="fas fa-phone"></i></span> <a href="tel:011223344"><?php echo $block->dataValue('tel'.$i);?></a><br>
+                  <span class="icon icon--mail"><i class="fas fa-envelope"></i></span> <a href="mailto:<?php echo $block->dataValue('mail'.$i);?>"><?php echo $block->dataValue('mail'.$i);?></a>
+                </p>
+                <p><a class="btn btn-ghost" href="<?php echo $block->dataValue('link'.$i);?>">Lees verder</a></p>
+            </div>
+          </div>
+        </div>
+        <?php $i++;?>
+      <?php endforeach;?>
+    </div>
+  </div>
+</div>

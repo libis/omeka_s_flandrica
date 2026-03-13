@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016-2017
- * Copyright Daniel Berthereau 2017-2023
+ * Copyright Daniel Berthereau 2017-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -30,12 +30,11 @@
 
 namespace AdvancedSearch\Form\Admin;
 
-use AdvancedSearch\Form\Element\OptionalRadio;
 use AdvancedSearch\FormAdapter\Manager as SearchFormAdapterManager;
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 use Omeka\Api\Manager as ApiManager;
-use Omeka\Form\Element\SiteSelect;
 
 class SearchConfigForm extends Form
 {
@@ -52,6 +51,7 @@ class SearchConfigForm extends Form
     public function init(): void
     {
         $this
+            ->setAttribute('id', 'search-config-edit-form')
             ->add([
                 'name' => 'o:name',
                 'type' => Element\Text::class,
@@ -65,34 +65,34 @@ class SearchConfigForm extends Form
             ])
 
             ->add([
-                'name' => 'o:path',
+                'name' => 'o:slug',
                 'type' => Element\Text::class,
                 'options' => [
-                    'label' => 'Path', // @translate
-                    'info' => 'The path to the search form. The site path will be automatically prepended.',
+                    'label' => 'Slug', // @translate
+                    'info' => 'The slug to the search form. The site slug will be automatically prepended.',
                 ],
                 'attributes' => [
-                    'id' => 'path',
+                    'id' => 'slug',
                     'required' => true,
                 ],
             ])
 
             ->add([
-                'name' => 'o:engine',
+                'name' => 'o:search_engine',
                 'type' => Element\Select::class,
                 'options' => [
                     'label' => 'Search engine', // @translate
-                    'value_options' => $this->getEnginesOptions(),
+                    'value_options' => $this->getSearchEngineOptions(),
                     'empty_option' => 'Select a search engine below…', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'engine',
+                    'id' => 'search_engine',
                     'required' => true,
                 ],
             ])
 
             ->add([
-                'name' => 'o:form',
+                'name' => 'o:form_adapter',
                 'type' => Element\Select::class,
                 'options' => [
                     'label' => 'Form', // @translate
@@ -100,19 +100,19 @@ class SearchConfigForm extends Form
                     'empty_option' => 'Select a form below…', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'form',
+                    'id' => 'form_adapter',
                     'required' => true,
                 ],
             ])
 
             ->add([
                 'name' => 'manage_config_default',
-                'type' => SiteSelect::class,
+                'type' => CommonElement\OptionalSiteSelect::class,
                 'options' => [
-                    'label' => 'Set as default search page for sites', // @translate
-                    'empty_option' => '[No change]', // @translate
-                    'info' => 'The page will be made available on all selected sites. This param can be set in each site settings too.', // @translate
+                    'label' => 'Default search page for admin and sites', // @translate
+                    'empty_option' => '',
                     'prepend_value_options' => [
+                        'none' => '[No site]', // @translate
                         'all' => '[All sites]', // @translate
                         'admin' => 'Admin', // @translate
                     ],
@@ -126,19 +126,25 @@ class SearchConfigForm extends Form
             ])
             ->add([
                 'name' => 'manage_config_availability',
-                'type' => OptionalRadio::class,
+                'type' => CommonElement\OptionalSiteSelect::class,
                 'options' => [
                     'label' => 'Availability on sites', // @translate
-                    'info' => 'The admin settings are not modified.', // @translate
-                    'value_options' => [
-                        'disable' => 'Make unavailable in all sites', // @translate
-                        'let' => 'Don’t modify', // @translate
+                    'empty_option' => '',
+                    'prepend_value_options' => [
+                        // This option is useless, since each site should be
+                        // disable individually.
+                        // 'disable' => 'Make unavailable in all sites', // @ translate
                         'enable' => 'Make available in all sites', // @translate
                     ],
                 ],
                 'attributes' => [
                     'id' => 'manage_config_availability',
-                    'value' => 'let',
+                    'class' => 'chosen-select',
+                    'multiple' => true,
+                    'data-placeholder' => 'Select sites…', // @translate
+                    'value' => [
+                        'enable',
+                    ],
                 ],
             ])
         ;
@@ -164,14 +170,15 @@ class SearchConfigForm extends Form
         return $this;
     }
 
-    protected function getEnginesOptions(): array
+    protected function getSearchEngineOptions(): array
     {
         $options = [];
 
-        $engines = $this->apiManager->search('search_engines')->getContent();
-        foreach ($engines as $engine) {
-            $options[$engine->id()] =
-                sprintf('%s (%s)', $engine->name(), $engine->adapterLabel());
+        /** @var \AdvancedSearch\Api\Representation\SearchEngineRepresentation[] $searchEngines */
+        $searchEngines = $this->apiManager->search('search_engines')->getContent();
+        foreach ($searchEngines as $searchEngine) {
+            $options[$searchEngine->id()] =
+            sprintf('%s (%s)', $searchEngine->name(), $searchEngine->engineAdapterLabel());
         }
 
         return $options;

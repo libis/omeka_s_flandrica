@@ -4,32 +4,27 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit74ee6ca9584c924fd973098ea42a0b02
+class ComposerStaticInitfebede4d478a3422315f70fe55017fef
 {
     public static $prefixLengthsPsr4 = array (
-        'O' => 
+        'B' => 
         array (
-            'OpenSpout\\' => 10,
+            'Box\\Spout\\' => 10,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'OpenSpout\\' => 
+        'Box\\Spout\\' => 
         array (
-            0 => __DIR__ . '/..' . '/openspout/openspout/src',
+            0 => __DIR__ . '/..' . '/box/spout/src/Spout',
         ),
-    );
-
-    public static $classMap = array (
-        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit74ee6ca9584c924fd973098ea42a0b02::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit74ee6ca9584c924fd973098ea42a0b02::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit74ee6ca9584c924fd973098ea42a0b02::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitfebede4d478a3422315f70fe55017fef::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitfebede4d478a3422315f70fe55017fef::$prefixDirsPsr4;
 
         }, null, ClassLoader::class);
     }

@@ -1,0 +1,21 @@
+<?php
+use Zend\Form\Element\Textarea;
+?>
+<?php echo $this->blockAttachmentsForm($block);?>
+
+<div class="field">
+  <div class="field-meta">
+      <label>Title</label>
+  </div>
+  <div class="inputs">
+      <input type="text" class="" value="<?php echo (!isset($block) ? '' : $block->dataValue('title')); ?>" name="o:block[__blockIndex__][o:data][title]">
+  </div>
+</div>
+<div class="field">
+  <div class="field-meta">
+      <label>Link</label>
+  </div>
+  <div class="inputs">
+      <input type="text" class="" value="<?php echo (!isset($block) ? '' : $block->dataValue('link')) ?>" name="o:block[__blockIndex__][o:data][link]">
+  </div>
+</div>

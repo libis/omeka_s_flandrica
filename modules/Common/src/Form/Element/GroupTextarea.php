@@ -55,13 +55,13 @@ class GroupTextarea extends ArrayTextarea
     {
         if (is_array($string)) {
             return $string;
-        } elseif ($string === '' || is_null($string)) {
+        } elseif ($string === '' || $string === null) {
             return [];
         }
 
         // Clean the text area from end of lines.
         // Fixes Windows and Apple issues for copy/paste.
-        $string = str_replace(["\r\n", "\n\r", "\r"], ["\n", "\n", "\n"], (string) $string);
+        $string = strtr((string) $string, ["\r\n" => "\n", "\n\r" => "\n", "\r" => "\n"]);
         $array = array_filter(array_map('trim', explode("\n", $string)), 'strlen');
 
         $groupsArray = [];

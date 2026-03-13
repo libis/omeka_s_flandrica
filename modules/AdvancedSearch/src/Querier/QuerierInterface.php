@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2018-2023
+ * Copyright Daniel Berthereau, 2018-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -36,16 +36,16 @@ use AdvancedSearch\Response;
 use Laminas\Log\LoggerAwareInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 
-/**
- * The signature uses "QuerierInterface" instead of "self" for compatibility with php < 7.4.
- */
 interface QuerierInterface extends LoggerAwareInterface
 {
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator): QuerierInterface;
+    /**
+     * @deprecated Use factories.
+     */
+    public function setServiceLocator(ServiceLocatorInterface $services): self;
 
-    public function setSearchEngine(SearchEngineRepresentation $engine): QuerierInterface;
+    public function setSearchEngine(SearchEngineRepresentation $searchEngine): self;
 
-    public function setQuery(Query $query): QuerierInterface;
+    public function setQuery(Query $query): self;
 
     /**
      * Process a search query.
@@ -56,6 +56,35 @@ interface QuerierInterface extends LoggerAwareInterface
      * Process a search query for suggestions.
      */
     public function querySuggestions(): Response;
+
+    /**
+     * Process a search query for lists, in particular to fill filters.
+     *
+     * Options (languages, order, limit) may be appended to query args.
+     *
+     * @return array Key-value pairs for name and label, generally the same.
+     */
+    public function queryValues(string $field): array;
+
+    /**
+     * Process a search query to get all ids of a type, without pagination.
+     *
+     * This method should be avoided when the total resources is too big for the
+     * server, else a memory overflow can occur.
+     * Instead, get the query with $response->getQuery()->getQuerier()->getPreparedQuery()
+     * and process it.
+     *
+     * It is used in the rare cases where a whole list of ids is needed, in
+     * particular to get Mapping features for an item set, and old versions of
+     * Bulk Export and Reference.
+     *
+     * @param string|null $resourceType May be "items", "resources", etc.
+     * @param bool $byResourceType Return ids by type when set.
+     * @return array List of ids for the resource type. If the resource type is
+     * not set, all resources (items, item sets, media) will be mixed, unless
+     * the second argument is true.
+     */
+    public function queryAllResourceIds(?string $resourceType = null, bool $byResourceType = false): array;
 
     /**
      * Prepare a search query.

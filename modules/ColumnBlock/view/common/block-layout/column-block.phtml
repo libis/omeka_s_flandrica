@@ -1,0 +1,62 @@
+<section class="section section-fluid column-block">
+  <div class="container">
+  <!-- overview blocks -->
+  <?php if(sizeof($attachments) > 1 || sizeof($attachments) < 5):?>
+    <?php if($block->dataValue('title')):?>
+      <h3 class="title is-3"><?php echo $block->dataValue('title');?></h3>
+    <?php endif;?>
+    <div class="columns is-gapless">
+      <?php for($i = 1; $i <= sizeof($attachments); $i++){ ?>
+        <?php if(($i == 3) && sizeof($attachments) == 4):?>
+        <?php else:?>
+          <?php if(($i == 2) && sizeof($attachments) == 4):?>
+            <div class="column first-of-4">
+          <?php else:?>
+            <div class="column">
+          <?php endif;?>
+        <?php endif;?>
+        <?php
+          $url='';
+          if($attachments[$i-1]):
+            $media = $attachments[$i-1]->media();
+            if($media):
+              if(sizeof($attachments) <= 2):
+                $url = $media->thumbnailUrl('large');
+                $url = str_replace('http:', '', $url);
+              else:
+                $url = $media->thumbnailUrl('medium');
+                $url = str_replace('http:', '', $url);
+              endif;
+            endif;
+          endif;
+        ?>
+            <a class="card-link-wrapper" href="<?php echo $block->dataValue('link'.$i);?>">
+              <div class="tile-bg"
+                style="background:url(<?php echo  $url;?>) no-repeat center 20%;background-color:#7fb5b2;background-size: cover;"
+                >
+                <div class="content">
+                  <div class="to-end">
+                    <h3 class="title is-3 is-family-secondary">
+                        <span><?php echo $block->dataValue('title'.$i);?></span>
+                    </h3>
+                    <?php echo $block->dataValue('text'.$i);?>
+                    <?php if($block->dataValue('link'.$i) && $block->dataValue('linktext'.$i)):?>
+                        <?php echo $block->dataValue('linktext'.$i);?>
+                    <?php endif;?>
+                  </div>
+                </div>
+              </div>
+            </a>
+          <?php if(($i == 2) && sizeof($attachments) == 4):?>
+          <?php else:?>
+            </div>
+          <?php endif;?>
+      <?php } ?>
+    </div>
+    <?php else:?>
+      <p>
+        Om dit blok te gebruiken moet je minstens 2 afbeeldingen (attachments) selecteren.
+      </p>
+    <?php endif;?>
+</div>
+</section>

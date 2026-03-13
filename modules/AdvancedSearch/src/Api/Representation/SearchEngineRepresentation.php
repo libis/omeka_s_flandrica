@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2020-2023
+ * Copyright Daniel Berthereau, 2020-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -30,6 +30,7 @@
 
 namespace AdvancedSearch\Api\Representation;
 
+use AdvancedSearch\EngineAdapter\EngineAdapterInterface;
 use AdvancedSearch\Indexer\NoopIndexer;
 use AdvancedSearch\Querier\NoopQuerier;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
@@ -43,13 +44,20 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
 
     public function getJsonLd()
     {
-        $modified = $this->resource->getModified();
+        $getDateTimeJsonLd = function (?\DateTime $dateTime): ?array {
+            return $dateTime
+                ? [
+                    '@value' => $dateTime->format('c'),
+                    '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
+                ]
+                : null;
+        };
         return [
             'o:name' => $this->resource->getName(),
-            'o:adapter' => $this->resource->getAdapter(),
+            'o:engine_adapter' => $this->resource->getEngineAdapter(),
             'o:settings' => $this->resource->getSettings(),
-            'o:created' => $this->getDateTime($this->resource->getCreated()),
-            'o:modified' => $modified ? $this->getDateTime($modified) : null,
+            'o:created' => $getDateTimeJsonLd($this->resource->getCreated()),
+            'o:modified' => $getDateTimeJsonLd($this->resource->getModified()),
         ];
     }
 
@@ -64,7 +72,7 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
             'force_canonical' => $canonical,
         ];
 
-        return $url('admin/search/engine-id', $params, $options);
+        return $url('admin/search-manager/engine-id', $params, $options);
     }
 
     public function name(): string
@@ -72,10 +80,14 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
         return $this->resource->getName();
     }
 
+    /**
+     * Slugify and lower case the search engine name.
+     */
     public function cleanName(): string
     {
-        return strtolower(str_replace('__', '_',
-            preg_replace('/[^a-zA-Z0-9]/', '_', $this->resource->getName())
+        return strtolower(strtr(
+            preg_replace('/[^a-zA-Z0-9]/', '_', $this->resource->getName()),
+            ['__' => '_']
         ));
     }
 
@@ -91,13 +103,18 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
         return base_convert((string) $this->id(), 10, 36);
     }
 
-    public function adapter(): ?\AdvancedSearch\Adapter\AdapterInterface
+    public function engineAdapter(): ?EngineAdapterInterface
     {
         $name = $this->resource->getAdapter();
-        $adapterManager = $this->getServiceLocator()->get('Search\AdapterManager');
-        return $adapterManager->has($name)
-            ? $adapterManager->get($name)
+        $engineAdapterManager = $this->getServiceLocator()->get('AdvancedSearch\EngineAdapterManager');
+        return $engineAdapterManager->has($name)
+            ? $engineAdapterManager->get($name)->setSearchEngine($this)
             : null;
+    }
+
+    public function engineAdapterName(): ?string
+    {
+        return $this->resource->getAdapter();
     }
 
     public function settings(): array
@@ -115,9 +132,9 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
         return $this->resource->getSettings()[$mainName][$name] ?? $default;
     }
 
-    public function settingAdapter(string $name, $default = null)
+    public function settingEngineAdapter(string $name, $default = null)
     {
-        return $this->resource->getSettings()['adapter'][$name] ?? $default;
+        return $this->resource->getSettings()['engine_adapter'][$name] ?? $default;
     }
 
     public function created(): \DateTime
@@ -135,16 +152,16 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
         return $this->resource;
     }
 
-    public function adapterLabel(): string
+    public function engineAdapterLabel(): string
     {
-        $adapter = $this->adapter();
-        if (!$adapter) {
+        $engineAdapter = $this->engineAdapter();
+        if (!$engineAdapter) {
             $translator = $this->getServiceLocator()->get('MvcTranslator');
-            return sprintf($translator->translate('[Missing adapter "%s"]'), // @translate
+            return sprintf($translator->translate('[Missing engine adapter "%s"]'), // @translate
                 $this->resource->getAdapter()
             );
         }
-        return $adapter->getLabel();
+        return $engineAdapter->getLabel();
     }
 
     /**
@@ -153,9 +170,9 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
     public function indexer(): \AdvancedSearch\Indexer\IndexerInterface
     {
         $services = $this->getServiceLocator();
-        $adapter = $this->adapter();
-        if ($adapter) {
-            $indexerClass = $adapter->getIndexerClass() ?: NoopIndexer::class;
+        $engineAdapter = $this->engineAdapter();
+        if ($engineAdapter) {
+            $indexerClass = $engineAdapter->getIndexerClass() ?: NoopIndexer::class;
         } else {
             $indexerClass = NoopIndexer::class;
         }
@@ -174,9 +191,9 @@ class SearchEngineRepresentation extends AbstractEntityRepresentation
     public function querier(): \AdvancedSearch\Querier\QuerierInterface
     {
         $services = $this->getServiceLocator();
-        $adapter = $this->adapter();
-        if ($adapter) {
-            $querierClass = $adapter->getQuerierClass() ?: \AdvancedSearch\Querier\NoopQuerier::class;
+        $engineAdapter = $this->engineAdapter();
+        if ($engineAdapter) {
+            $querierClass = $engineAdapter->getQuerierClass() ?: \AdvancedSearch\Querier\NoopQuerier::class;
         } else {
             $querierClass = \AdvancedSearch\Querier\NoopQuerier::class;
         }

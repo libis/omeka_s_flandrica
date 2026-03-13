@@ -9,7 +9,9 @@ if (!count($references)) return;
 
 $plugins = $this->getHelperPluginManager();
 $url = $plugins->get('url');
-$escape = $this->plugin('escapeHtml');
+$api = $plugins->get('api');
+$escape = $plugins->get('escapeHtml');
+$thumbnail = $plugins->get('thumbnail');
 
 $siteSlug = $this->params()->fromRoute('site-slug');
 $fields = $options['fields'];
@@ -28,16 +30,19 @@ $controllerName = $mapResourcesControllers[$resourceName];
 // Set default values.
 $options += [
     'query_type' => 'eq',
+    'search_config' => null,
     'link_to_single' => true,
     'total' => true,
+    'url_argument_reference' => false,
     'raw' => false,
+    'thumbnail' => false,
     'expanded' => true,
     'custom_url' => false,
 ];
+$searchConfigSlug = $options['search_config'] ?? null;
 $options['custom_url'] = $options['custom_url'] && $options['link_to_single'];
 if (!$options['custom_url']) {
-    $templateUrlSingle = str_replace('__temp_placeholder__', '{reference}',
-        $url('site/resource-id', ['site-slug' => $siteSlug, 'controller' => $controllerName, 'id' => '__temp_placeholder__'], false));
+    $templateUrlSingle = strtr($url('site/resource-id', ['site-slug' => $siteSlug, 'controller' => $controllerName, 'id' => '__temp_placeholder__'], false), ['__temp_placeholder__' => '{reference}']);
     foreach ($fields as $field) {
         $query['property'][] = [
             'joiner' => 'or',
@@ -47,12 +52,21 @@ if (!$options['custom_url']) {
         ];
     }
     // The default url helper doesn't encode "&" as "&amp;", so append it manually.
-    $templateUrl = str_replace('__temp_placeholder__', '{reference}',
-        $url('site/resource', ['site-slug' => $siteSlug, 'controller' => $controllerName], false) . '?' . http_build_query($query, '', '&amp;', PHP_QUERY_RFC3986));
+    $urlReplace = ['__temp_placeholder__' => '{reference}'];
+    if ($options['url_argument_reference']) {
+        $urlReplace['__temp_placeholder_text_enc__'] = '{reference_text_enc}';
+        $query['reference'] = '__temp_placeholder_text_enc__';
+    }
+    if ($searchConfigSlug) {
+        $templateUrl = $url('search-page-' . $searchConfigSlug, ['site-slug' => $siteSlug, 'search-slug' => $searchConfigSlug], false) . '?' . http_build_query($query, '', '&amp;', PHP_QUERY_RFC3986);
+    } else {
+        $templateUrl = $url('site/resource', ['site-slug' => $siteSlug, 'controller' => $controllerName], false) . '?' . http_build_query($query, '', '&amp;', PHP_QUERY_RFC3986);
+    }
+    $templateUrl = strtr($templateUrl, $urlReplace);
 }
 ?>
 
-<div id="reference-headings">
+<div id="reference-headings" class="references-tree">
     <ul class="tree">
         <?php
             // Create the tree.
@@ -62,7 +76,7 @@ if (!$options['custom_url']) {
                 $level = $referenceData['level'];
 
                 // Close the previous line (done before, because next line is not known yet).
-                if (is_null($previous_level)):
+                if ($previous_level === null):
                     // Nothing for the first value (first level).
                     $previous_level = 0;
                 // Deeper level is always the next one.
@@ -98,12 +112,21 @@ if (!$options['custom_url']) {
                             if ($options['custom_url']) {
                                 // Keep the original query.
                                 $queryForUrl = $query;
-                                foreach ($fields as $field) {
-                                    $queryForUrl['property'][] = ['joiner' => 'or', 'property' => $field, 'type' => $options['query_type'], 'text' => $referenceOrBranch];
+                                if ($searchConfigSlug) {
+                                    foreach ($fields as $field) {
+                                        $queryForUrl['filter'][] = ['join' => 'or', 'field' => $field, 'type' => $options['query_type'], 'val' => $referenceOrBranch];
+                                    }
+                                    $queryForUrl['reference'] = $reference;
+                                    $referenceUrl = $url('search-page-' . $searchConfigSlug, ['site-slug' => $siteSlug, 'search-slug' => $searchConfigSlug], ['query' => $queryForUrl], false);
+                                } else {
+                                    foreach ($fields as $field) {
+                                        $queryForUrl['property'][] = ['joiner' => 'or', 'property' => $field, 'type' => $options['query_type'], 'text' => $referenceOrBranch];
+                                    }
+                                    $queryForUrl['reference'] = $reference;
+                                    $referenceUrl = $url('site/resource', ['site-slug' => $siteSlug, 'controller' => $controllerName], ['query' => $queryForUrl], false);
                                 }
-                                $referenceUrl = $url('site/resource', ['site-slug' => $siteSlug, 'controller' => $controllerName], ['query' => $queryForUrl], false);
                             } else {
-                                $referenceUrl = str_replace('{reference}', rawurlencode($referenceOrBranch), $templateUrl);
+                                $referenceUrl = strtr($templateUrl, ['{reference}' => rawurlencode($referenceOrBranch), '{reference_text_enc}' => rawurlencode($reference)]);
                             }
                         } else {
                             if ($options['custom_url']) {
@@ -112,17 +135,29 @@ if (!$options['custom_url']) {
                                 // $referenceUrl = $resource->siteUrl();
                                 $referenceUrl = $url('site/resource-id', ['site-slug' => $siteSlug, 'controller' => $controllerName, 'id' => $referenceData['first']], false);
                             } else {
-                                $referenceUrl = str_replace('{reference}', rawurldecode($referenceData['first']), $templateUrlSingle);
+                                $encodedReference = rawurlencode($referenceData['first']);
+                                $replaceReference = ['{reference}' => $encodedReference, '{reference_text_enc}' => $encodedReference];
+                                $referenceUrl = strtr($templateUrlSingle, $replaceReference);
                             }
                         }
-                        $referenceText = '<a href="' . $referenceUrl . '">' . $escape($reference) . '</a>';
+                        // To set the thumbnail is slow, because the resource should be loaded.
+                        // Currently only possible with items and media, checked above.
+                        $thumbnailResource = '';
+                        if ($options['thumbnail'] && $referenceData['first']) {
+                            /** @var \Omeka\Api\Representation\ItemRepresentation|\Omeka\Api\Representation\MediaRepresentation $resource */
+                            $resource = $api->read($options['resource_name'], $referenceData['first'])->getContent();
+                            $thumbnailResource = $thumbnail($resource, $options['thumbnail']);
+                        }
+                        $referenceText = '<a href="' . $referenceUrl . '">' . $thumbnailResource . $escape($reference) . '</a>';
                     }
                 }
 
                 echo $referenceText;
                 // Can be null when references are set directly.
                 if ($options['total'] && $referenceNumber && ($referenceData['total'] ?? false)):
-                    echo ' (' . $referenceData['total'] . ')';
+                    echo $options['raw']
+                        ? ' (' . $referenceData['total'] . ')'
+                        : ' <span class="reference-total"> (' . $referenceData['total'] . ')</span>';
                 endif;
 
                 $previous_level = $level;

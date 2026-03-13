@@ -1,0 +1,63 @@
+<?php
+  $url = '';
+  if($attachments):
+    $media = $attachments[0]->media();
+
+    $url = '';
+    if($media):
+      $url = $media->thumbnailUrl('large');
+      $url = str_replace('http:', '', $url);
+    endif;
+  endif;
+?>
+<div class="jumbotron2 kuleuven-banner">
+  <div class="card card-banner card-50-50-right">
+    <!--<div class="card-img-right" style="background-image: url(<?php echo $url;?>);"></div>-->
+    
+    <div class="card-body">
+      <?php if($block->dataValue('sec_title')):?>
+        <h2><?php echo $block->dataValue('sec_title');?></h2>
+      <?php endif;?>
+      <h1><?php echo $block->dataValue('title');?></h1>
+
+      <p><?php echo $block->dataValue('text');?></p>
+
+      <?php if($block->dataValue('link')):?> 
+        <div class="inline">
+          <div class="inline-item"><a class="btn btn-secondary more" href="<?php echo $block->page()->site()->url().$block->dataValue('link');?>"><?php echo $block->dataValue('link_text');?></a></div>
+        </div>
+      <?php endif;?>
+      <?php $lang = $this->lang();?>
+      <?php $lang_r = array(
+        "en-US" => array(
+          "Collectie" => "Collection",
+          "Zoeken in deze collectie" => "Search the collection"
+        ),
+        "nl-NL" => array(
+          "Collectie" => "Collectie",
+          "Zoeken in deze collectie" => "Zoeken in deze collectie"
+        ),
+      );?>
+      <!--
+      <h3><?php echo $lang_r[$lang]["Collectie"];?></h3>
+
+      <form
+      class="form-search"
+      role="search"
+      action="<?php echo $block->page()->site()->url(); ?>/zoeken"
+      method="get"
+      name="searchform"
+      >
+        <div class="input-group">
+          <div class="form-outline" style="flex-grow: 1;">
+            <input id="search-input" placeholder="<?php echo $lang_r[$lang]["Zoeken in deze collectie"];?>" name="q" type="search" id="form1" class="form-control" />
+          </div>
+          <button id="search-button" type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </form>
+      -->
+    </div>
+  </div>
+</div>

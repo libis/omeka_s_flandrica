@@ -1,0 +1,15 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \AdvancedSearch\Query $query
+ * @var \Laminas\Form\Element\Select $select
+ * @var array $params
+ */
+
+if (count($select->getValueOptions()) <= 1) return;
+?>
+
+<div class="search-sort<?= empty($params['as_url']) ? '' : ' as-url' ?>">
+    <?= $select->getlabel() ? $this->formLabel($select) : '' ?>
+    <?= $this->formSelect($select) ?>
+</div>

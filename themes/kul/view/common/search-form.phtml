@@ -1,0 +1,20 @@
+<?php
+$translate = $this->plugin('translate');
+$searchValue = $this->escapeHtml($this->params()->fromQuery('fulltext_search', ''));
+?>
+  <form class="has-icons-right" action="https://blendeff.be/nl/index/search" id="search-form">
+    <div class="field has-addons">
+      <div class="control">
+        <input class="input is-medium" type="search" name="fulltext_search" value="<?php echo $searchValue; ?>"
+            placeholder="<?php echo $translate('Search'); ?>"
+            aria-label="<?php echo $translate('Search'); ?>">
+      </div>
+      <div class="control">
+        <button class="button is-primary is-medium">
+          <span class="icon is-large">
+            <i class="fas fa-search"></i>
+          </span>
+        </button>
+      </div>
+    </div>
+  </form>

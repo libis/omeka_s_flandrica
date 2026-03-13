@@ -15,16 +15,25 @@ class SettingsFieldsetFactory implements FactoryInterface
         $valueOptions = [];
         $apiOptions = [];
         foreach ($searchConfigs as $searchConfig) {
-            $labelSearchConfig = sprintf('%s (/%s)', $searchConfig->name(), $searchConfig->path());
+            $labelSearchConfig = sprintf('%s (/%s)', $searchConfig->name(), $searchConfig->slug());
             $valueOptions[$searchConfig->id()] = $labelSearchConfig;
             if ($searchConfig->formAdapter() instanceof \AdvancedSearch\FormAdapter\ApiFormAdapter) {
                 $apiOptions[$searchConfig->id()] = $labelSearchConfig;
             }
         }
+
+        $config = $services->get('Config');
+
+        $listSearchFields = $config['advancedsearch']['search_fields'] ?: [];
+        foreach ($listSearchFields as $key => $searchField) {
+            $listSearchFields[$key] = $searchField['label'] ?? $key;
+        }
+
         $fieldset = new SettingsFieldset(null, $options ?? []);
         return $fieldset
             ->setSearchConfigs($valueOptions)
             ->setSearchConfigsApi($apiOptions)
-            ->setRestrictUsedTerms((bool) $services->get('Omeka\Settings')->get('advancedsearch_restrict_used_terms'));
+            ->setListSearchFields($listSearchFields)
+        ;
     }
 }

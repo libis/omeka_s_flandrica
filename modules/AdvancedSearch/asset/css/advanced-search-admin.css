@@ -1,5 +1,8 @@
-/* Adaptation from application/asset/sass/_screen.scss */
-@media screen {
+/**
+ * Manage the simple search field in admin board.
+ * Adapted from application/asset/sass/_screen.scss
+ */
+@media all {
     #search-form-quick {
         width: 100%;
         display: inline-block;
@@ -69,25 +72,7 @@
         border-bottom: 1px solid #000;
     }
 
-    #advanced-search #datetime-queries .query-text:disabled,
-    #advanced-search #property-queries.multi-value .value:first-child .chosen-container:first-of-type,
-    #advanced-search #datetime-queries.multi-value .value:first-child .chosen-container:first-of-type,
-    #advanced-search #property-queries.multi-value .value:first-child .joiner:first-of-type,
-    #advanced-search #datetime-queries.multi-value .value:first-child .joiner:first-of-type {
-       display: none;
-    }
-    #advanced-search .inputs .chosen-container {
-      margin-top: 3px;
-    }
-    #advanced-search .inputs .chosen-choices li.search-choice span {
-        padding: 4px;
-    }
-
     input[type=submit][disabled] {
         cursor: unset;
-    }
-
-    #advanced-search #property-queries .chosen-container-multi .chosen-choices .search-choice {
-        max-width: 24em;
     }
 }

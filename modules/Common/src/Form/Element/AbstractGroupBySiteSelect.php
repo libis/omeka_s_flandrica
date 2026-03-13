@@ -10,6 +10,7 @@ use Omeka\Api\Representation\SiteRepresentation;
 abstract class AbstractGroupBySiteSelect extends Select
 {
     use TraitOptionalElement;
+    use TraitPrependValuesOptions;
 
     /**
      * @var SiteRepresentation
@@ -114,7 +115,6 @@ abstract class AbstractGroupBySiteSelect extends Select
                 }
             }
         } else {
-            $currentSiteSlug = $currentSite->slug();
             // Group alphabetically by site title (but use slugs as keys).
             $resourceSites = [];
             $resourceSiteTitles = [];
@@ -138,9 +138,9 @@ abstract class AbstractGroupBySiteSelect extends Select
                 $options = [];
                 foreach ($resourceSite['resources'] as $resource) {
                     $options[$resource->id()] = $this->getValueLabel($resource);
-                    if (!$options) {
-                        continue;
-                    }
+                }
+                if (!$options) {
+                    continue;
                 }
                 $site = $resourceSite['site'];
                 if ($site instanceof SiteRepresentation) {
@@ -154,11 +154,7 @@ abstract class AbstractGroupBySiteSelect extends Select
             }
         }
 
-        $prependValueOptions = $this->getOption('prepend_value_options');
-        if (is_array($prependValueOptions)) {
-            $valueOptions = $prependValueOptions + $valueOptions;
-        }
-        return $valueOptions;
+        return $this->prependValuesOptions($valueOptions);
     }
 
     /**

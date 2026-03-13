@@ -1,0 +1,75 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \AdvancedSearch\Form\MainSearchForm $form
+ * @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig
+ */
+
+// Scripts are loaded via an event on view.layout and can be managed in search-form-main-header.phtml.
+
+$params = $this->params()->fromQuery() ?: [];
+$form
+    ->setData($params)
+    ->prepare();
+
+$formId = $form->getAttribute('id');
+if (!$formId) {
+    $formId = 'form-search';
+    $form->setAttribute('id', $formId);
+}
+
+// Move buttons reset and submit outside of the form.
+$reset = null;
+$submit = null;
+if ($form->has('reset')) {
+    $reset = $form->get('reset');
+    $form->remove('reset');
+}
+if ($form->has('submit')) {
+    $submit = $form->get('submit');
+    $form->remove('submit');
+}
+
+// To avoid to display all advanced search filters, so the js just add new ones:
+// TODO This new mechanism requires to update the js.
+/** @var \Laminas\Form\Fieldset $filters */
+/*
+$filters = $form->get('filter');
+if ($filters) {
+    $defaultCount = (int) $filters->getAttribute('data-count-default');
+    $i = 0;
+    foreach ($filters->getFieldsets() as $name => $element) {
+        if (++$i > max($defaultCount, count($params['filter']))) {
+            $filters->remove($name);
+        }
+    }
+}
+*/
+?>
+<div class="card card-dark card-body" style="border:none;border-radius:0;">
+    <div class="container">
+        <div class="advanced-search-block-wrapper">
+            <div class="inline">
+                <h2 class="info inline-item" style="font-family: Source Sans Pro, sans-serif; font-weight: bold; font-size: 1em;">Search the collection</h2>
+                <div class="inline-item">
+                    <div id="advanced-search-form">
+                        <?= $this->form()->openTag($form) ?>
+                        <?= $this->formCollection($form) ?>
+                        <div class="search-form-buttons">
+                            <!--<?= $reset ? $this->formButton($reset) : null ?>
+                            <?= $submit ? $this->formButton($submit) : null ?>-->
+                            <button type="submit" name="submit" id="search-submit" class="btn btn-ghost search-submit" value=""><span class="material-icons">search</span></button>
+                        </div>
+                        <?= $this->form()->closeTag() ?>
+                    </div>
+                </div>
+                <div class="inline-item">
+                    <a href="/flandrica/s/start/" id="search-reset" class="btn btn-ghost search-reset">Reset fields</a>
+                    <a class="btn btn-ghost all-results" href="/flandrica/s/start/find">Discover the collection</a>
+                </div>
+            </div>   
+        </div>
+    </div>
+</div>
+
+

@@ -1,6 +1,8 @@
-/*
+'use strict';
+
+/**
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2017-2023
+ * Copyright Daniel Berthereau, 2017-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -26,24 +28,147 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
+if (typeof hasChosenSelect === 'undefined') {
+    var hasChosenSelect = typeof $.fn.chosen === 'function';
+}
+if (typeof hasOmekaTranslate === 'undefined') {
+    var hasOmekaTranslate = typeof Omeka !== 'undefined' && typeof Omeka.jsTranslate === 'function';
+}
+
+const $searchFiltersAdvanced = $('#search-filters');
+const $searchFacets = $('#search-facets');
+
+/**
+ * Manage search form, search filters, search results, search facets.
+ */
+
 var Search = (function() {
+
     var self = {};
 
-    self.setViewType = function(viewType) {
-        // In some themes, the mode for resource list is set with a different class.
-        var resourceLists = document.querySelectorAll('.search-results .resource-list, .search-results .resources-list-content');
-        for (var i = 0; i < resourceLists.length; i++) {
-            var resourceItem = resourceLists[i];
-            resourceItem.className = resourceItem.className.replace(' grid', '').replace(' list', '')
-                + ' ' + viewType;
-        }
-        localStorage.setItem('search_view_type', viewType);
+    /**
+     * Data about search filter types.
+     *
+     * @see \AdvancedSearch\Stdlib\SearchResources
+     */
+    self.filterTypes = {
+        withValue: [
+            'eq',
+            'neq',
+            'in',
+            'nin',
+            'ma',
+            'nma',
+            'res',
+            'nres',
+            'resq',
+            'nresq',
+            'list',
+            'nlist',
+            'sw',
+            'nsw',
+            'ew',
+            'new',
+            'near',
+            'nnear',
+            'lres',
+            'nlres',
+            'lkq',
+            'nlkq',
+            'dt',
+            'ndt',
+            'dtp',
+            'ndtp',
+            'tp',
+            'ntp',
+            'lt',
+            'lte',
+            'gte',
+            'gt',
+            '<',
+            '≤',
+            '≥',
+            '>',
+            'yreq',
+            'nyreq',
+            'yrlt',
+            'yrlte',
+            'yrgte',
+            'yrgt',
+        ],
+        withoutValue: [
+            'ex',
+            'nex',
+            'exs',
+            'nexs',
+            'exm',
+            'nexm',
+            'resq',
+            'nresq',
+            'lex',
+            'nlex',
+            'lkq',
+            'nlkq',
+            'dtp',
+            'ndtp',
+            'tp',
+            'ntp',
+            'tpl',
+            'ntpl',
+            'tpr',
+            'ntpr',
+            'tpu',
+            'ntpu',
+            'dup',
+            'ndup',
+            'dupl',
+            'ndupl',
+            'dupt',
+            'ndupt',
+            'duptl',
+            'nduptl',
+            'dupv',
+            'ndupv',
+            'dupvl',
+            'ndupvl',
+            'dupvt',
+            'ndupvt',
+            'dupvtl',
+            'ndupvtl',
+            'dupr',
+            'ndupr',
+            'duprl',
+            'nduprl',
+            'duprt',
+            'nduprt',
+            'duprtl',
+            'nduprtl',
+            'dupu',
+            'ndupu',
+            'dupul',
+            'ndupul',
+            'duput',
+            'nduput',
+            'duputl',
+            'nduputl',
+        ],
+    };
+
+    /**
+     * Chosen default options.
+     * @see https://harvesthq.github.io/chosen/
+     */
+    self.chosenOptions = {
+        allow_single_deselect: true,
+        disable_search_threshold: 10,
+        width: '100%',
+        include_group_label_in_selected: true,
     };
 
     /**
      * Check if the current query is an advanced search one.
      */
-    self.isAdvancedSearchQuery = function () {
+    self.isAdvancedSearchQuery = function() {
         let searchParams = new URLSearchParams(document.location.search);
         let  params = Array.from(searchParams.entries());
         for (let i in params) {
@@ -61,43 +186,45 @@ var Search = (function() {
     }
 
     /**
-     * Chosen default options.
-     * @see https://harvesthq.github.io/chosen/
-     */
-    self.chosenOptions = {
-        allow_single_deselect: true,
-        disable_search_threshold: 10,
-        width: '100%',
-        include_group_label_in_selected: true,
-    };
-
-    var transformResult = function(response) {
-        // Managed by Solr endpoint.
-        // @see https://solr.apache.org/guide/suggester.html#example-usages
-        if (response.suggest) {
-            const answer = response.suggest[Object.keys(response.suggest)[0]];
-            const searchString = answer[Object.keys(answer)[0]];
-            return {
-                query: searchString,
-                suggestions: $.map(answer[searchString].suggestions, function(dataItem) {
-                    return { value: dataItem.term, data: dataItem.weight };
-                })
-            };
-        }
-        // Managed by module or try the format of jQuery-Autocomplete.
-        return response.data ? response.data : response;
-    }
-
-    /**
+     * Autocomplete or autosuggest for any input element.
+     *
      * @see https://github.com/devbridge/jQuery-Autocomplete
      */
-    self.autosuggestOptions = function (searchElement) {
-        let serviceUrl = searchElement.data('autosuggest-url');
+    self.autosuggestOptions = function(element) {
+        let serviceUrl = element.data('autosuggest-url');
         if (!serviceUrl || !serviceUrl.length) {
             return null;
         }
-        let paramName = searchElement.data('autosuggest-param-name');
-        paramName = paramName && paramName.length ? paramName : 'q'
+
+        let transformResult = function(response) {
+            // Managed by Solr endpoint.
+            // @see https://solr.apache.org/guide/suggester.html#example-usages
+            if (response.suggest) {
+                const answer = response.suggest[Object.keys(response.suggest)[0]];
+                const searchString = answer[Object.keys(answer)[0]] instanceof String
+                    ? answer[Object.keys(answer)[0]]
+                    : Object.keys(answer)[0];
+                if (!Object.keys(answer[searchString]).find((key) => 'suggestions' === key)) {
+                    return {};
+                }
+                return {
+                    query: searchString,
+                    suggestions: $.map(answer[searchString].suggestions, function(dataItem) {
+                        return {
+                            value: dataItem.term,
+                            data: dataItem.weight,
+                        };
+                    }),
+                };
+            }
+            // Managed by module, that uses the format of jQuery-Autocomplete
+            // in data, or jQuery-Autocomplete directly.
+            return response.data ? response.data : response;
+        };
+
+        // Get the param name (always "q" for the internal suggester).
+        let paramName = element.data('autosuggest-param-name');
+        paramName = paramName && paramName.length ? paramName : 'q';
         return {
             serviceUrl: serviceUrl,
             dataType: 'json',
@@ -110,16 +237,598 @@ var Search = (function() {
                     console.log(errorThrown)
                 }
             },
+            onSelect: function (suggestion) {
+                if (!$(this).data('autosuggest-fill-input')) {
+                    $(this).closest('form').submit();
+                }
+            },
         };
     };
+
+    /**
+     * Advanced filters.
+     */
+
+    self.filtersAdvanced = (function() {
+        var self = {};
+
+        // At least one default.
+        self.countDefault = $searchFiltersAdvanced.data('count-default') ? $searchFiltersAdvanced.data('count-default') : 0;
+
+        self.countMax = $searchFiltersAdvanced.data('count-max') ? $searchFiltersAdvanced.data('count-max') : 0;
+
+        self.countAll = function() {
+            return $searchFiltersAdvanced.find('> fieldset.filter').length;
+        };
+
+        self.countFilled = function() {
+            var countFilled = 0;
+            $searchFiltersAdvanced.find('> fieldset.filter').each(function(index, filterFieldset) {
+                // The fields may be select or radio or checkboxes.
+                const field = $(filterFieldset).find('[name^="filter["][name$="][field]"]');
+                const type = $(filterFieldset).find('[name^="filter["][name$="][type]"]');
+                const val = $(filterFieldset).find('[name^="filter["][name$="][val]"]');
+                // A filter is filled when there is a field and either:
+                // - a type that requires no value (like "is empty")
+                // - or a value in the val field
+                const hasField = field.length && field.val();
+                const typeRequiresNoValue = type.length && Search.filterTypes.withoutValue.includes(type.val());
+                const hasValue = val.length && val.val();
+                if (hasField && (typeRequiresNoValue || hasValue)) {
+                    ++countFilled;
+                }
+            });
+            return countFilled;
+        };
+
+        self.init = function() {
+            // Warning: nth-child() counts all childs, even not fieldsets, so use nth-of-type().
+            // Remove unmanaged fieldset.
+            if (self.countMax) {
+                $searchFiltersAdvanced.find('> fieldset.filter:nth-of-type(n+' + (self.countMax + 1) + ')').remove();
+            }
+            // Display or remove fieldsets.
+            const countFilled = self.countFilled();
+            const countNeeded = Math.max(self.countDefault, countFilled);
+            $searchFiltersAdvanced.find('> fieldset.filter:nth-of-type(-n+' + (countNeeded + 1) + ')').removeAttr('hidden');
+            $searchFiltersAdvanced.find('> fieldset.filter:nth-of-type(n+' + (countNeeded + 1) + ')').remove();
+            // Create missing fieldsets.
+            self.appendFilter(self.countDefault - self.countAll());
+            self.updatePlus();
+            return self;
+        };
+
+        self.appendFilter = function(countAppend = 1) {
+            countAppend = self.countMax ? Math.min(countAppend, self.countMax - self.countAll()) : countAppend;
+            if (countAppend <= 0) {
+                return self;
+            }
+            const fieldsetTemplate = $searchFiltersAdvanced.find('span[data-template]').attr('data-template');
+            let maxIndex = 0;
+            $searchFiltersAdvanced.find('> fieldset.filter').each(function(no, item) {
+                const fieldsetName = $(item).attr('name');
+                const fieldsetIndex = fieldsetName.replace(/\D+/g, '');
+                maxIndex = Math.max(maxIndex, fieldsetIndex);
+            });
+            for (var i = 0; i < countAppend; i++) {
+                $searchFiltersAdvanced.append(fieldsetTemplate.split('__index__').join(++maxIndex));
+            }
+            $searchFiltersAdvanced.trigger('o:advanced-search.filter.append');
+            return self;
+        };
+
+        self.removeFilter = function(filter) {
+            $(filter).remove();
+            $searchFiltersAdvanced.trigger('o:advanced-search.filter.remove');
+            return self;
+        };
+
+        self.updatePlus = function() {
+            const buttonPlus = $searchFiltersAdvanced.find('.search-filter-plus');
+            if (self.countMax && self.countAll() >= self.countMax) {
+                buttonPlus.hide();
+            } else {
+                buttonPlus.show();
+            }
+            return self;
+        };
+
+        return self;
+    })();
+
+    /* Results */
+
+    self.setViewType = function(viewType) {
+        // In some themes, the mode for resource list is set with a different class.
+        // Or different search engines are used, some with grid, some with list.
+        var resourceLists = document.querySelectorAll('.search-results .resource-list, .search-results .resources-list-content');
+
+        var hasOnlyMode = Array.prototype.some.call(resourceLists, function(el) {
+            return el.classList.contains('only-mode');
+        });
+        if (hasOnlyMode) {
+            return;
+        }
+
+        for (var i = 0; i < resourceLists.length; i++) {
+            var resourceItem = resourceLists[i];
+            resourceItem.className = resourceItem.className.replace(' grid', '').replace(' list', '')
+                + ' ' + viewType;
+        }
+        localStorage.setItem('search_view_type', viewType);
+    };
+
+    /* Facets. */
+
+    self.facets = (function() {
+        var self = {};
+
+        /**
+         * Modes may be "click a button to apply facets" or "reload the page directly".
+         * .apply-facets is kept for compatibility with old themes.
+         */
+        self.useApplyFacets = $searchFacets.find('.facets-apply, .apply-facets').length > 0;
+
+        self.expandOrCollapse = function(button) {
+            button = $(button);
+            if (button.hasClass('expand')) {
+                button.attr('aria-label', button.attr('data-label-expand') ? button.attr('data-label-expand') : (hasOmekaTranslate ? Omeka.jsTranslate('Expand') : 'Expand'));
+                button.closest('.facet').find('.facet-elements').attr('hidden', 'hidden');
+            } else {
+                button.attr('aria-label', button.attr('data-label-collapse') ? button.attr('data-label-collapse') : (hasOmekaTranslate ? Omeka.jsTranslate('Collapse') : 'Collapse'));
+                button.closest('.facet').find('.facet-elements').removeAttr('hidden');
+            }
+            $searchFacets.trigger('o:advanced-search.facet.expand-or-collapse');
+            return self;
+        };
+
+        self.seeMoreOrLess = function(button) {
+            button = $(button);
+            if (button.hasClass('expand')) {
+                button.text(button.attr('data-label-see-more') ? button.attr('data-label-see-more') : (hasOmekaTranslate ? Omeka.jsTranslate('See more') : 'See more'));
+                const defaultCount = Number(button.attr('data-default-count')) + 1;
+                button.closest('.facet').find('.facet-items .facet-item:nth-child(n+' + defaultCount + ')').attr('hidden', 'hidden');
+            } else {
+                button.text(button.attr('data-label-see-less') ? button.attr('data-label-see-less') : (hasOmekaTranslate ? Omeka.jsTranslate('See less') : 'See less'));
+                button.closest('.facet').find('.facet-items .facet-item').removeAttr('hidden');
+            }
+            $searchFacets.trigger('o:advanced-search.facet.see-more-or-less');
+            return self;
+        };
+
+        self.directLinkCheckbox = function (facetItem) {
+            if (!self.useApplyFacets) {
+                facetItem = facetItem ? $(facetItem) : $(this);
+                if (facetItem.data('url')) {
+                    window.location = facetItem.data('url');
+                }
+            }
+            return self;
+        };
+
+        self.directLinkSelect = function (facet) {
+            if (self.useApplyFacets) {
+                return self;
+            }
+            // Replace the current select args by new ones.
+            // Names in facets may have no index in array ("[]") when it is a
+            // multiple one. But the select may be a single select too, in which
+            // case the url is already in data.
+            facet = facet ? $(facet) : $(this);
+            let url;
+            let selectValues = facet.val();
+            if (typeof selectValues !== 'object') {
+                let option =  facet.find('option:selected');
+                if (option.length && option[0].value !== '') {
+                    url = option.data('url');
+                    if (url && url.length) {
+                        window.location = url;
+                    }
+                } else {
+                    url = new URL(window.location.href);
+                    url.searchParams.delete(facet.prop('name'));
+                    window.location = url.toString();
+                }
+            } else {
+                // Prepare the url with the selected values.
+                url = new URL(window.location.href);
+                let selectName = facet.prop('name');
+                url.searchParams.delete(selectName);
+                selectValues.forEach((element, index) => {
+                    url.searchParams.set(selectName.substring(0, selectName.length - 2) + '[' + index + ']', element);
+                });
+                window.location = url.toString();
+            }
+            return self;
+        };
+
+        /**
+         * Active facets are always a link, but the link may be skipped when
+         * the mode is to use the apply button.
+         */
+        self.removeActiveFacet = function (activeFacet) {
+            // Reload with the link when there is no button to apply facets.
+            if (!Search.facets.useApplyFacets) {
+                return true;
+            }
+            e.preventDefault();
+            activeFacet = activeFacet ? $(activeFacet) : $(this);
+            activeFacet.closest('li').hide();
+            var facetName = activeFacet.data('facetName');
+            var facetValue = activeFacet.data('facetValue');
+            $searchFacets.find('.facet-item input:checked').each(function() {
+                if ($(this).prop('name') === facetName
+                    && $(this).prop('value') === String(facetValue)
+                ) {
+                    $(this).prop('checked', false);
+                }
+            });
+            $searchFacets.find('select.facet-items option:selected').each(function() {
+                if ($(this).closest('select').prop('name') === facetName
+                    && $(this).prop('value') === String(facetValue)
+                ) {
+                    $(this).prop('selected', false);
+                    if (hasChosenSelect) {
+                        $(this).closest('select').trigger('chosen:updated');
+                    }
+                }
+            });
+            // Manage the special case where the active facet is a range.
+            var facetRange = $searchFacets.find(`input[type=range][name="${facetName}"]`);
+            if (facetRange.length) {
+                if (facetName.includes('[to]')) {
+                    facetRange.val(facetRange.attr('max'));
+                    Search.rangeSliderDouble.controlSliderTo(facetRange[0]);
+                } else {
+                    facetRange.val(facetRange.attr('min'));
+                    Search.rangeSliderDouble.controlSliderFrom(facetRange[0]);
+                }
+            }
+            return self;
+        };
+
+        return self;
+    })();
+
+    /* Forms tools. */
+
+    /**
+     * Clear the form with hidden and min/max management.
+     *
+     * The html button "reset" resets to default values, not empty values.
+     * Furthermore, the min/max of ranges and numbers should be managed.
+     * For select and radio, set the default or the first value.
+     * Keep hidden values.
+     */
+    self.smartClearForm = function(form) {
+        if (!form) {
+            return;
+        }
+        // TODO Function reset() does not work on search form, only on facets form.
+        typeof form.reset === 'function' ? form.reset() : $(form).trigger('reset');
+        const elements = form.elements;
+        var element, type;
+        for (var i = 0; i < elements.length; i++) {
+            element = elements[i];
+            type = element.type.toLowerCase();
+            switch(type) {
+                case 'hidden':
+                case 'button':
+                case 'reset':
+                case 'submit':
+                    // Keep hidden fields.
+                    break;
+                case 'checkbox':
+                case 'radio':
+                    element.checked = false;
+                    // Fix reset issue with some config.
+                    $(element).prop('checked', false);
+                    $(element).removeAttr('checked');
+                    break;
+                case 'select-one':
+                case 'select-multiple':
+                    $(element).find('option').removeAttr('selected').end().trigger('chosen:updated');
+                    break;
+                case 'number':
+                    if ((element.name.endsWith('[to]')) || element.className.endsWith('-to')) {
+                        element.defaultValue = element.value = element.max;
+                        Search.rangeSliderDouble.controlNumericTo(element);
+                    } else {
+                        element.defaultValue = element.value = element.min;
+                        if (element.name.endsWith('[from]') || element.className.endsWith('-from')) {
+                            Search.rangeSliderDouble.controlNumericFrom(element);
+                        }
+                    }
+                    break;
+                case 'range':
+                    if (element.name.endsWith('[to]') || element.className.endsWith('-to')) {
+                        element.defaultValue = element.value = element.max;
+                        Search.rangeSliderDouble.controlSliderTo(element);
+                    } else {
+                        element.defaultValue = element.value = element.min;
+                        if (element.name.endsWith('[from]') || element.className.endsWith('-from')) {
+                            Search.rangeSliderDouble.controlSliderFrom(element);
+                        }
+                    }
+                    break;
+                default:
+                    // Text area, text, password, etc.
+                    element.defaultValue = element.value = '';
+                    break;
+            }
+        }
+        return self;
+    }
+
+    /**
+    * Search range double / sliders.
+    *
+    * "min" and "max" values are required to compute color.
+    *
+    * @todo Get slider colors from the css.
+    * @see https://medium.com/@predragdavidovic10/native-dual-range-slider-html-css-javascript-91e778134816
+    */
+    self.rangeSliderDouble = (function() {
+        var self = {};
+
+        self.minDefault = 0;
+        self.maxDefault = 100;
+        self.colorRangeDefault = '#a7a7a7';
+        self.colorSliderDefault = '#000000';
+
+        self.getRangeDoubleElements = function(element) {
+            const rangeDouble = element.closest('.range-double');
+            return rangeDouble
+                ? [
+                    rangeDouble.querySelector('.range-numeric-from'),
+                    rangeDouble.querySelector('.range-numeric-to'),
+                    rangeDouble.querySelector('.range-slider-from'),
+                    rangeDouble.querySelector('.range-slider-to'),
+                ]
+                : [null, null, null, null];
+        };
+
+        self.controlNumericFrom = function(element) {
+            const [inputFrom, inputTo, sliderFrom, sliderTo] = self.getRangeDoubleElements(element);
+            const [from, to] = self.parseTwoElementsToNumber(inputFrom, inputTo);
+            [inputFrom.value, sliderFrom.value] = from > to ? [to, to] : [from, from];
+            self.fillSlider(inputFrom, inputTo, sliderTo);
+            return self;
+        };
+
+        self.controlNumericTo = function(element) {
+            const [inputFrom, inputTo, sliderFrom, sliderTo] = self.getRangeDoubleElements(element);
+            const [from, to] = self.parseTwoElementsToNumber(inputFrom, inputTo);
+            [inputTo.value, sliderTo.value] = from <= to ? [to, to] : [from, from];
+            self.fillSlider(inputFrom, inputTo, sliderTo);
+            self.toggleRangeSliderAccessible(sliderTo);
+            return self;
+        }
+
+        self.controlSliderFrom = function(element) {
+            const [inputFrom, inputTo, sliderFrom, sliderTo] = self.getRangeDoubleElements(element);
+            const [from, to] = self.parseTwoElementsToNumber(sliderFrom, sliderTo);
+            [inputFrom.value, sliderFrom.value] = from > to ? [to, to] : [from, from];
+            self.fillSlider(sliderFrom, sliderTo, sliderTo);
+            return self;
+        }
+
+        self.controlSliderTo = function(element) {
+            const [inputFrom, inputTo, sliderFrom, sliderTo] = self.getRangeDoubleElements(element);
+            const [from, to] = self.parseTwoElementsToNumber(sliderFrom, sliderTo);
+            [inputTo.value, sliderTo.value] = from <= to ? [to, to] : [from, from];
+            self.fillSlider(sliderFrom, sliderTo, sliderTo);
+            self.toggleRangeSliderAccessible(sliderTo);
+            return self;
+        }
+
+        self.fillSlider = function(fromEl, toEl, controlSlider, colorSlider, colorRange) {
+            // Here, from and to may be the input or the slider.
+            // This is the main point to manage the double slider simply.
+
+            const rangeDouble = controlSlider.closest('.range-double');
+            if (!rangeDouble) {
+                return self;
+            }
+            const prog = rangeDouble.querySelector('.range-progress');
+            if (!prog) {
+                return self;
+            }
+
+            // Validate bounds.
+            const min = toEl.min !== '' && !isNaN(parseFloat(toEl.min)) ? parseFloat(toEl.min) : self.minDefault;
+            const max = toEl.max !== '' && !isNaN(parseFloat(toEl.max)) ? parseFloat(toEl.max) : self.maxDefault;
+
+            // Parse current values.
+            const fromVal = fromEl.value !== '' && !isNaN(parseFloat(fromEl.value)) ? parseFloat(fromEl.value) : min;
+            const toVal = toEl.value !== '' && !isNaN(parseFloat(toEl.value)) ? parseFloat(toEl.value) : max;
+
+            const fromPct = ((Math.min(Math.max(fromVal, min), max) - min) / (max - min)) * 100;
+            const toPct = ((Math.min(Math.max(toVal, min), max) - min) / (max - min)) * 100;
+
+            const fromProgress= Math.min(fromPct, toPct);
+            const toProgress = Math.max(fromPct, toPct);
+
+            // Drive CSS variables on the visible progress bar.
+            // Previous version used a linear-gradient on main range.
+            prog.style.setProperty('--from', fromProgress + '%');
+            prog.style.setProperty('--to', toProgress + '%');
+
+            return self;
+        }
+
+        self.toggleRangeSliderAccessible = function(sliderCurrent) {
+            const [inputFrom, inputTo, sliderFrom, sliderTo] = self.getRangeDoubleElements(sliderCurrent);
+            if (!sliderFrom || !sliderTo) return self;
+            const min = sliderFrom.min !== '' && !isNaN(parseFloat(sliderFrom.min)) ? parseFloat(sliderFrom.min) : self.minDefault;
+            const max = sliderTo.max !== '' && !isNaN(parseFloat(sliderTo.max)) ? parseFloat(sliderTo.max) : self.maxDefault;
+            const fromValue = sliderFrom.value !== '' && !isNaN(parseFloat(sliderFrom.value)) ? parseFloat(sliderFrom.value) : min;
+            const toValue = sliderTo.value !== '' && !isNaN(parseFloat(sliderTo.value)) ? parseFloat(sliderTo.value) : max;
+
+            // Allow right slider to capture events when overlap.
+            sliderTo.style.zIndex = (fromValue === toValue) ? '2' : '0';
+            return self;
+        }
+
+        self.parseTwoElementsToNumber = function (currentFrom, currentTo) {
+            const from = parseFloat(currentFrom.value, 10);
+            const to = parseFloat(currentTo.value, 10);
+            return [from, to];
+        }
+
+        self.ensureValidBounds = function(el) {
+            if (!el) {
+                return self;
+            }
+
+            const minDefault = self.minDefault;
+            const maxDefault = self.maxDefault;
+
+            // Validate min and max. Swap if needed.
+            let min = el.min !== '' ? parseFloat(el.min) : NaN;
+            let max = el.max !== '' ? parseFloat(el.max) : NaN;
+            if (isNaN(min)) {
+                min = minDefault;
+            }
+            if (isNaN(max)) {
+                max = maxDefault;
+            }
+            if (min > max) {
+                const tmp = min;
+                min = max;
+                max = tmp;
+            }
+            el.min = String(min);
+            el.max = String(max);
+
+            // Clamp current value into bounds when present.
+            if (el.value !== '') {
+                const val = parseFloat(el.value);
+                el.value = isNaN(val) ? String(min) : String(Math.min(Math.max(val, min), max));
+            } else {
+                // Default to lower bound for "from", upper for "to" if class hints exist.
+                if (el.classList.contains('range-slider-to') || el.classList.contains('range-numeric-to')) {
+                    el.value = String(max);
+                } else {
+                    el.value = String(min);
+                }
+            }
+
+            return self;
+        }
+
+        self.normalizeRangeDouble = function(rangeDouble) {
+            if (!rangeDouble) {
+                return self;
+            }
+
+            const inputFrom = rangeDouble.querySelector('.range-numeric-from');
+            const inputTo = rangeDouble.querySelector('.range-numeric-to');
+            const sliderFrom = rangeDouble.querySelector('.range-slider-from');
+            const sliderTo = rangeDouble.querySelector('.range-slider-to');
+
+            // Ensure valid bounds on all parts.
+            [inputFrom, inputTo, sliderFrom, sliderTo].forEach(self.ensureValidBounds);
+
+            // Sync values: prefer the slider values if present; keep order from <= to.
+            const fromVal = parseFloat(sliderFrom && sliderFrom.value || inputFrom && inputFrom.value || self.minDefault);
+            const toVal = parseFloat(sliderTo && sliderTo.value || inputTo && inputTo.value || self.maxDefault);
+            const min = parseFloat(sliderTo ? sliderTo.min : self.minDefault);
+            const max = parseFloat(sliderTo ? sliderTo.max : self.maxDefault);
+
+            const from = isNaN(fromVal) ? min : Math.min(Math.max(fromVal, min), max);
+            const to = isNaN(toVal) ? max : Math.min(Math.max(toVal, min), max);
+            const fromClamped = Math.min(from, to);
+            const toClamped = Math.max(from, to);
+
+            if (inputFrom) {
+                inputFrom.value = String(fromClamped);
+            }
+            if (sliderFrom) {
+                sliderFrom.value = String(fromClamped);
+            }
+            if (inputTo) {
+                inputTo.value = String(toClamped);
+            }
+            if (sliderTo) {
+                sliderTo.value = String(toClamped);
+            }
+
+            // Render and adjust accessibility.
+            if (sliderFrom && sliderTo) {
+                self.fillSlider(sliderFrom, sliderTo, sliderTo);
+                self.toggleRangeSliderAccessible(sliderTo);
+            } else if (inputFrom && inputTo && sliderTo) {
+                self.fillSlider(inputFrom, inputTo, sliderTo);
+                self.toggleRangeSliderAccessible(sliderTo);
+            }
+
+            return self;
+        };
+
+        /**
+         * Clear range values at extremes before form submission.
+         *
+         * When the slider is at the minimum, don't filter by "from" (any start).
+         * When the slider is at the maximum, don't filter by "to" (any end).
+         * This provides better UX: user hasn't moved the slider = no filter.
+         *
+         * Note: For <input type="range">, setting value='' resets to min,
+         * so we remove the name attribute to exclude from form submission.
+         *
+         * @todo Backend: sort items without date values last when no filter is active.
+         * @todo Backend: exclude items without date when filter is active, include when not.
+         * @todo Add admin option to enable/disable this behavior per field.
+         */
+        self.clearExtremesBeforeSubmit = function(rangeDouble) {
+            if (!rangeDouble) {
+                return self;
+            }
+
+            const inputFrom = rangeDouble.querySelector('.range-numeric-from');
+            const inputTo = rangeDouble.querySelector('.range-numeric-to');
+            const sliderFrom = rangeDouble.querySelector('.range-slider-from');
+            const sliderTo = rangeDouble.querySelector('.range-slider-to');
+
+            // Get min/max from slider or input attributes.
+            const refElement = sliderFrom || inputFrom;
+            if (!refElement) {
+                return self;
+            }
+
+            const min = parseFloat(refElement.min);
+            const max = parseFloat(refElement.max);
+
+            // Remove "from" from submission if it equals min.
+            // For range inputs, we remove the name attribute (value='' doesn't work).
+            const fromValue = parseFloat(sliderFrom ? sliderFrom.value : (inputFrom ? inputFrom.value : NaN));
+            if (!isNaN(fromValue) && !isNaN(min) && fromValue === min) {
+                if (sliderFrom) sliderFrom.removeAttribute('name');
+                if (inputFrom && inputFrom.name) inputFrom.removeAttribute('name');
+            }
+
+            // Remove "to" from submission if it equals max.
+            const toValue = parseFloat(sliderTo ? sliderTo.value : (inputTo ? inputTo.value : NaN));
+            if (!isNaN(toValue) && !isNaN(max) && toValue === max) {
+                if (sliderTo) sliderTo.removeAttribute('name');
+                if (inputTo && inputTo.name) inputTo.removeAttribute('name');
+            }
+
+            return self;
+        };
+
+        return self;
+    })();
 
     return self;
 })();
 
 $(document).ready(function() {
 
+    const hasAutocomplete = typeof $.fn.autocomplete === 'function';
+
     /**
-     * When the simple and the advanced form are the same form.
+     * Fix when the simple and the advanced form are the same form.
      */
     $('.advanced-search-form-toggle a').on('click', function(e) {
         e.preventDefault();
@@ -133,117 +842,51 @@ $(document).ready(function() {
         // $('#search-form [name=q]').focus();
     });
 
-    /* Results tools (sort, pagination, per-page) */
+    /**
+     * Events.
+     */
 
-    $('.as-url select, select.as-url').on('change', function(e) {
-        const url = $(this).find('option:selected').data('url');
-        if (url && url.length && window.location !== url) {
-            window.location = url;
-        };
-    });
-
-    /* Per-page selector links (depending if server or client build) */
-    /* @deprecated Kept for old themes: use ".as-url" instead */
-    $('.search-results-per-page:not(.as-url) select').on('change', function(e) {
-        // Per-page fields don't look like a url.
-        e.preventDefault();
-        var perPage = $(this).val();
-        if (perPage.substring(0, 6) === 'https:' || perPage.substring(0, 5) === 'http:') {
-            window.location = perPage;
-        } else if (perPage.substring(0, 1) === '/') {
-            window.location = window.location.origin + perPage;
-        } else {
-            var searchParams = new URLSearchParams(window.location.search);
-            searchParams.set('page', 1);
-            searchParams.set('per_page', $(this).val());
-            window.location.search = searchParams.toString();
-        }
-    });
-
-    /* Sort selector links (depending if server or client build) */
-    /* @deprecated Kept for old themes: use ".as-url" instead. */
-    $('.search-sort:not(.as-url) select').on('change', function(e) {
-        // Sort fields don't look like a url.
-        e.preventDefault();
-        var sort = $(this).val();
-        if (sort.substring(0, 6) === 'https:' || sort.substring(0, 5) === 'http:') {
-            window.location = sort;
-        } else if (sort.substring(0, 1) === '/') {
-            window.location = window.location.origin + sort;
-        } else {
-            var searchParams = new URLSearchParams(window.location.search);
-            searchParams.set('sort', $(this).val());
-            window.location.search = searchParams.toString();
-        }
-    });
-
-    /* Facets. */
-
-    $('.search-facets-active a').on('click', function(e) {
-        // Reload with the link when there is no button to apply facets.
-        if (!$('.apply-facets').length) {
-            return true;
-        }
-        e.preventDefault();
-        $(this).closest('li').hide();
-        var facetName = $(this).data('facetName');
-        var facetValue = $(this).data('facetValue');
-        $('.search-facet-item input:checked').each(function() {
-            if ($(this).prop('name') === facetName
-                && $(this).prop('value') === String(facetValue)
-            ) {
-                $(this).prop('checked', false);
-            }
-        });
-        $('select.search-facet-items option:selected').each(function() {
-            if ($(this).closest('select').prop('name') === facetName
-                && $(this).prop('value') === String(facetValue)
-            ) {
-                $(this).prop('selected', false);
-                if ($.isFunction($.fn.chosen)) {
-                    $(this).closest('select').trigger('chosen:updated');
+    $('#search-reset, #facets-reset').on('click', function () {
+        // The button may be outside the form.
+        const form = $(this)[0].form;
+        Search.smartClearForm(form);
+        // Reload page only when there is no button to apply.
+        if (!Search.facets.useApplyFacets) {
+            const url = new URL(window.location.href);
+            const params = new URLSearchParams(url.search);
+            for (const key of params.keys()) {
+                if (key.startsWith('facet[') || key.startsWith('facet%5B')) {
+                    params.delete(key);
                 }
             }
-        });
-    });
-
-    $('.search-facets').on('change', 'input[type=checkbox]', function() {
-        if (!$('.apply-facets').length && $(this).data('url')) {
-            window.location = $(this).data('url');
+            url.search = params.toString();
+            window.location.href = url.toString();
         }
     });
 
-    $('.search-facets').on('change', 'select', function() {
-        if (!$('#apply-facets').length) {
-            // Replace the current select args by new ones.
-            // Names in facets may have no index in array ("[]") when it is a multiple one.
-            // But the select may be a single select too, in which case the url is already in data.
-            let url;
-            let selectValues = $(this).val();
-            if (typeof selectValues !== 'object') {
-                let option =  $(this).find('option:selected');
-                if (option.length && option[0].value !== '') {
-                    url = option.data('url');
-                    if (url && url.length) {
-                        window.location = url;
-                    }
-                } else {
-                    url = new URL(window.location.href);
-                    url.searchParams.delete($(this).prop('name'));
-                    window.location = url.toString();
-                }
-                return;
-            }
-            // Prepare the url with the selected values.
-            url = new URL(window.location.href);
-            let selectName = $(this).prop('name');
-            url.searchParams.delete(selectName);
-            selectValues.forEach((element, index) => {
-                url.searchParams.set(selectName.substring(0, selectName.length - 2) + '[' + index + ']', element);
-            });
-            window.location = url.toString();
-        }
+    /**
+     * Init advanced search filters.
+     */
+
+    Search.filtersAdvanced.init();
+
+    $searchFiltersAdvanced.on('click', '.search-filter-minus', function (ev) {
+        const filter = $(ev.target).closest('fieldset.filter');
+        Search.filtersAdvanced
+            .removeFilter(filter)
+            .updatePlus();
     });
+
+    $searchFiltersAdvanced.on('click', '.search-filter-plus', function (ev) {
+        // const index = fieldset.index('fieldset.filter');
+        Search.filtersAdvanced
+            .appendFilter()
+            .updatePlus();
+    });
+
+    /**
+     * Results tools (sort, pagination, per-page).
+     */
 
     $('.search-view-type-list').on('click', function(e) {
         e.preventDefault();
@@ -259,12 +902,117 @@ $(document).ready(function() {
         $('.search-view-type-grid').addClass('active');
     });
 
+    $('.as-url select, select.as-url').on('change', function(e) {
+        const url = $(this).find('option:selected').data('url');
+        if (url && url.length && window.location !== url) {
+            window.location = url;
+        };
+    });
+
+    /* Facets. */
+
+    if ($searchFacets.length) {
+        if (Search.facets.useApplyFacets) {
+            $searchFacets.on('click', '.facets-active a', (event) => Search.facets.removeActiveFacet(event.target));
+        } else {
+            $searchFacets.on('change', 'input[type=checkbox][data-url]', (event) => Search.facets.directLinkCheckbox(event.target));
+            $searchFacets.on('change', 'select', (event) => Search.facets.directLinkSelect(event.target));
+        }
+
+        $searchFacets.on('click', '.facet-button, .facet-see-more-or-less', function() {
+            const button = $(this);
+            if (button.hasClass('expand')) {
+                $(this).removeClass('expand').addClass('collapse');
+            } else {
+                $(this).removeClass('collapse').addClass('expand');
+            }
+            if (button.hasClass('facet-see-more-or-less')) {
+                Search.facets.seeMoreOrLess(button);
+            } else {
+                Search.facets.expandOrCollapse(button);
+            }
+        });
+
+        $searchFacets.find('.facet-see-more-or-less').each((index, button) => Search.facets.seeMoreOrLess(button));
+    }
+
+    const rangeDoubles = document.querySelectorAll('.range-double');
+
+    // Init ranges only when present.
+    if (rangeDoubles.length) {
+        rangeDoubles.forEach((rangeDouble) => {
+            Search.rangeSliderDouble.normalizeRangeDouble(rangeDouble);
+        });
+        $('.range-numeric-from').on('input', (event) => Search.rangeSliderDouble.controlNumericFrom(event.target));
+        $('.range-numeric-to').on('input', (event) => Search.rangeSliderDouble.controlNumericTo(event.target));
+        $('.range-slider-from').on('input', (event) => Search.rangeSliderDouble.controlSliderFrom(event.target));
+        $('.range-slider-to').on('input', (event) => Search.rangeSliderDouble.controlSliderTo(event.target));
+
+        // Clear extreme values before form submission (filters and facets).
+        // When slider is at min, don't filter by "from"; at max, don't filter by "to".
+        $('#search-form, #search-filters-form, #facets-form, .search-facets form').on('submit', function() {
+            $(this).find('.range-double').each(function() {
+                Search.rangeSliderDouble.clearExtremesBeforeSubmit(this);
+            });
+        });
+
+        // Handle range-double submit button click (for link/js mode with Ok button).
+        $('.range-double-submit').on('click', function(e) {
+            const rangeDouble = $(this).closest('.range-double');
+            if (!rangeDouble.length) return;
+
+            // Check if using direct link mode (data-url on inputs).
+            const inputFrom = rangeDouble.find('.range-numeric-from, .range-slider-from').filter('[data-url]').first();
+            const inputTo = rangeDouble.find('.range-numeric-to, .range-slider-to').filter('[data-url]').first();
+
+            if (!inputFrom.length && !inputTo.length) {
+                // Not direct link mode, let form submission handle it.
+                return;
+            }
+
+            e.preventDefault();
+
+            // Get min/max from attributes.
+            const refEl = rangeDouble.find('.range-slider-from, .range-numeric-from')[0];
+            const min = parseFloat(refEl?.min);
+            const max = parseFloat(refEl?.max);
+            const fromVal = parseFloat(rangeDouble.find('.range-numeric-from').val() || rangeDouble.find('.range-slider-from').val());
+            const toVal = parseFloat(rangeDouble.find('.range-numeric-to').val() || rangeDouble.find('.range-slider-to').val());
+
+            // Build URL: use "to" input URL as base, modify from/to params.
+            let url = inputTo.data('url') || inputFrom.data('url');
+            if (!url) return;
+
+            // Parse URL to modify query parameters.
+            const urlObj = new URL(url, window.location.origin);
+            const facetName = inputFrom.attr('name')?.match(/facet\[([^\]]+)\]/)?.[1]
+                || inputTo.attr('name')?.match(/facet\[([^\]]+)\]/)?.[1];
+
+            if (facetName) {
+                // Only add from/to if not at extremes.
+                if (!isNaN(fromVal) && !isNaN(min) && fromVal !== min) {
+                    urlObj.searchParams.set(`facet[${facetName}][from]`, fromVal);
+                } else {
+                    urlObj.searchParams.delete(`facet[${facetName}][from]`);
+                }
+                if (!isNaN(toVal) && !isNaN(max) && toVal !== max) {
+                    urlObj.searchParams.set(`facet[${facetName}][to]`, toVal);
+                } else {
+                    urlObj.searchParams.delete(`facet[${facetName}][to]`);
+                }
+            }
+
+            window.location.href = urlObj.toString();
+        });
+    }
+
     /**********
      * Initialisation.
      */
 
     /**
      * Open advanced search when it is used according to the query.
+     *
      * @todo Check if we are on the advanced search page first.
      * @todo Use focus on load, but don't open autosuggestion on focus.
      */
@@ -272,61 +1020,41 @@ $(document).ready(function() {
         $('.advanced-search-form-toggle a').click();
     }
 
+    /**
+     * Auto-scroll to results when enabled.
+     */
+    var searchResults = document.getElementById('search-results');
+    if (searchResults && searchResults.dataset.autoscroll) {
+        searchResults.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    /**
+     * Init display of results list or grid.
+     */
     var view_type = localStorage.getItem('search_view_type');
     if (!view_type) {
         view_type = 'list';
     }
     $('.search-view-type-' + view_type).click();
 
-    if ($.isFunction($.fn.autocomplete)) {
-        let searchElement = $('.form-search .autosuggest[name=q]');
-        let autosuggestOptions = Search.autosuggestOptions(searchElement);
-        if (autosuggestOptions) searchElement.autocomplete(autosuggestOptions);
-    }
-
-    if ($.isFunction($.fn.chosen)) {
-        $('.chosen-select').chosen(Search.chosenOptions);
-    }
-
-    /********
-     * Standard advanced search form.
+    /**
+     * Init chosen select.
      */
-
-    // Disable query text according to some query types without values.
-    // See global.js.
-    function disableQueryTextInput(queryType) {
-        var queryText = queryType.siblings('.query-text');
-        queryText.prop('disabled',
-            ['ex', 'nex', 'exs', 'nexs', 'exm', 'nexm', 'lex', 'nlex', 'tpl', 'ntpl', 'tpr', 'ntpr', 'tpu', 'ntpu'].includes(queryType.val()));
-    };
-    $(document).on('change', '.query-type', function () {
-         disableQueryTextInput($(this));
-    });
-    // Updating querying should be done on load too.
-    $('#property-queries .query-type').each(function() {
-         disableQueryTextInput($(this));
-    });
+    if (hasChosenSelect) {
+        $('select.chosen-select').chosen(Search.chosenOptions);
+    }
 
     /**
-     * Avoid to select "All properties" in the advanced search form by default.
-     * It should be done on load for empty request and on append for new fields.
-     * @see application/asset/js/advanced-search.js.
+     * Init autocompletion/autosuggestion of all specified input fields.
      */
-    const propertyValues = $('body.search #advanced-search #property-queries .inputs > .value');
-    if (propertyValues.length === 1) {
-        const searchParams = new URLSearchParams(document.location.search);
-        if ((!searchParams.has('property[0][property]') && !searchParams.has('property[0][property][0]') && !searchParams.has('property[0][property][]'))
-            || (['', 'eq'].includes(searchParams.get('property[0][type]')) && searchParams.get('property[0][text]') === '')
-        ) {
-            const selectProperty = $(propertyValues[0]).find('.query-property');
-            selectProperty.find('option:selected').prop('selected', false);
-            selectProperty.trigger('chosen:updated');
-        }
+    if (hasAutocomplete) {
+        $('input[type=search].autosuggest, input[type=text].autosuggest').each(function(index, element) {
+            element = $(element);
+            let autosuggestOptions = Search.autosuggestOptions(element);
+            if (autosuggestOptions) {
+                element.autocomplete(autosuggestOptions);
+            }
+        });
     }
-    $(document).on('click', '#property-queries.multi-value .add-value', function(e) {
-        const selectProperty = $(this).closest('#property-queries').find('.inputs > .value:last-child .query-property');
-        selectProperty.find('option:selected').prop('selected', false);
-        selectProperty.trigger('chosen:updated');
-    });
 
 });

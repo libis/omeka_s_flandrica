@@ -1,0 +1,42 @@
+<?php
+$translate = $this->plugin('translate');
+$this->htmlElement('body')->appendAttribute('class', 'item resource show lg-from-hash');
+
+$main = $this->resourcePageBlocks($media, 'main')->hasBlocks();
+?>
+<!-- <?php echo $this->pageTitle($media->displayTitle(), 2); ?>
+<h3><?php echo $translate('Media'); ?></h3>
+<?php $this->trigger('view.show.before'); ?>
+<?php echo $media->render(); ?>
+<?php echo $media->displayValues(); ?>
+<?php $this->trigger('view.show.after'); ?> -->
+<section class="container">
+<div >
+    <div id="portal-breadcrumbs" class="breadcrumbs" style="display:block;">
+      <span class="breadcrumb-item">
+          <a href="<?php echo $site->url();?>">Home</a>
+      </span>
+      <span class="breadcrumb-item">
+          <?php if(str_contains($site->url(), "film-photonovel")): ?>
+            <a href="<?php echo $site->url()."/".strtolower($translate('Search'))."_FPN";?>"><?= $translate('Search') ?></a>  
+          <?php elseif(str_contains($site->url(), "exofficina")): ?>
+            <a href="<?php echo $site->url()."/".strtolower($translate('Search'))."_EO";?>"><?= $translate('Search') ?></a>  
+          <?php elseif(str_contains($site->url(), "graphicnovels")): ?>
+            <a href="<?php echo $site->url()."/".strtolower($translate('Search'))."_GN";?>"><?= $translate('Search') ?></a>  
+          <?php endif; ?>        
+        </span>    
+      <span class="breadcrumb-item active">
+        <?php echo $media->item()->displayTitle(); ?>
+      </span>
+
+    </div>
+  </div>
+    <h1><?php echo $this->pageTitle($media->item()->displayTitle(), 2); ?></h1>
+    <?php if($main): ?>
+    <div class="row">
+        <div class="main-content col-md-12">
+        <?php echo $this->resourcePageBlocks($media, 'main')->getBlocks(); ?>
+        </div>
+    </div>
+    <?php endif; ?>
+</section>

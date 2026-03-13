@@ -1,0 +1,67 @@
+<?php
+$media = $resource;
+$mediaType = $media->mediaType();
+$translate = $this->plugin('translate');
+if($mediaType == "application/pdf") :?>
+    <div class="lightbox-wrapper">
+        <?= $this->lightGalleryOutput([['media' => $media]]); ?>
+        <?php $thumbnail = $media->thumbnailUrl('medium'); ?>
+        <span class="pdf-thumbnail-item" data-thumbnail="<?= $thumbnail; ?>" data-pdf="<?= $media->originalUrl() ?>" data-pdf-text="<?= $translate("Open the pdf") ?>"></span>
+    </div>
+<?php else: ?>
+    <div class="media-embeds w-100">
+        <?php echo $media->render(); ?>
+    </div>
+<?php endif;?>
+
+<script>
+  window.addEventListener('load', () => {
+    if (window.innerWidth <= 1024) {
+        var lightboxes = document.querySelectorAll(".media-list");
+
+        if(lightboxes != null) {
+            lightboxes.forEach((lightbox) => {
+                var lightboxWrapper = lightbox.parentNode;
+                var elementSpan = lightboxWrapper.querySelector(".pdf-thumbnail-item");
+                var thumbnailUrl = elementSpan.dataset.thumbnail;
+                var pdfUrl = elementSpan.dataset.pdf;
+                var textUnderThumbnail = elementSpan.dataset.pdfText;
+
+                console.log(textUnderThumbnail);
+                
+                //create thummnail box with image
+                var mediaEmbedsBox = document.createElement('div');
+                mediaEmbedsBox.className = "media-embeds w-100";
+
+                var mediaRenderBox = document.createElement('div');
+                mediaRenderBox.className = "media-render file";
+
+                var linkPdfElement = document.createElement('a');
+                linkPdfElement.setAttribute("href", pdfUrl);
+                linkPdfElement.setAttribute("target", "blank");
+                linkPdfElement.className = "element-pdf-link";
+
+                var thumbnail = document.createElement('img');
+                thumbnail.setAttribute("src", thumbnailUrl);
+
+                var linkPdftext = document.createElement('p');
+                linkPdftext.innerHTML = textUnderThumbnail;
+                linkPdftext.className = "link-to-pdf-text";
+
+                linkPdfElement.appendChild(thumbnail);
+                linkPdfElement.appendChild(linkPdftext);
+
+                mediaRenderBox.appendChild(linkPdfElement);
+                mediaEmbedsBox.appendChild(mediaRenderBox);
+
+                lightboxWrapper.appendChild(mediaEmbedsBox);
+                elementSpan.remove();
+
+                //delete lightbox
+                lightbox.style.display = "none";
+            });
+        }
+    };
+  }); 
+   
+</script>

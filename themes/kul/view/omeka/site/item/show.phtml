@@ -1,0 +1,209 @@
+<?php
+use Laminas\Http\Client;
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$this->htmlElement('body')->appendAttribute('class', 'item resource show');
+$embedMedia = $this->siteSetting('item_media_embed', false);
+$itemMedia = $item->media();
+$template = $item->resourceTemplate();
+if($template):
+  $type = $template->label();
+else:
+  $type = "";
+endif;
+
+$main = $this->resourcePageBlocks($item, 'main')->hasBlocks();
+$right = $this->resourcePageBlocks($item, 'right')->hasBlocks();
+$left = $this->resourcePageBlocks($item, 'left')->hasBlocks();
+$second = $this->resourcePageBlocks($item, 'second')->hasBlocks();
+?>
+<style>
+  a {
+    text-decoration: none;
+  }
+</style>
+<div class="container item-page">
+  <div class="row">
+    <div class="col-xs-12">
+      <div id="portal-breadcrumbs" class="breadcrumbs" style="display:block;">
+        <span class="breadcrumb-item">
+            <a href="<?php echo $site->url();?>">Home</a>
+        </span>
+
+        <?php if($type == 'News'):?>
+          <span class="breadcrumb-item" dir="ltr">
+            <a href="<?php echo $site->url()."/page/news";?>">News</a>
+          </span>
+        <?php else:?>
+          <span class="breadcrumb-item" dir="ltr">
+            <a href="<?php echo $site->url()."/find";?>">Search</a>
+          </span>
+        <?php endif;?>
+        <span class="breadcrumb-item active">
+          <?php echo $item->displayTitle(); ?>
+        </span>
+      </div>
+      <div class="type">
+          <?php echo $resource->resourceClass()->label();?>
+      </div>    
+      <div class="item-information-top">
+        <h2 class="title"><?php echo $item->displayTitle(); ?></h2>
+        <div class="creator">
+          <?php 
+              $creator = $resource->value('dcterms:creator', ['all' => true]);
+              echo implode("; ", $creator);
+          ?>
+        </div>       
+      </div>
+    </div>
+  </div>
+  <div class="row">  
+    <div class="col-xs-12">
+      <?php if($item->value('dcterms:abstract') || $item->value('dcterms:subject')):?>        
+        <div class="row">
+          <div class="offset-md-2 col-md-8">                
+          <?php if($item->value('dcterms:abstract')):?>    
+            <div class="item-metadata-middle">            
+              <h5>Abstract</h5>
+              <p> 
+                <?php echo $item->value('dcterms:abstract')->asHtml(); ?>
+              </p>   
+            </div>
+          <?php endif;?>                
+
+          <?php if($item->value('dcterms:subject')):?>              
+            <?php $subjects = $item->value('dcterms:subject', ['all' => true]);?>
+            <div class="item-metadata-middle">
+              <div class="subjects">  
+                <?php foreach($subjects as $subject):?>        
+                  <?php 
+                    //splite the first part seperate by _ and display the second part
+                    $d_subject = explode("_", $subject);
+                  ?>
+                  <a 
+                    class="btn btn-secondary btn-sm"
+                    href="/flandrica/s/start/find?facet[date][from]=1454&facet[date][to]=2025&facet[dcterms%3Asubject][]=<?php echo $subject;?>">
+                  <?php echo $d_subject[1] ?? $d_subject[0]; ?></a>       
+                <?php endforeach;?>
+              </div>
+            </div>  
+          <?php endif;?>      
+        </div>
+      </div>
+
+  <?php endif;?>
+  </div>  
+  </div>
+</div>
+<div class="section" style="background-color: #d4e7f3;">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12 offset-md-2 col-md-8">
+        <h5 class="section-title">Details</h5>
+      </div>
+    </div>  
+  <?php if($main && $right && $left): ?>
+    <div class="row">
+      <div class="left-content col-md-2">
+        <?php echo $this->resourcePageBlocks($item, 'left')->getBlocks(); ?>
+      </div>
+      <div class="main-content image-wrapper col-md-6">
+        <?php echo $this->resourcePageBlocks($item, 'main')->getBlocks(); ?>
+      </div>
+      <div class="right-content col-md-2">
+        <?php echo $this->resourcePageBlocks($item, 'right')->getBlocks(); ?>
+      </div>
+    </div>
+  <?php endif; ?>
+  <?php if($main && $right && !$left): ?>
+    <div class="row">
+      <div class="main-content col-md-6">
+        <?php echo $this->resourcePageBlocks($item, 'main')->getBlocks(); ?>
+      </div>
+      <div class="right-content col-md-6">
+        <?php echo $this->resourcePageBlocks($item, 'right')->getBlocks(); ?>
+      </div>
+    </div>
+  <?php endif; ?>
+  <?php if($main && !$right && $left): ?>
+    <div class="row">
+      <div class="left-content col-md-2">
+        <?php echo $this->resourcePageBlocks($item, 'left')->getBlocks(); ?>
+      </div>
+      <div class="main-content col-md-8">
+        <?php echo $this->resourcePageBlocks($item, 'main')->getBlocks(); ?>
+      </div>
+    </div>
+  <?php endif; ?>
+  <?php if($main && !$right && !$left): ?>
+    <div class="row">
+      <div class="main-content col-md-12">
+        <?php echo $this->resourcePageBlocks($item, 'main')->getBlocks(); ?>
+      </div>
+    </div>
+  <?php endif; ?>
+  <?php if($second): ?>
+    <div class="row">
+      <div class="second-content offset-md-2 col-md-8">
+        <?php echo $this->resourcePageBlocks($item, 'second')->getBlocks(); ?>
+      </div>
+    </div>
+  <?php endif; ?>
+  </div>
+</div>
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12 offset-md-2 col-md-8">
+        <h5 class="section-title" style="margin-top:1.5rem;">Related items</h5>
+      </div>
+    </div>        
+        <?php 
+          parse_str("property[0][joiner]=and&property[0][property]=3&property[0][type]=eq&property[0][text]=&resource_class_id[]=&resource_template_id[]=2", $query);
+          $query['property'][0]['text'] = $item->value('dcterms:subject').'';
+          $items = $this->api()->search('items',$query);
+          $items = $items->getContent();
+          if(sizeof($items) <= 1):
+            parse_str("&resource_class_id[]=".$item->resourceClass()->label()."&resource_template_id[]=2", $query);
+            $items = $this->api()->search('items',$query);
+            $items = $items->getContent();
+          endif;
+          if(sizeof($items) > 1):
+            $count = sizeof($items) < 3 ? sizeof($items) : 3;
+            $keys = array_rand($items,$count);
+            $resources = array();
+            foreach($keys as $key):
+              $resources[] = $items[$key];
+            endforeach;
+          //this means that only the current or no item was found
+          elseif(sizeof($items) <= 1):
+            $resources = array();
+          endif;
+          ?>
+          <?php if($resources):?>
+            <div class="row">
+            <?php foreach($resources as $resource):?>
+              <div class="col-xs-12 col-md-4">
+                <div class="card card-undefined">
+                  <div class="card-body">
+                    <h5><a href="<?php $resource->url();?>"><?php echo $resource->displayTitle();?></a></h5>
+                    <div class="information" style="font-style:italic">
+                      <?php 
+                          $creator = $resource->value('dcterms:creator', ['all' => true]);
+                          echo implode("; ", $creator);
+                      ?>
+                      <?php 
+                          $date = $resource->value('dcterms:date', ['all' => true]);
+                          echo implode("; ", $date);
+                      ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach;?>  
+            </div>  
+          <?php endif; ?>
+      </div>
+    </div> 
+  </div>
+</div>  

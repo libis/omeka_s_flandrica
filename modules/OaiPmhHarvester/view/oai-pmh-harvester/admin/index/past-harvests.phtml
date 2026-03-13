@@ -1,0 +1,158 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \OaiPmhHarvester\Api\Representation\HarvestRepresentation[] $harvests
+ */
+
+$plugins = $this->getHelperPluginManager();
+$url = $plugins->get('url');
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+$hyperlink = $plugins->get('hyperlink');
+
+$hasModuleLog = class_exists('Log\Module', false);
+
+$this->htmlElement('body')
+    ->appendAttribute('class', 'oai-pmh-harvester oai-pmh-harvester-index jobs harvests undo');
+
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/oai-pmh-harvester.css', 'OaiPmhHarvester'));
+?>
+
+<?= $this->pageTitle($translate('Past Imports'), 1, $translate('OAI-PMH Harvester')) ?>
+
+<nav class="section-nav">
+    <?= $this->navigation('Laminas\Navigation\OaiPmhHarvester')->menu() ?>
+</nav>
+
+<?php if (empty($harvests)): ?>
+
+<?= $translate('There are no harvests currently.') ?>
+
+<?php else: ?>
+
+<?= $this->pagination() ?>
+
+<form method='POST'>
+    <fieldset id='page-actions'>
+        <input type="submit" value="<?= $escape($translate('Delete harvested resources')) ?>" />
+    </fieldset>
+    <table class="tablesaw" data-tablesaw-mode="stack">
+        <thead>
+            <tr>
+                <th><?= $escape($translate('Undo?')) ?></th>
+                <th><?= $escape($translate('Date')) ?></th>
+                <th><?= $escape($translate('Label')) ?></th>
+                <th><?= $escape($translate('Mode')) ?></th>
+                <th><?= $escape($translate('Last message')) ?></th>
+                <th><?= $escape($translate('Results')) ?></th>
+                <th><?= $escape($translate('Status')) ?></th>
+                <th><?= $escape($translate('Owner')) ?></th>
+            </tr>
+        </thead>
+        <tbody>
+
+        <?php
+        foreach ($harvests as $harvest):
+            $job = $harvest->job();
+            $undoJob = $harvest->undoJob();
+            $setSpec = $harvest->getSetSpec();
+            $setName = $harvest->getSetName();
+            ?>
+        <tr class="<?= $undoJob ? 'undone' : '' ?>">
+            <td>
+                <input type="checkbox" name="harvest_id[]" value="<?= $harvest->id() ?>" <?= $undoJob ? ' disabled="disabled"' : '' ?>/>
+                <span><?= $harvest->id() ?></span>
+            </td>
+            <td>
+                <span class="oai-pmh-date">
+                    <?= $escape($this->i18n()->dateFormat($job->started())) ?>
+                </span>
+                <br/>
+                <span class="oai-pmh-job">
+                    <?= $job->link($translate('Job details')) ?>
+                </span>
+                <?php if ($job->log()): ?>
+                /
+                <span class="oai-pmh-log">
+                    <?= $job->link($translate('Log'), 'log', ['target' => '_blank']) ?>
+                </span>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if (!$setName || $setName === $setSpec): ?>
+                [<span class="oai-pmh-set"><?= $escape($setSpec) ?></span>]
+                <?php else: ?>
+                <span class="oai-pmh-set"><?= $escape($setName) ?></span>
+                    <?php if ($setSpec): ?>
+                [<span class="oai-pmh-set"><?= $escape($setSpec) ?></span>]
+                    <?php endif; ?>
+                <?php endif; ?>
+            </td>
+            <td>
+                <span><?= $escape(sprintf($translate('Harvest: %s'), $translate($harvest->modeHarvest()))) ?></span>
+                <br/>
+                <span><?= $escape(sprintf($translate('Deletion: %s'), $translate($harvest->modeDelete()))) ?></span>
+            </td>
+            <td>
+                <?= $translate($harvest->message()) ?>
+                <?php if ($harvest->hasErr()): ?>
+                    <p><?= $translate('Problems were detected with the import. Check the job’s log for details.') ?></p>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ($stats = $harvest->stats()):
+                    if (!empty($stats['harvested'])) $stats['imported'] ??= 0;
+                    foreach ($stats as $statKey => $statValue):
+                        $statKey = str_replace('_', ' ', $statKey);
+                        if ($statKey === 'whitelisted') $statKey = 'not whitelisted'; // @translate
+                        ?>
+                    <span class="oai-pmh-stat">
+                        <?= sprintf($translate('%s: %s'), $translate($statKey), $statValue) ?>
+                    </span>
+                    <br/>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <?= sprintf($translate('Imported: %d %s'), $harvest->totalImported(), $translate('items'/* $harvest->entityName() */)) ?>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php
+                if ($undoJob):
+                    if ($undoJob->ended()):
+                        echo $translate('Undone') . ' ' . $escape($this->i18n()->dateFormat($undoJob->ended()));
+                    else:
+                        echo $translate('Undo in progress');
+                    endif;
+                    ?>
+                    <br/>
+                    <span class="oai-pmh-job">
+                        <?= $undoJob->link($translate('Job details')) ?>
+                    </span>
+                    <?php if ($undoJob->log() || $hasModuleLog): ?>
+                    /
+                    <span class="oai-pmh-log">
+                        <?= $hasModuleLog
+                            ? $hyperlink($translate('Log'), $url('admin/log/default', [], ['query' => ['job_id' => $undoJob->id()]]))
+                            : $undoJob->link($translate('Log'), 'log', ['target' => '_blank']) ?>
+                    </span>
+                    <?php
+                    endif;
+                else:
+                    echo $hasModuleLog
+                        ? $hyperlink($translate($job->status()), $url('admin/log/default', [], ['query' => ['job_id' => $job->id()]]))
+                        : $escape($translate($job->status()));
+                endif;
+                ?>
+            </td>
+            <td>
+                <?= $hyperlink($job->owner()->name(), $url('admin/id', ['controller' => 'user', 'action' => 'show', 'id' => $job->owner()->id()])) ?>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</form>
+
+<?php endif; ?>

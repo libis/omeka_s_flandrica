@@ -1,0 +1,25 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
+ * @var array $fields
+ * @var array $query
+ * @var array $options
+ */
+
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+?>
+
+<div class="reference-block">
+    <?php if (empty($fields)): ?>
+    <p><?= $translate('There is no references.') ?></p>
+    <?php else: ?>
+    <?= $this->partial('common/reference-index', [
+        'site' => $block->page()->site(),
+        'fields' => $fields,
+        'query' => $query,
+        'options' => $options,
+    ]) ?>
+    <?php endif; ?>
+</div>

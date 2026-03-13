@@ -2,17 +2,16 @@
 
 namespace AdvancedSearch\Site\BlockLayout;
 
-use AdvancedSearch\Api\Representation\SearchConfigRepresentation;
-use AdvancedSearch\Response;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\SitePageBlockRepresentation;
 use Omeka\Api\Representation\SitePageRepresentation;
 use Omeka\Api\Representation\SiteRepresentation;
 use Omeka\Entity\SitePageBlock;
 use Omeka\Site\BlockLayout\AbstractBlockLayout;
+use Omeka\Site\BlockLayout\TemplateableBlockLayoutInterface;
 use Omeka\Stdlib\ErrorStore;
 
-class SearchingForm extends AbstractBlockLayout
+class SearchingForm extends AbstractBlockLayout implements TemplateableBlockLayoutInterface
 {
     /**
      * The default partial view script.
@@ -21,15 +20,36 @@ class SearchingForm extends AbstractBlockLayout
 
     public function getLabel()
     {
-        return 'Search form (module Search)'; // @translate
+        return 'Search form (module Advanced Search)'; // @translate
     }
 
     public function onHydrate(SitePageBlock $block, ErrorStore $errorStore): void
     {
-        $data = $block->getData() + ['query' => '', 'query_filter' => ''];
-        $data['query'] = ltrim($data['query'], "? \t\n\r\0\x0B");
-        $data['query_filter'] = ltrim($data['query_filter'], "? \t\n\r\0\x0B");
-        // TODO Store queries as array to avoid to parse them each time.
+        $data = ($block->getData() ?? []) + ['query' => '', 'query_filter' => ''];
+
+        if (empty($data['query'])) {
+            $data['query'] = [];
+        } elseif (!is_array($data['query'])) {
+            $query = [];
+            parse_str(ltrim($data['query'], "? \t\n\r\0\x0B"), $query);
+            $data['query'] = array_filter($query, fn ($v) => $v !== '' && $v !== [] && $v !== null);
+        }
+
+        if (empty($data['query_filter'])) {
+            $data['query_filter'] = [];
+        } elseif (!is_array($data['query_filter'])) {
+            $query = [];
+            parse_str(ltrim($data['query_filter'], "? \t\n\r\0\x0B"), $query);
+            $data['query_filter'] = array_filter($query, fn ($v) => $v !== '' && $v !== [] && $v !== null);
+        }
+
+        // Convert properties string to array.
+        if (empty($data['properties'])) {
+            $data['properties'] = [];
+        } elseif (!is_array($data['properties'])) {
+            $data['properties'] = array_filter(array_map('trim', explode("\n", str_replace(["\r\n", "\r"], "\n", $data['properties']))));
+        }
+
         $block->setData($data);
     }
 
@@ -45,7 +65,12 @@ class SearchingForm extends AbstractBlockLayout
         $defaultSettings = $services->get('Config')['advancedsearch']['block_settings']['searchingForm'];
         $blockFieldset = \AdvancedSearch\Form\SearchingFormFieldset::class;
 
-        $data = $block ? $block->data() + $defaultSettings : $defaultSettings;
+        $data = $block ? ($block->data() ?? []) + $defaultSettings : $defaultSettings;
+
+        $query = $data['query'] ?? '';
+        $data['query'] = is_array($query) ? http_build_query($query, '', '&', PHP_QUERY_RFC3986) : $query;
+        $queryFilter = $data['query_filter'] ?? '';
+        $data['query_filter'] = is_array($queryFilter) ? http_build_query($queryFilter, '', '&', PHP_QUERY_RFC3986) : $queryFilter;
 
         $dataForm = [];
         foreach ($data as $key => $value) {
@@ -58,38 +83,66 @@ class SearchingForm extends AbstractBlockLayout
         return $view->formCollection($fieldset);
     }
 
-    public function render(PhpRenderer $view, SitePageBlockRepresentation $block)
+    public function render(PhpRenderer $view, SitePageBlockRepresentation $block, $templateViewScript = self::PARTIAL_NAME)
     {
-        $data = $block->data();
+        /**
+         * @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig
+         *
+         * @see \AdvancedSearch\View\Helper\GetSearchConfig
+         */
 
-        /** @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig */
+        $data = $block->data();
+        $site = $block->page()->site();
+
         $searchConfig = $data['search_config'] ?? null;
         $searchConfigId = empty($searchConfig) || $searchConfig === 'default' ? null : (int) $searchConfig;
         $searchConfig = $view->getSearchConfig($searchConfigId);
         if (!$searchConfig) {
-            $message = new \Omeka\Stdlib\Message(
-                'No search config specified for this block or not available for this site.' // @translate
+            $view->logger()->err(
+                'No search config "{value}" specified for this block or not available for site {site_slug}.', // @translate
+                ['value' => $searchConfigId, 'site_slug' => $site->slug()]
             );
-            $view->logger()->err($message);
             return '';
         }
 
         $form = $searchConfig->form();
         if (!$form) {
-            $message = new \Omeka\Stdlib\Message(
-                'The search config "%s" has no form associated.', // @translate
-                $searchConfig->path()
+            $view->logger()->warn(
+                'The search config "{search_slug}" has no form associated.', // @translate
+                ['search_slug' => $searchConfig->slug()]
             );
-            $view->logger()->warn($message);
             return '';
         }
 
-        $site = $block->page()->site();
+        // Check if it is an item set redirection.
+        $itemSetId = (int) $view->params()->fromRoute('item-set-id');
+        // This is just a check: if set, mvc listeners add item_set['id'][].
+        // @see \AdvancedSearch\Mvc\MvcListeners::redirectItemSetToSearch()
+        // May throw a not found exception.
+        // TODO Use site item set ?
+        $itemSet = $itemSetId
+            ? $view->api()->read('item_sets', ['id' => $itemSetId])->getContent()
+            : null;
 
         $displayResults = !empty($data['display_results']);
+        $autoscroll = !empty($data['autoscroll']);
 
+        // Determine the form action URL.
+        // When displaying results on the same page with autoscroll enabled,
+        // include the fragment so the page scrolls to this block after
+        // submission.
+        // Use just the fragment (not "?#") so the browser properly handles
+        // repeated form submissions with the same parameters.
+        $formAction = null;
         if (!$displayResults) {
-            $form->setAttribute('action', $searchConfig->siteUrl($site->slug()));
+            $formAction = $searchConfig->siteUrl($site->slug());
+        } elseif ($autoscroll) {
+            $formAction = '#block-' . $block->id();
+        }
+
+        // Generally, the form is rebuild later, but not in all cases.
+        if ($formAction) {
+            $form->setAttribute('action', $formAction);
         }
 
         if (empty($data['link'])) {
@@ -99,87 +152,63 @@ class SearchingForm extends AbstractBlockLayout
             $link = ['url' => trim($link[0]), 'label' => trim($link[1] ?? '')];
         }
 
-        $cssClass = str_replace('searching-form', 'block-template', basename((string) $block->dataValue('template', ''))) ?: 'block-template';
+        $properties = $data['properties'] ?? [];
 
         $vars = [
             'block' => $block,
             'site' => $site,
-            'heading' => $data['heading'] ?? '',
-            'html' => $data['html'] ?? '',
-            'link' => $link,
             'searchConfig' => $searchConfig,
-            'query' => null,
+            'itemSet' => $itemSet,
+            'request' => null,
+            'link' => $link,
             // Returns results on the same page.
             'skipFormAction' => $displayResults,
+            'formAction' => $formAction,
             'displayResults' => $displayResults,
-            'cssClass' => $cssClass,
-            'response' => new Response,
+            'properties' => $properties,
         ];
 
+        $formAdapter = $searchConfig->formAdapter();
+
         if ($displayResults) {
-            $query = [];
-            parse_str((string) ($data['query'] ?? ''), $query);
-            $query = array_filter($query);
-
-            $filterQuery = [];
-            parse_str((string) $block->dataValue('query_filter'), $filterQuery);
-            $filterQuery = array_filter($filterQuery);
-
+            $query = $data['query'] ?? [];
+            $filterQuery = $data['query_filter'] ?? [];
             $query += $filterQuery;
 
             $request = $view->params()->fromQuery();
-            $request = array_filter($request);
-            if ($request) {
-                $request += $filterQuery;
-                $request = $this->validateSearchRequest($searchConfig, $form, $request) ?: $query;
+            $request = $formAdapter->cleanRequest($request);
+            $isEmptyRequest = $formAdapter->isEmptyRequest($request);
+            if ($isEmptyRequest) {
+                $request = $query + ['page' => 1];
             } else {
-                $request = $query;
+                $request += $filterQuery;
+                if (!$formAdapter->validateRequest($request)) {
+                    $request = $query;
+                }
             }
+            $vars['request'] = $request;
 
-            $plugins = $block->getServiceLocator()->get('ControllerPluginManager');
-            $result = $plugins->get('searchRequestToResponse')($request, $searchConfig, $site);
-            if ($result['status'] === 'success') {
-                $vars = array_replace($vars, $result['data']);
-            } elseif ($result['status'] === 'error') {
-                $messenger = $plugins->get('messenger');
-                $messenger->addError($result['message']);
-            }
-        }
-
-        $template = $block->dataValue('template', self::PARTIAL_NAME);
-        return $template !== self::PARTIAL_NAME && $view->resolver($template)
-            ? $view->partial($template, $vars)
-            : $view->partial(self::PARTIAL_NAME, $vars);
-    }
-
-    /**
-     * Get the request from the query and check it according to the search config.
-     *
-     * @todo Factorize with \AdvancedSearch\Controller\IndexController::getSearchRequest()
-     *
-     * @param SearchConfigRepresentation $searchConfig
-     * @param \Laminas\Form\Form $searchForm
-     * @param array $request
-     * @return array|bool
-     */
-    protected function validateSearchRequest(
-        SearchConfigRepresentation $searchConfig,
-        \Laminas\Form\Form $form,
-        array $request
-    ) {
-        // Only validate the csrf.
-        // There may be no csrf element for initial query.
-        if (array_key_exists('csrf', $request)) {
-            $form->setData($request);
-            if (!$form->isValid()) {
-                $messages = $form->getMessages();
-                if (isset($messages['csrf'])) {
-                    $messenger = $searchConfig->getServiceLocator()->get('ControllerPluginManager')->get('messenger');
-                    $messenger->addError('Invalid or missing CSRF token'); // @translate
-                    return false;
+            $response = $formAdapter->toResponse($request, $site);
+            if ($response->isSuccess()) {
+                $vars['query'] = $response->getQuery();
+                $vars['response'] = $response;
+                /** @var \Omeka\Mvc\Controller\Plugin\Paginator $paginator */
+                $paginator = $block->getServiceLocator()->get('ControllerPluginManager')->get('paginator');
+                $paginator(
+                    $response->getTotalResults(),
+                    $response->getCurrentPage(),
+                    $response->getPerPage()
+                );
+            } else {
+                $msg = $response->getMessage();
+                if ($msg) {
+                    $plugins = $block->getServiceLocator()->get('ControllerPluginManager');
+                    $messenger = $plugins->get('messenger');
+                    $messenger->addError($msg);
                 }
             }
         }
-        return $request;
+
+        return $view->partial($templateViewScript, $vars);
     }
 }

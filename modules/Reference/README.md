@@ -28,6 +28,11 @@ Installation
 
 See general end user documentation for [installing a module].
 
+This module requires the module [Common], that should be installed first.
+
+If your records contains diacritic letters like É, Ù, etc., it is recommended to
+install the php extension `intl`.
+
 * From the zip
 
 Download the last release [Reference.zip] from the list of releases, and
@@ -37,6 +42,17 @@ uncompress it in the `modules` directory.
 
 If the module was installed from the source, rename the name of the folder of
 the module to `Reference`.
+
+Then install it like any other Omeka module and follow the config instructions.
+
+- For test
+
+The module includes a comprehensive test suite with unit and functional tests.
+Run them from the root of Omeka:
+
+```sh
+vendor/bin/phpunit -c modules/Reference/phpunit.xml --testdox
+```
 
 ### Note for an upgrade from Omeka Classic
 
@@ -58,7 +74,7 @@ necessary to modify the config.
 Usage
 -----
 
-The site settigns allows to select the terms to display. The config is the same
+The site settings allows to select the terms to display. The config is the same
 for the main site pages or in the block form for pages. It is recommended to use
 site pages when possible.
 
@@ -81,7 +97,7 @@ Available pages and options can be set in the site settings. Options are:
 
 A block allows to display the lists in any page. Furthermore,
 
-These contents can be displayed anywere via the view helper `references()`:
+These contents can be displayed anywhere via the view helper `references()`:
 
 ```php
 // With default values.
@@ -276,10 +292,16 @@ TODO
 - [ ] Make the reference recursive (two levels currently).
 - [ ] Get the second levels via a single sql, not via api.
 - [ ] Check if the option "include_without_meta" is still needed with data types.
-- [ ] Include the fields in the main request or get them via a second request, not via api.
-- [ ] Use the new table `reference_metadata` when possible.
+- [x] Include the fields in the main request or get them via a second request, not via api.
 - [ ] Simplify queries for aggregated fields (see AdvancedSearch).
 - [ ] Order by years instead of alphabetic.
+- [ ] Get thumbnail url directly from references for performance.
+- [ ] Store the display title by language, in particular when the title is a resource or not dcterms:title. Use sql views? Store only ids?
+      Other properties are useless to store. Or use a double or a sub-query.
+
+No more todo:
+
+- Use the new table `reference_metadata` when possible.
 
 
 Warning
@@ -328,7 +350,7 @@ Copyright
 
 * Copyright William Mayo, 2011
 * Copyright Philip Collins, 2013 ([jQuery tree view])
-* Copyright Daniel Berthereau, 2014-2023 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2014-2026 (see [Daniel-KM] on GitLab)
 
 This module is inspired from earlier work done by William Mayo (see [pobocks] on
 GitLab) in [Subject Browse], with some ideas from [Metadata Browser] and
@@ -342,8 +364,8 @@ Performance fixes were made for Article 19.
 [Reference]: https://gitlab.com/Daniel-KM/Omeka-S-module-Reference
 [Omeka]: https://omeka.org/classic
 [Reference plugin]: https://gitlab.com/Daniel-KM/Omeka-plugin-Reference
-[Reference.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-Reference/-/releases
-[Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
+[Reference.zip]: https://github.com/Daniel-KM/Omeka-S-module-Reference/releases
+[installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Api Info]: https://gitlab.com/Daniel-KM/Omeka-S-module-ApiInfo
 [Bulk Edit]: https://gitlab.com/Daniel-KM/Omeka-S-module-BulkEdit
 [Bulk Check]: https://gitlab.com/Daniel-KM/Omeka-S-module-BulkCheck

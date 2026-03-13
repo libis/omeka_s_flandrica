@@ -4,28 +4,27 @@
  * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
  * @var \Omeka\Api\Representation\SiteRepresentation $site
  * @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig
- * @var \AdvancedSearch\Query $query
- * @var string $heading
- * @var string $html
+ * @var \Omeka\Api\Representation\ItemSetRepresentation|null $itemSet
+ * @var array|null $request The user request completed with the hidden one.
  * @var array $link
  * @var bool $skipFormAction Allow to display results on same form.
- * @var string $cssClass
- * @var \AdvancedSearch\Response $response
+ * @var bool $formAction Specific url for form action.
+ * @var bool $displayResults Display results in the same block.
  */
 
 $plugins = $this->getHelperPluginManager();
-$escape = $plugins->get('escapeHtml');
 $hyperlink = $plugins->get('hyperlink');
 ?>
 
-<div class="block block-search <?= $cssClass ?>">
-    <?php if (!empty($heading)): ?>
-    <h2><?= $escape($heading) ?></h2>
-    <?php endif; ?>
-    <?= $html ?>
+<div id="block-<?= $block->id() ?>" class="block block-search">
     <?= $searchConfig->renderForm([
-        'template' => null,
+        'site' => $site,
+        'itemSet' => $itemSet,
+        'template' => $displayResults ? 'search/search' :  null,
         'skip_form_action' => $skipFormAction,
+        'form_action' => $formAction,
+        'request' => $request,
+        'properties' => $properties ?? [],
     ]) ?>
     <?php if ($link): ?>
     <div class="block-search-link">

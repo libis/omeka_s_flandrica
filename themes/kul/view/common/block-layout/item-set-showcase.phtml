@@ -1,0 +1,61 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
+ * @var \Omeka\Api\Representation\ItemSetRepresentation[] $itemSets
+ * @var string $thumbnailType
+ * @var string $showTitleOption
+ * @var string $heading
+ */
+
+$plugins = $this->getHelperPluginManager();
+$escape = $plugins->get('escapeHtml');
+$thumbnail = $plugins->get('thumbnail');
+
+$defaultThumbnail = $this->assetUrl('thumbnails/default.png', 'Omeka', true);
+$defaultThumbnail = '<img src="' . $defaultThumbnail . '"/>';
+
+$filterLocale = (bool) $this->siteSetting('filter_locale_values');
+$lang = $filterLocale ? $this->lang() : null;
+$itemSetsTitles = [];
+foreach ($itemSets as $itemSet):
+    $itemSetsTitles[] = $itemSet->displayTitle();
+endforeach;
+
+asort($itemSetsTitles);
+array_multisort($itemSets, $itemSetsTitles);
+?>
+
+<section class="section">
+    <div class="container">
+        <?php foreach ($itemSets as $itemSet):
+            $itemSetTitle = $itemSet->displayTitle();
+            $itemSetId = $itemSet->id();
+            $items = $this->api()->search("items", ["item_set_id" => $itemSetId])->getContent();
+        ?>
+        <h2><?php echo $itemSetTitle;?></h2>
+        <div class="row">
+            <?php foreach($items as $item):
+                $media = $item->media();
+                $thumbnail = $media[0]->thumbnailUrl('large');   
+                if ($mediaUrlOption !== 'no_media_url'){
+                    $url = $media[0]->url();
+                } else {
+                    $url = $item->url();
+                }
+            ?>
+            <div class="col-md-3">
+                <div class="kul-card-image card card-gray card-hover">
+                    <a href="<?php echo $url;?>">
+                        <img src="<?php echo $thumbnail;?>">
+                    </a>
+                    <div class="card-body">
+                        <h2><?php echo $item->displayTitle();?></h2>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach;?>
+        </div>
+        <?php endforeach;?>
+    </div>
+</section>

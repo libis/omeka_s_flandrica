@@ -4,17 +4,30 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit58c045181513e74ba1c54d56f403ea36
+class ComposerStaticInit74ab689c002769a444550873a32fa5e3
 {
     public static $prefixLengthsPsr4 = array (
-        'C' => 
+        'S' =>
+        array (
+            'Sempia\\ExternalAssets\\' => 22,
+            'Sempia\\CommonSymlink\\' => 21,
+        ),
+        'C' =>
         array (
             'Common\\' => 7,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Common\\' => 
+        'Sempia\\ExternalAssets\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/sempia/external-assets/src',
+        ),
+        'Sempia\\CommonSymlink\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/sempia/common-symlink/src',
+        ),
+        'Common\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
@@ -27,9 +40,9 @@ class ComposerStaticInit58c045181513e74ba1c54d56f403ea36
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit58c045181513e74ba1c54d56f403ea36::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit58c045181513e74ba1c54d56f403ea36::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit58c045181513e74ba1c54d56f403ea36::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit74ab689c002769a444550873a32fa5e3::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit74ab689c002769a444550873a32fa5e3::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit74ab689c002769a444550873a32fa5e3::$classMap;
 
         }, null, ClassLoader::class);
     }

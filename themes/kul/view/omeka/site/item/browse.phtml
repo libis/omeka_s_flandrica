@@ -1,0 +1,199 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$this->htmlElement('body')->appendAttribute('class', 'item resource browse');
+
+$query = $this->params()->fromQuery();
+$itemSetShow = isset($itemSet);
+if ($itemSetShow):
+    $this->htmlElement('body')->appendAttribute('class', 'item-set');
+    $query['item_set_id'] = $itemSet->id();
+endif;
+$news= false;
+$template_id = '';
+if(isset($_GET['resource_template_id'])):
+  $template_id = $_GET['resource_template_id'];
+endif;
+if($template_id == 2):
+  $news = true;
+endif;
+$sortHeadings = [
+    [
+        'label' => $translate('Title'),
+        'value' => 'dcterms:title'
+    ],
+    [
+        'label' => $translate('Identifier'),
+        'value' => 'dcterms:identifier'
+    ],
+    [
+        'label' => $translate('Class'),
+        'value' => 'resource_class_label'
+    ],
+    [
+        'label' => $translate('Created'),
+        'value' => 'created'
+    ],
+];
+?>
+  <div class="container first">
+    <div >
+      <div id="portal-breadcrumbs" class="breadcrumbs" style="display:block;">
+        <span class="breadcrumb-item">
+            <a href="<?php echo $site->url();?>">Home</a>
+        </span>
+        <span class="breadcrumb-item">
+          <a href="<?php echo $site->url();?>/page/collections"><?php echo $translate('Collections'); ?></a>       
+        </span>   
+        <span class="breadcrumb-item active">
+          <?php echo $itemSet->displayTitle(); ?>
+        </span>
+      </div>
+    </div>
+  
+    <?php if ($itemSetShow): ?>
+        <h2><?php echo $itemSet->displayTitle(); ?></h2>
+        <div class="row">         
+          <div class="col-md-4">
+            <?php
+              $mediaurl = "";
+              if($media = $itemSet->thumbnail()):               
+                  if(sizeof($this->resources) <= 2):
+                    $mediaurl = str_replace('http:','',$media->assetUrl('large'));
+                  else:
+                    $mediaurl = str_replace('http:','',$media->assetUrl('medium'));
+                  endif;
+              elseif($media = $itemSet->primaryMedia()):
+                if($media):
+                  if(sizeof($this->resources) <= 2):
+                    $mediaurl = str_replace('http:', '', $media->thumbnailUrl('large'));
+                  else:
+                    $mediaurl = str_replace('http:', '', $media->thumbnailUrl('medium'));
+                  endif;
+                endif;
+              endif;
+            ?>
+            <?php
+            if($mediaurl):?>
+                <img src="<?php echo $mediaurl;?>" />
+                <?php if($itemSet->value('dcterms:rights')):?>
+                  <div class="caption">
+                    <?php echo $itemSet->value('dcterms:rights')->asHtml(); ?>
+                  </div>
+                <?php endif;?>
+            <?php endif;?>
+          </div>
+          <?if($itemSet->value('dcterms:description')):?>
+
+            <div class="col-md-8">
+              <div class="content text-box">
+                <?php echo $itemSet->value('dcterms:description')->asHtml(); ?>
+              </div>
+              <div class="content text-box">
+                <div class="metadata">
+                    <?php echo $itemSet->displayValues(); ?>
+                </div>
+              </div>
+            </div>
+          <?php endif;?>          
+      </div>
+      <div class="item-set-items">
+    <?php elseif ($news):?>
+        <h1 class="title is-2 is-family-secondary"><?php echo $translate('Nieuws'); ?></h1>
+    <?php else: ?>
+        <h1 class="title is-2 is-family-secondary"><?php echo $translate('Items'); ?></h1>
+    <?php endif; ?>
+
+    <?php if(sizeof($items) > 0):?>    
+      <?php $this->trigger('view.browse.before'); ?>
+      <div class="row" style="margin-top:2rem;">
+        <?php
+        $headingTerm = $this->siteSetting('browse_heading_property_term');
+        $bodyTerm = $this->siteSetting('browse_body_property_term');
+        $i=0;
+        foreach ($items as $item):
+            if ($itemSetShow && $i==6):
+              continue;
+            endif;  
+            $heading = $headingTerm ? $item->value($headingTerm, ['default' => $translate('[Untitled]')]) : $item->displayTitle();
+            $body = $bodyTerm ? $item->value($bodyTerm) : $item->displayDescription();
+            $media = $item->media();
+            if($media):
+                $mediaurl = str_replace('http:', '', $media[0]->thumbnailUrl('medium'));
+            else:
+              $mediaurl = "";
+            endif;
+        ?>
+        <?php if (!$news):?>
+          <div class="col-md-4">
+            <div class="kul-card-image card card-gray">              
+              <div class="card-img-top"
+                style="background:url(<?php echo  $mediaurl;?>) no-repeat center 20%;background-color:#7fb5b2;background-size: cover;"
+                >
+              </div>
+              <div class="card-body">
+                <h2><a class="card-link-wrapper" href="<?php echo $item->url();?>"><?php echo $heading;?></a></h2>
+                <?php if ($body): ?>
+                  <p>
+                    <?php $trunc = implode(" ", array_slice(explode(" ", $body), 0, 21)); ?>
+                    <?php if(strlen($body) != strlen($trunc)):?>
+                      <?php echo $trunc.' ...';?>
+                    <?php else:?>
+                      <?php echo $trunc;?>
+                    <?php endif;?>
+                  </p>
+                <?php endif; ?>
+              </div>
+            </div>
+          </div>
+        <?php else:?>
+          <div class="col-md-4">
+            <?php if ($itemThumbnail = $this->thumbnail($item, 'square')): ?>
+              <?php echo $item->linkRaw($itemThumbnail); ?>
+            <?php endif;?>
+          </div>
+          <div class="col-md-8">              
+            <h3>
+              <a class="card-link-wrapper" href="<?php echo $item->url();?>">
+                <span><?php echo $heading;?></span>
+              </a>
+            </h3>
+            <?php $date =  $item->value('dcterms:date');?>
+            <?php if($date):?>
+              <?php $date = new DateTime($date->asHtml());?>
+              <div style="margin-bottom:0.3rem;color:#666;">
+                <?php echo $date->format('d-m-Y');?>
+              </div>            
+            <?php endif;?> 
+            <?php if ($body): ?>
+              <p>
+                <?php $trunc = implode(" ", array_slice(explode(" ", $body), 0, 31)); ?>
+                <?php if(strlen($body) != strlen($trunc)):?>
+                  <?php echo $trunc.' ...';?>
+                <?php else:?>
+                  <?php echo $trunc;?>
+                <?php endif;?>
+              </p>
+            <?php endif; ?>
+          </div>
+        <?php endif;?>
+        <?php $i++;?>
+        <?php endforeach; ?>
+      </div>
+      <?php echo ($itemSetShow) ? '</div>' : ''; ?>
+      <?php $this->trigger('view.browse.after'); ?>
+      <?php if ($itemSetShow): ?>
+        <div style="text-align:right;">
+          <a class="more" href="<?php echo 'https://services3.libis.be/test/s/kul/search?facet[item_set_id][0]='.$itemSet->id();?>" class="button is-primary">
+            <strong><?php echo "View all items in this collection";?></strong>
+          </a>
+        </div>
+      <?php endif;?>
+    <?php else:?>
+      <?php echo $this->pagination(); ?>
+    <?php endif;?>
+  </div>
+<script>
+  var module = document.getElementsByClassName("truncate");
+  $clamp(module, {clamp: 3});
+</script>

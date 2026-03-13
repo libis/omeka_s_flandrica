@@ -3,66 +3,49 @@
 namespace AdvancedSearch\FormAdapter;
 
 use AdvancedSearch\Query;
+use AdvancedSearch\Response;
+use AdvancedSearch\Stdlib\SearchResources;
+use Common\Stdlib\EasyMeta;
 use Doctrine\DBAL\Connection;
+use Omeka\Api\Representation\SiteRepresentation;
 
 /**
- * Simulate an api search.
+ * Simulate an api search for an external search engine.
  *
  * Only main search and properties are managed currently, with the joiner "and".
  */
-class ApiFormAdapter implements FormAdapterInterface
+class ApiFormAdapter extends AbstractFormAdapter implements FormAdapterInterface
 {
+    protected $configFormClass = \AdvancedSearch\Form\Admin\ApiFormConfigFieldset::class;
+
+    protected $label = 'Api'; // @translate
+
     /**
-     * @var Connection
+     * @var \Doctrine\DBAL\Connection
      */
     protected $connection;
 
     /**
-     * @param Connection $connection
+     * @var \Common\Stdlib\EasyMeta
      */
-    public function __construct(Connection $connection)
-    {
+    protected $easyMeta;
+
+    public function __construct(
+        Connection $connection,
+        EasyMeta $easyMeta
+    ) {
         $this->connection = $connection;
+        $this->easyMeta = $easyMeta;
     }
 
-    public function getLabel(): string
-    {
-        return 'Api'; // @translate
-    }
-
-    public function setForm(?\Laminas\Form\Form $form): \AdvancedSearch\FormAdapter\FormAdapterInterface
-    {
-        return $this;
-    }
-
-    public function getForm(): ?\Laminas\Form\Form
-    {
-        return null;
-    }
-
-    public function getFormClass(): ?string
-    {
-        return null;
-    }
-
-    public function getFormPartialHeaders(): ?string
-    {
-        return null;
-    }
-
-    public function getFormPartial(): ?string
-    {
-        return null;
-    }
-
-    public function getConfigFormClass(): ?string
-    {
-        return \AdvancedSearch\Form\Admin\ApiFormConfigFieldset::class;
-    }
-
-    public function toQuery(array $request, array $formSettings): \AdvancedSearch\Query
+    public function toQuery(array $request, array $formSettings): Query
     {
         $query = new Query();
+        $query
+            ->setAliases($formSettings['aliases'] ?? [])
+            ->setFieldsQueryArgs($formSettings['fields_query_args'] ?? [])
+            ->setOption('remove_diacritics', !empty($formSettings['remove_diacritics']))
+            ->setOption('default_search_partial_word', !empty($formSettings['default_search_partial_word']));
 
         if (isset($request['search'])) {
             $query->setQuery($request['search']);
@@ -75,8 +58,17 @@ class ApiFormAdapter implements FormAdapterInterface
 
         $this->buildMetadataQuery($query, $request, $formSettings);
         $this->buildPropertyQuery($query, $request, $formSettings);
+        $this->buildFilterQuery($query, $request, $formSettings);
 
         return $query;
+    }
+
+    public function toResponse(array $request, ?SiteRepresentation $site = null): Response
+    {
+        $response = new Response();
+        return $response
+            ->setIsSuccess(false)
+            ->setMessage('Not implemented in this form adapter.'); // @translate
     }
 
     /**
@@ -100,7 +92,7 @@ class ApiFormAdapter implements FormAdapterInterface
         // Copied from \Omeka\Api\Adapter\ItemAdapter::buildQuery(), etc.
 
         if (isset($metadata['is_public']) && isset($request['is_public'])) {
-            $query->addFilter($metadata['is_public'], (bool) $request['is_public']);
+            $query->addFilterQuery($metadata['is_public'], (bool) $request['is_public'], 'eq');
         }
 
         if (isset($metadata['id']) && !empty($request['id'])) {
@@ -142,7 +134,12 @@ class ApiFormAdapter implements FormAdapterInterface
         }
 
         if (isset($metadata['is_open']) && isset($request['is_open'])) {
-            $query->addFilter($metadata['is_open'], (bool) $request['is_open']);
+            $query->addFilterQuery($metadata['is_open'], (bool) $request['is_open'], 'eq');
+        }
+
+        // Module Access.
+        if (isset($metadata['access']) && isset($request['access'])) {
+            $query->addFilterQuery($metadata['access'], (string) $request['access'], 'eq');
         }
     }
 
@@ -168,17 +165,6 @@ class ApiFormAdapter implements FormAdapterInterface
             return;
         }
 
-        $withoutValueQueryTypes = [
-            'ex',
-            'nex',
-            'exs',
-            'nexs',
-            'exm',
-            'nexm',
-            'lex',
-            'nlex',
-        ];
-
         foreach ($request['property'] as $queryRow) {
             if (!(is_array($queryRow)
                 && array_key_exists('property', $queryRow)
@@ -191,28 +177,43 @@ class ApiFormAdapter implements FormAdapterInterface
             // $joiner = $queryRow['joiner']) ?? null;
             $value = $queryRow['text'] ?? null;
 
-            if (!$value && !in_array($queryType, $withoutValueQueryTypes)) {
+            if ((!isset($value) || $value === '' || $value === [])
+                && !in_array($queryType, SearchResources::FIELD_QUERY['value_none'])
+            ) {
                 continue;
             }
 
-            // Narrow to specific property, if one is selected, else use search.
-            $property = $this->normalizeProperty($property);
-            // TODO Manage empty properties (main search and "any property").
+            // TODO Manage empty, multiple and all properties (main search and "any property").
+            // For now, it is managed via fields?
+
             if (!$property) {
                 continue;
             }
+
+            if (is_array($property)) {
+                if (count($property) <= 1) {
+                    $property = reset($property);
+                } else {
+                    continue;
+                }
+            }
+
+            // Narrow to specific property, if one is selected, else use search.
+            $property = $this->easyMeta->propertyTerm($property);
+            if (!$property) {
+                continue;
+            }
+
             if (empty($properties[$property])) {
                 continue;
             }
+
             $propertyField = $properties[$property];
 
             // $positive = true;
 
             switch ($queryType) {
-                case 'eq':
-                    $query->addFilter($propertyField, $value);
-                    break;
-
+                /** @deprecated Use eq/neq, that supports array internally. */
                 case 'nlist':
                 case 'list':
                     $list = is_array($value) ? $value : explode("\n", $value);
@@ -221,32 +222,12 @@ class ApiFormAdapter implements FormAdapterInterface
                         continue 2;
                     }
                     $value = $list;
+                    $queryType = $queryType === 'nlist' ? 'neq' : 'eq';
                     // no break;
-                case 'neq':
-                case 'nin':
-                case 'in':
-                case 'nsw':
-                case 'sw':
-                case 'new':
-                case 'ew':
-                case 'nma':
-                case 'ma':
-                case 'nnear':
-                case 'near':
-                case 'nres':
-                case 'res':
-                case 'nex':
-                case 'ex':
-                case 'nexs':
-                case 'exs':
-                case 'nexm':
-                case 'exm':
-                case 'nlex':
-                case 'lex':
-                case 'nlres':
-                case 'lres':
+                case isset(SearchResources::FIELD_QUERY['reciprocal'][$queryType]):
                     $query->addFilterQuery($propertyField, $value, $queryType);
                     break;
+
                 default:
                     continue 2;
             }
@@ -254,37 +235,94 @@ class ApiFormAdapter implements FormAdapterInterface
     }
 
     /**
-     * Get the term from a property string or integer.
+     * Apply search of filters into a search query.
      *
-     * @todo Factorize with \AdvancedSearch\Mvc\Controller\Plugin\ApiSearch::normalizeProperty().
+     * @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::buildPropertyQuery()
      *
-     * @param string|int $termOrId
+     * @todo Manage negative search and missing parameters.
+     *
+     * @param Query $query
+     * @param array $request
+     * @param array $formSettings
      */
-    protected function normalizeProperty($termOrId): string
+    protected function buildFilterQuery(Query $query, array $request, array $formSettings): void
     {
-        static $properties;
-
-        if (!$termOrId) {
-            return '';
+        if (!isset($request['filter']) || !is_array($request['filter']) || empty($formSettings['properties'])) {
+            return;
         }
 
-        if (is_null($properties)) {
-            $sql = <<<'SQL'
-SELECT
-    CONCAT(vocabulary.prefix, ":", property.local_name),
-    property.id
-FROM property
-JOIN vocabulary ON vocabulary.id = property.vocabulary_id
-SQL;
-            $properties = array_map('intval', $this->connection->executeQuery($sql)->fetchAllKeyValue());
+        $properties = array_filter($formSettings['properties']);
+        if (empty($properties)) {
+            return;
         }
 
-        if (is_numeric($termOrId)) {
-            return array_search((int) $termOrId, $properties) ?: '';
-        }
+        foreach ($request['filter'] as $queryRow) {
+            if (!(is_array($queryRow)
+                && array_key_exists('field', $queryRow)
+                && array_key_exists('type', $queryRow)
+            )) {
+                continue;
+            }
+            $field = $queryRow['field'];
+            $queryType = $queryRow['type'];
+            // $join = $queryRow['join']) ?? null;
+            $val = $queryRow['val'] ?? null;
 
-        $termOrId = (string) $termOrId;
-        return isset($properties[$termOrId]) ? $termOrId : '';
+            if (($val === null || $val === '' || $val === [])
+                && !in_array($queryType, SearchResources::FIELD_QUERY['value_none'])
+            ) {
+                continue;
+            }
+
+            // TODO Manage empty, multiple and all properties (main search and "any property").
+            // For now, it is managed via fields?
+
+            if (!$field) {
+                continue;
+            }
+
+            if (is_array($field)) {
+                if (count($field) <= 1) {
+                    $field = reset($field);
+                } else {
+                    continue;
+                }
+            }
+
+            // Narrow to specific property, if one is selected, else use search.
+            $property = $this->easyMeta->propertyTerm($field);
+            if (!$property) {
+                continue;
+            }
+
+            if (empty($properties[$property])) {
+                continue;
+            }
+
+            $propertyField = $properties[$property];
+
+            // $positive = true;
+
+            switch ($queryType) {
+                /** @deprecated Use eq/neq, that supports array internally. */
+                case 'nlist':
+                case 'list':
+                    $list = is_array($val) ? $val : explode("\n", $val);
+                    $list = array_filter(array_map('trim', $list), 'strlen');
+                    if (empty($list)) {
+                        continue 2;
+                    }
+                    $val = $list;
+                    $queryType = $queryType === 'nlist' ? 'neq' : 'eq';
+                    // no break;
+                case isset(SearchResources::FIELD_QUERY['reciprocal'][$queryType]):
+                    $query->addFilterQuery($propertyField, $val, $queryType);
+                    break;
+
+                default:
+                    continue 2;
+            }
+        }
     }
 
     /**
@@ -298,7 +336,7 @@ SQL;
     {
         $dataValues = trim(is_array($value) ? array_shift($value) : $value);
         if (strlen($dataValues)) {
-            $query->addFilter($filterName, $dataValues);
+            $query->addFilterQuery($filterName, $dataValues, 'eq');
         }
     }
 
@@ -313,7 +351,7 @@ SQL;
     {
         $dataValues = (int) (is_array($value) ? array_shift($value) : $value);
         if ($dataValues) {
-            $query->addFilter($filterName, $dataValues);
+            $query->addFilterQuery($filterName, $dataValues, 'eq');
         }
     }
 
@@ -329,7 +367,7 @@ SQL;
         $dataValues = is_array($value) ? $value : [$value];
         $dataValues = array_filter(array_map('trim', $dataValues), 'strlen');
         if ($dataValues) {
-            $query->addFilter($filterName, $dataValues);
+            $query->addFilterQuery($filterName, $dataValues, 'eq');
         }
     }
 
@@ -345,7 +383,7 @@ SQL;
         $dataValues = is_array($value) ? $value : [$value];
         $dataValues = array_filter(array_map('intval', $dataValues));
         if ($dataValues) {
-            $query->addFilter($filterName, $dataValues);
+            $query->addFilterQuery($filterName, $dataValues, 'eq');
         }
     }
 }

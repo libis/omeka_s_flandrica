@@ -55,6 +55,18 @@ class EasyMeta
         'media' => \Omeka\Entity\Media::class,
         'resources' => \Omeka\Entity\Resource::class,
         'value_annotations' => \Omeka\Entity\ValueAnnotation::class,
+        // Common resources that are not base resources.
+        'sites' => \Omeka\Entity\Site::class,
+        'site_pages' => \Omeka\Entity\SitePage::class,
+    ];
+
+    const RESOURCE_RESOURCE_CLASSES = [
+        'annotations' => \Annotate\Entity\Annotation::class,
+        'items' => \Omeka\Entity\Item::class,
+        'item_sets' => \Omeka\Entity\ItemSet::class,
+        'media' => \Omeka\Entity\Media::class,
+        'resources' => \Omeka\Entity\Resource::class,
+        'value_annotations' => \Omeka\Entity\ValueAnnotation::class,
     ];
 
     const RESOURCE_LABELS = [
@@ -68,6 +80,8 @@ class EasyMeta
         'resource_classes' => 'resource class', // @translate
         'resource_templates' => 'resource template', // @translate
         'vocabularies' => 'vocabulary', // @translate
+        'sites' => 'site', // @translate
+        'site_pages' => 'page', // @translate
     ];
 
     const RESOURCE_LABELS_PLURAL = [
@@ -81,6 +95,8 @@ class EasyMeta
         'resource_classes' => 'resource classes', // @translate
         'resource_templates' => 'resource templates', // @translate
         'vocabularies' => 'vocabularies', // @translate
+        'sites' => 'sites', // @translate
+        'site_pages' => 'pages', // @translate
     ];
 
     const RESOURCE_NAMES = [
@@ -92,6 +108,8 @@ class EasyMeta
         'media' => 'media',
         'resources' => 'resources',
         'value_annotations' => 'value_annotations',
+        'sites' => 'sites',
+        'site_pages' => 'site_pages',
         // Json-ld type.
         'oa:Annotation' => 'annotations',
         'o:Asset' => 'assets',
@@ -100,6 +118,8 @@ class EasyMeta
         'o:Media' => 'media',
         'o:Resource' => 'resources',
         'o:ValueAnnotation' => 'value_annotations',
+        'o:Site' => 'sites',
+        'o:SitePage' => 'site_pages',
         // Keys in json-ld representation.
         'oa:annotation' => 'annotations',
         'o:asset' => 'assets',
@@ -109,6 +129,8 @@ class EasyMeta
         'o:site_item_set' => 'item_sets',
         'o:media' => 'media',
         '@annotations' => 'value_annotations',
+        'o:site' => 'sites',
+        'o:page' => 'site_pages',
         // Controllers and singular.
         'annotation' => 'annotations',
         'asset' => 'assets',
@@ -123,6 +145,9 @@ class EasyMeta
         'resource:item' => 'items',
         'resource:itemset' => 'item_sets',
         'resource:media' => 'media',
+        'site' => 'sites',
+        'page' => 'site_pages',
+        'site-page' => 'site_pages',
         // Representation class.
         \Annotate\Api\Representation\AnnotationRepresentation::class => 'annotations',
         \Omeka\Api\Representation\AssetRepresentation::class => 'assets',
@@ -131,6 +156,8 @@ class EasyMeta
         \Omeka\Api\Representation\MediaRepresentation::class => 'media',
         \Omeka\Api\Representation\ResourceReference::class => 'resources',
         \Omeka\Api\Representation\ValueAnnotationRepresentation::class => 'value_annotations',
+        \Omeka\Api\Representation\SiteRepresentation::class => 'sites',
+        \Omeka\Api\Representation\SitePageRepresentation::class => 'site_pages',
         // Entity class.
         \Annotate\Entity\Annotation::class => 'annotations',
         \Omeka\Entity\Asset::class => 'assets',
@@ -139,6 +166,8 @@ class EasyMeta
         \Omeka\Entity\Media::class => 'media',
         \Omeka\Entity\Resource::class => 'resources',
         \Omeka\Entity\ValueAnnotation::class => 'value_annotations',
+        \Omeka\Entity\Site::class => 'sites',
+        \Omeka\Entity\SitePage::class => 'site_pages',
         // Doctrine entity class (when using get_class() and not getResourceId().
         \DoctrineProxies\__CG__\Annotate\Entity\Annotation::class => 'annotations',
         \DoctrineProxies\__CG__\Omeka\Entity\Asset::class => 'assets',
@@ -147,6 +176,8 @@ class EasyMeta
         \DoctrineProxies\__CG__\Omeka\Entity\Media::class => 'media',
         // \DoctrineProxies\__CG__\Omeka\Entity\Resource::class => 'resources',
         \DoctrineProxies\__CG__\Omeka\Entity\ValueAnnotation::class => 'value_annotations',
+        \DoctrineProxies\__CG__\Omeka\Entity\Site::class => 'sites',
+        \DoctrineProxies\__CG__\Omeka\Entity\SitePage::class => 'site_pages',
         // Controllers, in particular in routes.
         'Annotate\Controller\Admin\Annotation' => 'annotations',
         'Annotate\Controller\Admin\AnnotationController' => 'annotations',
@@ -158,6 +189,10 @@ class EasyMeta
         'Omeka\Controller\Admin\MediaController' => 'media',
         'Omeka\Controller\Admin\ValueAnnotation' => 'value_annotations',
         'Omeka\Controller\Admin\ValueAnnotationController' => 'value_annotations',
+        'Omeka\Controller\SiteAdmin\Index' => 'sites',
+        'Omeka\Controller\SiteAdmin\IndexController' => 'sites',
+        'Omeka\Controller\SiteAdmin\Page' => 'site_pages',
+        'Omeka\Controller\SiteAdmin\PageController' => 'site_pages',
         'Annotate\Controller\Site\Annotation' => 'annotations',
         'Annotate\Controller\Site\AnnotationController' => 'annotations',
         'Omeka\Controller\Site\Item' => 'items',
@@ -168,6 +203,10 @@ class EasyMeta
         'Omeka\Controller\Site\MediaController' => 'media',
         'Omeka\Controller\Site\ValueAnnotation' => 'value_annotations',
         'Omeka\Controller\Site\ValueAnnotationController' => 'value_annotations',
+        'Omeka\Controller\Site\Index' => 'sites',
+        'Omeka\Controller\Site\IndexController' => 'sites',
+        'Omeka\Controller\Site\SitePage' => 'site_pages',
+        'Omeka\Controller\Site\SitePageController' => 'site_pages',
         // Capitalized name found in route __controller__.
         'Annotation' => 'annotations',
         'Item' => 'items',
@@ -175,12 +214,16 @@ class EasyMeta
         'Media' => 'media',
         'Resource' => 'resources',
         'ValueAnnotation' => 'value_annotations',
+        'Site' => 'sites',
+        'SitePage' => 'site_pages',
         'AnnotationController' => 'annotations',
         'ItemController' => 'items',
         'ItemSetController' => 'item_sets',
         'MediaController' => 'media',
         'ResourceController' => 'resources',
         'ValueAnnotationController' => 'value_annotations',
+        'SiteController' => 'sites',
+        'SitePageController' => 'site_pages',
         // Other deprecated, future or badly written names.
         'o:annotation' => 'annotations',
         'o:Annotation' => 'annotations',
@@ -222,6 +265,35 @@ class EasyMeta
         'resource:value-annotations' => 'value_annotations',
         'resource:value_annotation' => 'value_annotations',
         'resource:value_annotations' => 'value_annotations',
+        'site' => 'site_pages',
+        'sites' => 'sites',
+        'page' => 'site_pages',
+        'pages' => 'site_pages',
+    ];
+
+    const RESOURCE_TABLES = [
+        'annotations' => 'annotation',
+        'assets' => 'asset',
+        'items' => 'item',
+        'item_sets' => 'item_set',
+        'media' => 'media',
+        'resources' => 'resource',
+        'value_annotations' => 'value_annotation',
+        // Common resources that are not base resources.
+        'sites' => 'site',
+        'site_pages' => 'site_page',
+    ];
+
+    const RESOURCE_TYPES = [
+        'annotations' => 'annotation',
+        'assets' => 'asset',
+        'items' => 'item',
+        'item_sets' => 'item-set',
+        'media' => 'media',
+        'resources' => 'resource',
+        'value_annotations' => 'value-annotation',
+        'sites' => 'site',
+        'site_pages' => 'site-page',
     ];
 
     /**
@@ -383,9 +455,47 @@ class EasyMeta
     }
 
     /**
+     * Reset all static caches.
+     *
+     * Useful for long-running CLI jobs (bulk imports, etc.) where the database
+     * may change during execution (new properties, vocabularies, etc.).
+     */
+    public function resetCache(): self
+    {
+        static::$dataTypesByNames = null;
+        static::$dataTypesByNamesUsed = null;
+        static::$dataTypeLabelsByNames = null;
+        static::$dataTypesMainCustomVocabs = null;
+        static::$propertyIdsByTerms = null;
+        static::$propertyIdsByTermsAndIds = null;
+        static::$propertyIdsByTermsAndIdsUsed = null;
+        static::$propertyTermsByTermsAndIds = null;
+        static::$propertyLabelsByTerms = null;
+        static::$propertyLabelsByTermsAndIds = null;
+        static::$resourceClassIdsByTerms = null;
+        static::$resourceClassIdsByTermsAndIds = null;
+        static::$resourceClassIdsByTermsAndIdsUsed = null;
+        static::$resourceClassTermsByTermsAndIds = null;
+        static::$resourceClassLabelsByTerms = null;
+        static::$resourceClassLabelsByTermsAndIds = null;
+        static::$resourceTemplateIdsByLabels = null;
+        static::$resourceTemplateIdsByLabelsAndIds = null;
+        static::$resourceTemplateIdsByLabelsAndIdsUsed = null;
+        static::$resourceTemplateLabelsByLabelsAndIds = null;
+        static::$resourceTemplateClassesByIds = null;
+        static::$vocabularyIdsByPrefixes = null;
+        static::$vocabularyIdsByUris = null;
+        static::$vocabularyIdsByPrefixesAndUrisAndIds = null;
+        static::$vocabularyLabelsByPrefixesAndUrisAndIds = null;
+        static::$vocabularyPrefixesByPrefixesAndUrisAndIds = null;
+        static::$vocabularyUrisByPrefixesAndUrisAndIds = null;
+        return $this;
+    }
+
+    /**
      * Get the entity class from any class, type or name.
      *
-     * For now, only entity classes for resources are output.
+     * For now, only entity classes for resources, asset, site and pages are output.
      *
      * @param string $name
      * @return string|null The entity class if any.
@@ -399,11 +509,11 @@ class EasyMeta
      * Get the entity resource class from any class, type or name.
      *
      * @param string $name
-     * @return string|null The entity class if any.
+     * @return string|null The entity class of a resource if any.
      */
     public function entityResourceClass($name): ?string
     {
-        return static::RESOURCE_CLASSES[static::RESOURCE_NAMES[$name] ?? null] ?? null;
+        return static::RESOURCE_RESOURCE_CLASSES[static::RESOURCE_NAMES[$name] ?? null] ?? null;
     }
 
     /**
@@ -416,10 +526,10 @@ class EasyMeta
     public function entityResourceClasses($names = null): array
     {
         if ($names === null) {
-            return static::RESOURCE_CLASSES;
+            return static::RESOURCE_RESOURCE_CLASSES;
         }
         $result = $this->resourceNames($names);
-        return array_map(fn($v) => static::RESOURCE_CLASSES[$v], $result);
+        return array_filter(array_map(fn ($v) => static::RESOURCE_RESOURCE_CLASSES[$v] ?? null, $result));
     }
 
     /**
@@ -442,7 +552,7 @@ class EasyMeta
      */
     public function resourceNames($names = null): array
     {
-        if (is_null($names)) {
+        if ($names === null) {
             $result = array_unique(static::RESOURCE_NAMES);
             return array_combine($result, $result);
         }
@@ -454,6 +564,61 @@ class EasyMeta
         $searchKeys = array_flip($names);
         $result = array_intersect_key(static::RESOURCE_NAMES, $searchKeys);
         return array_replace(array_intersect_key($searchKeys, $result), $result);
+    }
+
+    /**
+     * Get the resource table name from any class, type or name.
+     *
+     * @param string $name
+     * @return string|null The resource table name if any.
+     */
+    public function resourceTable($name): ?string
+    {
+        return static::RESOURCE_TABLES[static::RESOURCE_NAMES[$name] ?? null] ?? null;
+    }
+
+    /**
+     * Get the resource table names from any class, type or name or all of them.
+     *
+     * @param array|string|null $names
+     * @return array The resource table name if any, or all table names as
+     * associative array with resource api names as key.
+     */
+    public function resourceTables($names = null): array
+    {
+        if ($names === null) {
+            return static::RESOURCE_TABLES;
+        }
+        $result = $this->resourceNames($names);
+        return array_map(fn ($v) => static::RESOURCE_TABLES[$v], $result);
+    }
+
+    /**
+     * Get the resource controller name from any class, type or name.
+     *
+     * @param string $name
+     * @return string|null The resource controller name if any.
+     */
+    public function resourceType($name): ?string
+    {
+        return static::RESOURCE_TYPES[static::RESOURCE_NAMES[$name] ?? null] ?? null;
+    }
+
+    /**
+     * Get the resource controller names from any class, type or name or all of
+     * them.
+     *
+     * @param array|string|null $names
+     * @return array The resource controller name if any, or all controllers
+     * names as associative array with resource api names as key.
+     */
+    public function resourceTypes($names = null): array
+    {
+        if ($names === null) {
+            return static::RESOURCE_TYPES;
+        }
+        $result = $this->resourceNames($names);
+        return array_map(fn ($v) => static::RESOURCE_TYPES[$v], $result);
     }
 
     /**
@@ -503,7 +668,7 @@ class EasyMeta
         if (!$dataType) {
             return null;
         }
-        if (is_null(static::$dataTypesByNames)) {
+        if (static::$dataTypesByNames === null) {
             $this->initDataTypes();
         }
         $dataType = mb_strtolower($dataType);
@@ -519,10 +684,10 @@ class EasyMeta
      */
     public function dataTypeNames($dataTypes = null): array
     {
-        if (is_null(static::$dataTypesByNames)) {
+        if (static::$dataTypesByNames === null) {
             $this->initDataTypes();
         }
-        if (is_null($dataTypes)) {
+        if ($dataTypes === null) {
             return static::$dataTypesByNames;
         }
         if (is_scalar($dataTypes)) {
@@ -540,10 +705,10 @@ class EasyMeta
      */
     public function dataTypeNamesUsed($dataTypes = null): array
     {
-        if (is_null(static::$dataTypesByNamesUsed)) {
+        if (static::$dataTypesByNamesUsed === null) {
             $this->initDataTypesUsed();
         }
-        if (is_null($dataTypes)) {
+        if ($dataTypes === null) {
             return static::$dataTypesByNamesUsed;
         }
         if (is_scalar($dataTypes)) {
@@ -561,10 +726,10 @@ class EasyMeta
      */
     public function dataTypeLabels($dataTypes = null): array
     {
-        if (is_null(static::$dataTypeLabelsByNames)) {
+        if (static::$dataTypeLabelsByNames === null) {
             $this->initDataTypes();
         }
-        if (is_null($dataTypes)) {
+        if ($dataTypes === null) {
             return static::$dataTypeLabelsByNames;
         }
         if (is_scalar($dataTypes)) {
@@ -584,12 +749,12 @@ class EasyMeta
         if (!$dataType) {
             return null;
         }
-        $name = mb_strtolower($dataType);
+        $dataType = mb_strtolower($dataType);
         if (isset(static::DATA_TYPES_MAIN[$dataType])) {
             return static::DATA_TYPES_MAIN[$dataType];
         }
         // Manage an exception in ValueSuggest: geonames features has no uri.
-        if ($name === 'valuesuggestall:geonames:features') {
+        if ($dataType === 'valuesuggestall:geonames:features') {
             return 'literal';
         }
         // Module ValueSuggest.
@@ -639,7 +804,7 @@ class EasyMeta
         if (!$dataType) {
             return null;
         }
-        if (is_null(static::$dataTypesMainCustomVocabs)) {
+        if (static::$dataTypesMainCustomVocabs === null) {
             $this->initDataTypesMainCustomVocabs();
         }
         $dataType = mb_strtolower($dataType);
@@ -657,10 +822,10 @@ class EasyMeta
      */
     public function dataTypeMainCustomVocabs($dataTypes = null): array
     {
-        if (is_null(static::$dataTypesMainCustomVocabs)) {
+        if (static::$dataTypesMainCustomVocabs === null) {
             $this->initDataTypesMainCustomVocabs();
         }
-        if (is_null($dataTypes)) {
+        if ($dataTypes === null) {
             return static::$dataTypesMainCustomVocabs;
         }
         if (is_scalar($dataTypes)) {
@@ -677,7 +842,7 @@ class EasyMeta
      */
     public function propertyId($termOrId): ?int
     {
-        if (is_null(static::$propertyIdsByTermsAndIds)) {
+        if (static::$propertyIdsByTermsAndIds === null) {
             $this->initProperties();
         }
         return static::$propertyIdsByTermsAndIds[$termOrId] ?? null;
@@ -693,7 +858,7 @@ class EasyMeta
      */
     public function propertyIds($termsOrIds = null): array
     {
-        if (is_null(static::$propertyIdsByTermsAndIds)) {
+        if (static::$propertyIdsByTermsAndIds === null) {
             $this->initProperties();
         }
         if (!$termsOrIds) {
@@ -722,7 +887,7 @@ class EasyMeta
      */
     public function propertyIdsUsed($termsOrIds = null): array
     {
-        if (is_null(static::$propertyIdsByTermsAndIdsUsed)) {
+        if (static::$propertyIdsByTermsAndIdsUsed === null) {
             $this->initPropertiesUsed();
         }
         if (!$termsOrIds) {
@@ -749,15 +914,22 @@ class EasyMeta
      */
     public function propertyTerm($termOrId): ?string
     {
-        if (is_null(static::$propertyIdsByTermsAndIds)) {
+        if (static::$propertyIdsByTermsAndIds === null) {
             $this->initProperties();
         }
         if (!isset(static::$propertyIdsByTermsAndIds[$termOrId])) {
             return null;
         }
-        return is_numeric($termOrId)
-            ? array_search($termOrId, static::$propertyIdsByTerms)
-            : $termOrId;
+        if (!is_numeric($termOrId)) {
+            return $termOrId;
+        }
+        // Use cached reverse lookup instead of array_search.
+        if (static::$propertyTermsByTermsAndIds === null) {
+            $propertyTermsByIds = array_flip(static::$propertyIdsByTerms);
+            static::$propertyTermsByTermsAndIds = array_combine($propertyTermsByIds, $propertyTermsByIds)
+                + $propertyTermsByIds;
+        }
+        return static::$propertyTermsByTermsAndIds[$termOrId] ?? null;
     }
 
     /**
@@ -770,7 +942,7 @@ class EasyMeta
      */
     public function propertyTerms($termsOrIds = null): array
     {
-        if (is_null(static::$propertyIdsByTermsAndIds)) {
+        if (static::$propertyIdsByTermsAndIds === null) {
             $this->initProperties();
         }
         if (!$termsOrIds) {
@@ -778,7 +950,7 @@ class EasyMeta
                 ? array_flip(static::$propertyIdsByTerms)
                 : [];
         }
-        if (is_null(static::$propertyTermsByTermsAndIds)) {
+        if (static::$propertyTermsByTermsAndIds === null) {
             $propertyTermsByIds = array_flip(static::$propertyIdsByTerms);
             static::$propertyTermsByTermsAndIds = array_combine($propertyTermsByIds, $propertyTermsByIds)
                 + $propertyTermsByIds;
@@ -803,7 +975,7 @@ class EasyMeta
      */
     public function propertyLabel($termOrId): ?string
     {
-        if (is_null(static::$propertyIdsByTermsAndIds)) {
+        if (static::$propertyIdsByTermsAndIds === null) {
             $this->initProperties();
         }
         return static::$propertyLabelsByTermsAndIds[$termOrId] ?? null;
@@ -820,7 +992,7 @@ class EasyMeta
      */
     public function propertyLabels($termsOrIds = null): array
     {
-        if (is_null(static::$propertyLabelsByTerms)) {
+        if (static::$propertyLabelsByTerms === null) {
             $this->initProperties();
         }
         if (!$termsOrIds) {
@@ -832,8 +1004,9 @@ class EasyMeta
             $result = static::$propertyLabelsByTermsAndIds[$termsOrIds] ?? null;
             return $result ? [$termsOrIds => $result] : [];
         }
-        // TODO Keep original order.
-        return array_intersect_key(static::$propertyLabelsByTermsAndIds, array_flip($termsOrIds));
+        $searchKeys = array_flip($termsOrIds);
+        $result = array_intersect_key(static::$propertyLabelsByTermsAndIds, $searchKeys);
+        return array_replace(array_intersect_key($searchKeys, $result), $result);
     }
 
     /**
@@ -844,7 +1017,7 @@ class EasyMeta
      */
     public function resourceClassId($termOrId): ?int
     {
-        if (is_null(static::$resourceClassIdsByTermsAndIds)) {
+        if (static::$resourceClassIdsByTermsAndIds === null) {
             $this->initResourceClasses();
         }
         return static::$resourceClassIdsByTermsAndIds[$termOrId] ?? null;
@@ -860,7 +1033,7 @@ class EasyMeta
      */
     public function resourceClassIds($termsOrIds = null): array
     {
-        if (is_null(static::$resourceClassIdsByTermsAndIds)) {
+        if (static::$resourceClassIdsByTermsAndIds === null) {
             $this->initResourceClasses();
         }
         if (!$termsOrIds) {
@@ -890,7 +1063,7 @@ class EasyMeta
      */
     public function resourceClassIdsUsed($termsOrIds = null): array
     {
-        if (is_null(static::$resourceClassIdsByTermsAndIdsUsed)) {
+        if (static::$resourceClassIdsByTermsAndIdsUsed === null) {
             $this->initResourceClassesUsed();
         }
         if (!$termsOrIds) {
@@ -917,15 +1090,22 @@ class EasyMeta
      */
     public function resourceClassTerm($termOrId): ?string
     {
-        if (is_null(static::$resourceClassIdsByTermsAndIds)) {
+        if (static::$resourceClassIdsByTermsAndIds === null) {
             $this->initResourceClasses();
         }
         if (!isset(static::$resourceClassIdsByTermsAndIds[$termOrId])) {
             return null;
         }
-        return is_numeric($termOrId)
-            ? array_search($termOrId, static::$resourceClassIdsByTerms)
-            : $termOrId;
+        if (!is_numeric($termOrId)) {
+            return $termOrId;
+        }
+        // Use cached reverse lookup instead of array_search.
+        if (static::$resourceClassTermsByTermsAndIds === null) {
+            $resourceClassTermsByIds = array_flip(static::$resourceClassIdsByTerms);
+            static::$resourceClassTermsByTermsAndIds = array_combine($resourceClassTermsByIds, $resourceClassTermsByIds)
+                + $resourceClassTermsByIds;
+        }
+        return static::$resourceClassTermsByTermsAndIds[$termOrId] ?? null;
     }
 
     /**
@@ -938,7 +1118,7 @@ class EasyMeta
      */
     public function resourceClassTerms($termsOrIds = null): array
     {
-        if (is_null(static::$resourceClassIdsByTermsAndIds)) {
+        if (static::$resourceClassIdsByTermsAndIds === null) {
             $this->initResourceClasses();
         }
         if (!$termsOrIds) {
@@ -946,7 +1126,7 @@ class EasyMeta
                 ? array_flip(static::$resourceClassIdsByTerms)
                 : [];
         }
-        if (is_null(static::$resourceClassTermsByTermsAndIds)) {
+        if (static::$resourceClassTermsByTermsAndIds === null) {
             $resourceClassTermsByIds = array_flip(static::$resourceClassIdsByTerms);
             static::$resourceClassTermsByTermsAndIds = array_combine($resourceClassTermsByIds, $resourceClassTermsByIds)
                 + $resourceClassTermsByIds;
@@ -971,7 +1151,7 @@ class EasyMeta
      */
     public function resourceClassLabel($termOrId): ?string
     {
-        if (is_null(static::$resourceClassIdsByTermsAndIds)) {
+        if (static::$resourceClassIdsByTermsAndIds === null) {
             $this->initResourceClasses();
         }
         return static::$resourceClassLabelsByTermsAndIds[$termOrId] ?? null;
@@ -988,7 +1168,7 @@ class EasyMeta
      */
     public function resourceClassLabels($termsOrIds = null): array
     {
-        if (is_null(static::$resourceClassLabelsByTerms)) {
+        if (static::$resourceClassLabelsByTerms === null) {
             $this->initResourceClasses();
         }
         if (!$termsOrIds) {
@@ -1000,8 +1180,9 @@ class EasyMeta
             $result = static::$resourceClassLabelsByTermsAndIds[$termsOrIds] ?? null;
             return $result ? [$termsOrIds => $result] : [];
         }
-        // TODO Keep original order.
-        return array_intersect_key(static::$resourceClassLabelsByTermsAndIds, array_flip($termsOrIds));
+        $searchKeys = array_flip($termsOrIds);
+        $result = array_intersect_key(static::$resourceClassLabelsByTermsAndIds, $searchKeys);
+        return array_replace(array_intersect_key($searchKeys, $result), $result);
     }
 
     /**
@@ -1012,7 +1193,7 @@ class EasyMeta
      */
     public function resourceTemplateId($labelOrId): ?int
     {
-        if (is_null(static::$resourceTemplateIdsByLabelsAndIds)) {
+        if (static::$resourceTemplateIdsByLabelsAndIds === null) {
             $this->initResourceTemplates();
         }
         return static::$resourceTemplateIdsByLabelsAndIds[$labelOrId] ?? null;
@@ -1028,7 +1209,7 @@ class EasyMeta
      */
     public function resourceTemplateIds($labelsOrIds = null): array
     {
-        if (is_null(static::$resourceTemplateIdsByLabelsAndIds)) {
+        if (static::$resourceTemplateIdsByLabelsAndIds === null) {
             $this->initResourceTemplates();
         }
         if (!$labelsOrIds) {
@@ -1058,7 +1239,7 @@ class EasyMeta
      */
     public function resourceTemplateIdsUsed($labelsOrIds = null): array
     {
-        if (is_null(static::$resourceTemplateIdsByLabelsAndIdsUsed)) {
+        if (static::$resourceTemplateIdsByLabelsAndIdsUsed === null) {
             $this->initResourceTemplatesUsed();
         }
         if (!$labelsOrIds) {
@@ -1085,10 +1266,10 @@ class EasyMeta
      */
     public function resourceTemplateLabel($labelOrId): ?string
     {
-        if (is_null(static::$resourceTemplateIdsByLabelsAndIds)) {
+        if (static::$resourceTemplateIdsByLabelsAndIds === null) {
             $this->initResourceTemplates();
         }
-        return static::$resourceTemplateIdsByLabelsAndIds[$labelOrId] ?? null;
+        return static::$resourceTemplateLabelsByLabelsAndIds[$labelOrId] ?? null;
     }
 
     /**
@@ -1101,7 +1282,7 @@ class EasyMeta
      */
     public function resourceTemplateLabels($labelsOrIds = null): array
     {
-        if (is_null(static::$resourceTemplateIdsByLabelsAndIds)) {
+        if (static::$resourceTemplateIdsByLabelsAndIds === null) {
             $this->initResourceTemplates();
         }
         if (!$labelsOrIds) {
@@ -1113,8 +1294,9 @@ class EasyMeta
             $result = static::$resourceTemplateIdsByLabelsAndIds[$labelsOrIds] ?? null;
             return $result ? [$labelsOrIds => $result] : [];
         }
-        // TODO Keep original order.
-        return array_intersect_key(static::$resourceTemplateLabelsByLabelsAndIds, array_flip($labelsOrIds));
+        $searchKeys = array_flip($labelsOrIds);
+        $result = array_intersect_key(static::$resourceTemplateLabelsByLabelsAndIds, $searchKeys);
+        return array_replace(array_intersect_key($searchKeys, $result), $result);
     }
 
     /**
@@ -1144,12 +1326,12 @@ class EasyMeta
      */
     public function resourceTemplateClassIds($labelsOrIds = null): array
     {
-        if (is_null(static::resourceTemplateClassesByIds)) {
+        if (static::$resourceTemplateClassesByIds === null) {
             $this->initResourceTemplateClasses();
         }
         if (!$labelsOrIds) {
             return $labelsOrIds === null
-                ? static::resourceTemplateClassesByIds
+                ? static::$resourceTemplateClassesByIds
                 : [];
         }
         if (is_scalar($labelsOrIds)) {
@@ -1159,8 +1341,10 @@ class EasyMeta
         if (!$templateIds) {
             return [];
         }
-        // TODO Keep original order.
-        return array_intersect_key(static::resourceTemplateClassesByIds, array_flip($labelsOrIds));
+        // Use template ids for lookup since cache is indexed by id.
+        $searchKeys = array_flip($templateIds);
+        $result = array_intersect_key(static::$resourceTemplateClassesByIds, $searchKeys);
+        return array_replace(array_intersect_key($searchKeys, $result), $result);
     }
 
     /**
@@ -1171,7 +1355,7 @@ class EasyMeta
      */
     public function vocabularyId($prefixOrUriOrId): ?int
     {
-        if (is_null(static::$vocabularyIdsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyIdsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
         return static::$vocabularyIdsByPrefixesAndUrisAndIds[$prefixOrUriOrId] ?? null;
@@ -1188,7 +1372,7 @@ class EasyMeta
      */
     public function vocabularyIds($prefixesOrUrisOrIds = null): array
     {
-        if (is_null(static::$vocabularyIdsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyIdsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
         if (!$prefixesOrUrisOrIds) {
@@ -1210,17 +1394,10 @@ class EasyMeta
      */
     public function vocabularyPrefix($prefixOrUriOrId): ?string
     {
-        if (is_null(static::$vocabularyIdsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyIdsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
-        if (!isset(static::$vocabularyIdsByPrefixesAndUrisAndIds[$prefixOrUriOrId])) {
-            return null;
-        }
-        if (is_numeric($prefixOrUriOrId)) {
-            return array_search($prefixOrUriOrId, static::$vocabularyIdsByPrefixes);
-        }
-        $id = static::$vocabularyIdsByPrefixesAndUrisAndIds[$prefixOrUriOrId];
-        return array_search($id, static::$vocabularyIdsByPrefixes);
+        return static::$vocabularyPrefixesByPrefixesAndUrisAndIds[$prefixOrUriOrId] ?? null;
     }
 
     /**
@@ -1234,7 +1411,7 @@ class EasyMeta
      */
     public function vocabularyPrefixes($prefixesOrUrisOrIds = null): array
     {
-        if (is_null(static::$vocabularyIdsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyIdsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
         if (!$prefixesOrUrisOrIds) {
@@ -1245,8 +1422,9 @@ class EasyMeta
         if (is_scalar($prefixesOrUrisOrIds)) {
             $prefixesOrUrisOrIds = [$prefixesOrUrisOrIds];
         }
-        // TODO Keep original order.
-        return array_intersect_key(static::$vocabularyPrefixesByPrefixesAndUrisAndIds, array_flip($prefixesOrUrisOrIds));
+        $searchKeys = array_flip($prefixesOrUrisOrIds);
+        $result = array_intersect_key(static::$vocabularyPrefixesByPrefixesAndUrisAndIds, $searchKeys);
+        return array_replace(array_intersect_key($searchKeys, $result), $result);
     }
 
     /**
@@ -1257,17 +1435,11 @@ class EasyMeta
      */
     public function vocabularyUri($prefixOrUriOrId): ?string
     {
-        if (is_null(static::$vocabularyIdsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyIdsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
-        if (!isset(static::$vocabularyIdsByPrefixesAndUrisAndIds[$prefixOrUriOrId])) {
-            return null;
-        }
-        if (is_numeric($prefixOrUriOrId)) {
-            return array_search($prefixOrUriOrId, static::$vocabularyIdsByUris);
-        }
-        $id = static::$vocabularyIdsByPrefixesAndUrisAndIds[$prefixOrUriOrId];
-        return array_search($id, static::$vocabularyIdsByUris);
+        // Use O(1) cached reverse lookup instead of array_search O(n).
+        return static::$vocabularyUrisByPrefixesAndUrisAndIds[$prefixOrUriOrId] ?? null;
     }
 
     /**
@@ -1281,7 +1453,7 @@ class EasyMeta
      */
     public function vocabularyUrisByPrefixes($prefixesOrUrisOrIds = null): array
     {
-        if (is_null(static::$vocabularyIdsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyIdsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
         if (!$prefixesOrUrisOrIds) {
@@ -1292,8 +1464,9 @@ class EasyMeta
         if (is_scalar($prefixesOrUrisOrIds)) {
             $prefixesOrUrisOrIds = [$prefixesOrUrisOrIds];
         }
-        // TODO Keep original order.
-        return array_intersect_key(static::$vocabularyUrisByPrefixesAndUrisAndIds, array_flip($prefixesOrUrisOrIds));
+        $searchKeys = array_flip($prefixesOrUrisOrIds);
+        $result = array_intersect_key(static::$vocabularyUrisByPrefixesAndUrisAndIds, $searchKeys);
+        return array_replace(array_intersect_key($searchKeys, $result), $result);
     }
 
     /**
@@ -1305,7 +1478,7 @@ class EasyMeta
      */
     public function vocabularyLabel($prefixOrUriOrId): ?string
     {
-        if (is_null(static::$vocabularyLabelsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyLabelsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
         return static::$vocabularyLabelsByPrefixesAndUrisAndIds[$prefixOrUriOrId] ?? null;
@@ -1317,12 +1490,12 @@ class EasyMeta
      * @param array|int|string|null $prefixesOrUrisOrIds One or multiple ids,
      * uris or prefixes.
      * @return string[] The vocabulary labels matching ids, uris or prefixes, or
-     * all vocabulary uris by prefixes. When the input contains uris, prefixes
+     * all vocabulary labels by prefixes. When the input contains uris, prefixes
      * and ids matching the same vocabularies, they are all returned.
      */
     public function vocabularyLabels($prefixesOrUrisOrIds = null): array
     {
-        if (is_null(static::$vocabularyLabelsByPrefixesAndUrisAndIds)) {
+        if (static::$vocabularyLabelsByPrefixesAndUrisAndIds === null) {
             $this->initVocabularies();
         }
         if (!$prefixesOrUrisOrIds) {
@@ -1365,7 +1538,7 @@ class EasyMeta
 
     protected function initDataTypesMainCustomVocabs(): void
     {
-        $hasCustomVocab = class_exists('CustomVocab\Module');
+        $hasCustomVocab = class_exists('CustomVocab\Module', false);
         if ($hasCustomVocab) {
             /*
             $sql = <<<'SQL'
@@ -1378,16 +1551,16 @@ class EasyMeta
             $customVocabsByType = $site->get('Omeka\Connection')->executeQuery($sql)->fetchAssociative() ?: ['literal' => '', 'resource' => '', 'uri' => ''];
              */
             $sql = <<<'SQL'
-SELECT
-    CONCAT('customvocab:', `id`) AS "customvocab",
-    CASE
-        WHEN `uris` != "" THEN "uri"
-        WHEN `item_set_id` IS NOT NULL THEN "resource"
-        ELSE "literal"
-    END AS "type"
-FROM `custom_vocab`
-ORDER BY `id` ASC;
-SQL;
+                SELECT
+                    CONCAT('customvocab:', `id`) AS "customvocab",
+                    CASE
+                        WHEN `uris` != "" THEN "uri"
+                        WHEN `item_set_id` IS NOT NULL THEN "resource"
+                        ELSE "literal"
+                    END AS "type"
+                FROM `custom_vocab`
+                ORDER BY `id` ASC;
+                SQL;
             static::$dataTypesMainCustomVocabs = $this->connection->executeQuery($sql)->fetchAllKeyValue() ?: [];
         } else {
             static::$dataTypesMainCustomVocabs = [];
@@ -1540,7 +1713,7 @@ SQL;
             ->orderBy('resource_template.id', 'asc')
         ;
         $result = $this->connection->executeQuery($qb)->fetchAllKeyValue();
-        static::$resourceTemplateClassesByIds = array_map(fn ($v) => $v ? null : (int) $v, $result);
+        static::$resourceTemplateClassesByIds = array_map(fn ($v) => $v !== null ? (int) $v : null, $result);
     }
 
     protected function initVocabularies(): void

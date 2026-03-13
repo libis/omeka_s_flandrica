@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2018-2023
+ * Copyright Daniel Berthereau, 2018-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -34,51 +34,49 @@ use AdvancedSearch\Api\Representation\SearchEngineRepresentation;
 use AdvancedSearch\Query;
 use Laminas\Log\LoggerAwareInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
-use Omeka\Entity\Resource;
+use Omeka\Api\Representation\AbstractResourceRepresentation;
 
-/**
- * The signature uses "IndexerInterface" instead of "self" for compatibility with php < 7.4.
- */
 interface IndexerInterface extends LoggerAwareInterface
 {
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator): IndexerInterface;
+    /**
+     * @deprecated Use factories.
+     */
+    public function setServiceLocator(ServiceLocatorInterface $services): self;
 
-    public function setSearchEngine(SearchEngineRepresentation $engine): IndexerInterface;
+    public function setSearchEngine(SearchEngineRepresentation $searchEngine): self;
 
     /**
      * Inidicate if the resource can be indexed.
      *
-     * @param string $resourceName The resource type ("items", "item_sets"…).
-     * @return bool
+     * @param string $resourceType May be "resources", "items", "item_sets"…
+     * Note that resources inclues items, media, etc.
      */
-    public function canIndex(string $resourceName): bool;
+    public function canIndex(string $resourceType): bool;
 
     /**
      * Reset the index.
      *
      * @param Query $query Allows to limit clearing to some resources.
-     * @return self
      */
-    public function clearIndex(?Query $query = null): IndexerInterface;
+    public function clearIndex(?Query $query = null): self;
 
     /**
      * Index a resource.
      */
-    public function indexResource(Resource $resource): IndexerInterface;
+    public function indexResource(AbstractResourceRepresentation $resource): self;
 
     /**
      * Index multiple resources.
      *
-     * @param Resource[] $resources
+     * @param AbstractResourceRepresentation[] $resources
      */
-    public function indexResources(array $resources): IndexerInterface;
+    public function indexResources(array $resources): self;
 
     /**
      * Unindex a deleted resource.
      *
-     * @param string $resourceName The resource type ("items", "item_sets"…).
+     * @param string $resourceType May be "resources", "items", "item_sets"…
      * @param int $id
-     * @return self
      */
-    public function deleteResource(string $resourceName, $id): IndexerInterface;
+    public function deleteResource(string $resourceType, $id): self;
 }

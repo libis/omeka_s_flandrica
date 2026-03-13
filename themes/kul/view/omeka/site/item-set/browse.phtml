@@ -1,0 +1,115 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$this->htmlElement('body')->appendAttribute('class', 'item-set resource browse');
+?>
+
+
+<?php //echo $this->searchFilters(); ?>
+<section class="section breadcrumb-section">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="<?php echo $site->url();?>/page/collectie">Collectie</a></li>
+        <li>Overzicht</li>
+      </ul>
+    </nav>
+    <h2 class="title is-family-secondary" style="margin-bottom:2rem;">
+      <?php echo $translate('Item sets'); ?>      
+    </h2>
+
+    <?php 
+        if(isset($_GET["property"]["0"])):
+          if($_GET["property"]["0"]["property"] == "dcterms:type"):
+            echo "<h3 class='subtitle' style='margin-bottom:2rem;'>".$_GET["property"]["0"]["text"]."</h3>";
+          endif; 
+        endif;
+    ?>  
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-9">
+        <div class="browse-text">
+        <form class="has-icons-right" action="<?php echo $this->escapeHtml($this->url(null, ['action' => 'browse'], true)); ?>" id="search-form">
+          <div class="columns" style="margin-bottom:0">
+            <div class="column is-7">
+              <?php
+              $searchValue = $this->escapeHtml($this->params()->fromQuery('fulltext_search', ''));
+              
+              ?>
+              
+                <div class="field has-addons">
+                  <div class="control">
+                    <input class="input" type="search" name="fulltext_search" value="<?php echo $searchValue; ?>"
+                        placeholder="Zoek een collectie"
+                        aria-label="<?php echo $translate('Search'); ?>">
+                  </div>
+                  <div class="control">
+                    <a class="button is-primary">
+                      <span class="icon is-large">
+                        <i class="fas fa-search"></i>
+                      </span>
+                    </a>
+                  </div>
+                </div>             
+            </div>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <?php $this->trigger('view.browse.before'); ?>
+    <div class="columns is-multiline">
+    <?php
+    $headingTerm = $this->siteSetting('browse_heading_property_term');
+    $bodyTerm = $this->siteSetting('browse_body_property_term');
+    foreach ($itemSets as $itemSet):
+        $heading = $headingTerm ? $itemSet->value($headingTerm, ['default' => $translate('[Untitled]')]) : $itemSet->displayTitle();
+        $body = $bodyTerm ? $itemSet->value($bodyTerm) : $itemSet->displayDescription();
+        $media = $itemSet->thumbnail();
+        $mediaurl = '';
+        if($media):
+            $mediaurl = str_replace('http:','',$media->assetUrl('medium'));
+        endif;
+    ?>
+        <div class="column is-4">
+          <div class="card equal-height">
+              <a class="card-link-wrapper" href="<?php echo $itemSet->url();?>">
+                <div class="card-bg card-bg-img-2"
+                  style="background:url(<?php echo  $mediaurl;?>) no-repeat center 20%;background-color:#45aab4;background-size: cover;"
+                  >
+                </div>
+                <header class="card-header">
+                  <p class="card-header-title title is-5 is-family-secondary">
+                      <span><?php echo $heading;?></span>
+                  </p>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    <?php if ($body): ?>
+                      <p>
+                        <?php $trunc = implode(" ", array_slice(explode(" ", $body), 0, 21)); ?>
+                        <?php if(strlen($body) != strlen($trunc)):?>
+                          <?php echo $trunc.' ...';?>
+                        <?php else:?>
+                          <?php echo $trunc;?>
+                        <?php endif;?>
+                      </p>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              </a>
+          </div>
+        </div>
+    <?php endforeach; ?>
+    </div>
+    <?php $this->trigger('view.browse.after'); ?>
+    <?php echo $this->pagination(); ?>
+  </div>
+</section>

@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2020-2023
+ * Copyright Daniel Berthereau, 2020-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -32,13 +32,10 @@ namespace AdvancedSearch\Entity;
 
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Event\LifecycleEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Omeka\Entity\AbstractEntity;
 
 /**
  * @Entity
- * @HasLifecycleCallbacks
  */
 class SearchEngine extends AbstractEntity
 {
@@ -87,7 +84,11 @@ class SearchEngine extends AbstractEntity
      * @var DateTime
      *
      * @Column(
-     *     type="datetime"
+     *     type="datetime",
+     *     nullable=false,
+     *     options={
+     *         "default": "CURRENT_TIMESTAMP"
+     *     }
      * )
      */
     protected $created;
@@ -193,23 +194,5 @@ class SearchEngine extends AbstractEntity
     public function getModified(): ?DateTime
     {
         return $this->modified;
-    }
-
-    /**
-     * @PrePersist
-     */
-    public function prePersist(LifecycleEventArgs $eventArgs): self
-    {
-        $this->created = new DateTime('now');
-        return $this;
-    }
-
-    /**
-     * @PreUpdate
-     */
-    public function preUpdate(PreUpdateEventArgs $eventArgs): self
-    {
-        $this->modified = new DateTime('now');
-        return $this;
     }
 }

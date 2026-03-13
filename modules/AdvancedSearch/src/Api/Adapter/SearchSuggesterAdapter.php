@@ -15,6 +15,7 @@ class SearchSuggesterAdapter extends AbstractEntityAdapter
         'id' => 'id',
         'name' => 'name',
         'engine' => 'engine',
+        'search_engine' => 'engine',
         'created' => 'created',
         'modified' => 'modified',
     ];
@@ -23,6 +24,7 @@ class SearchSuggesterAdapter extends AbstractEntityAdapter
         'id' => 'id',
         'name' => 'name',
         'engine' => 'engine',
+        'search_engine' => 'engine',
         'settings' => 'settings',
         'created' => 'created',
         'modified' => 'modified',
@@ -75,24 +77,29 @@ class SearchSuggesterAdapter extends AbstractEntityAdapter
     public function hydrate(Request $request, EntityInterface $entity,
         ErrorStore $errorStore
     ): void {
+        /** @var \AdvancedSearch\Entity\SearchSuggester $entity */
+
+        $entityManager = $this->getEntityManager();
+
         if ($this->shouldHydrate($request, 'o:name')) {
             $entity->setName($request->getValue('o:name'));
         }
         // The related engine cannot be modified once created.
         if ($request->getOperation() === Request::CREATE
-            && $this->shouldHydrate($request, 'o:engine')
+            && $this->shouldHydrate($request, 'o:search_engine')
         ) {
-            $engine = $request->getValue('o:engine');
-            if (is_array($engine)) {
-                $engine = $this->getAdapter('search_engines')->findEntity($engine['o:id'] ?? 0);
-            } elseif (is_numeric($engine)) {
-                $engine = $this->getAdapter('search_engines')->findEntity((int) $engine);
+            $searchEngine = $request->getValue('o:search_engine');
+            if (is_array($searchEngine)) {
+                $searchEngine = empty($searchEngine['o:id']) ? null : $entityManager->find(\AdvancedSearch\Entity\SearchEngine::class, $searchEngine['o:id']);
+            } elseif (is_numeric($searchEngine)) {
+                $searchEngine = $entityManager->find(\AdvancedSearch\Entity\SearchEngine::class, (int) $searchEngine);
             }
-            $entity->setEngine($engine);
+            $entity->setEngine($searchEngine);
         }
         if ($this->shouldHydrate($request, 'o:settings')) {
             $entity->setSettings($request->getValue('o:settings') ?? []);
         }
+        $this->updateTimestamps($request, $entity);
     }
 
     public function validateEntity(EntityInterface $entity, ErrorStore $errorStore): void

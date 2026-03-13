@@ -1,0 +1,55 @@
+<!-- overview blocks -->
+<?php if($attachments):?>
+  <section class="section items-section">
+    <div class="container">
+      <?php if($block->dataValue('title')):?>
+        <h2 class="title is-family-secondary"><?php echo $block->dataValue('title');?></h2>
+      <?php endif;?>  
+      <div class="columns">
+          <?php  for($i = 1; $i <= sizeof($attachments); $i++){ ?>
+            <?php
+                $media = $attachments[$i-1]->media();
+                $item = $media->item();
+                $url = '';
+                if($media):
+                  if($media->mediaType() == 'text/html'):
+                    $url = $media->originalUrl();
+                    $url = str_replace('http:', '', $url);
+                  else:
+                    $url = $media->thumbnailUrl('large');
+                    $url = str_replace('http:', '', $url);
+                  endif;
+                endif;
+            ?>
+            <div class="column">
+              <a href="<?php echo $item->url();?>">
+                <div class="items-block" style="background:url(<?php echo  $url;?>) no-repeat center 20%;background-color:#7fb5b2;background-size: cover;">
+                  <div class="overlay"></div>
+                </div>
+                <div class="items-content">
+                    <h3 class="title is-3 is-family-secondary">
+                        <span><?php echo $item->displayTitle();?></span>
+                    </h3>
+                    <p>
+                      <?php echo $item->displayDescription();?>
+                    </p>
+                    <div class="button"><a href="<?php echo $item->url();?>">Lees meer</a></div>
+                    
+                </div>
+              </a>              
+            </div>              
+          <?php } ?>
+        </div>
+        <?php if($block->dataValue('link')):?>
+          <div class="has-text-right">
+            <a class="button is-outlined is-white" href="<?php echo $block->dataValue('link');?>">
+              <span>Lees meer</span>
+              <span class="icon is-small">
+                <i class="fas fa-angle-right"></i>
+              </span>
+            </a>
+          </div>  
+        <?php endif;?>  
+    </div>
+</section>
+<?php endif;?>

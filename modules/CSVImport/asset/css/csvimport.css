@@ -81,8 +81,8 @@ ul.options {
     margin: 0;
 }
 
-ul.options > li:not(.active) {
-    display: none;
+ul.options li {
+    display: flex;
 }
 
 li {
@@ -138,6 +138,13 @@ li.option.delete {
 
 .sidebar .options p {
     margin: 3px;
+}
+
+.sidebar input.value-language[type="text"].active {
+    display: block;
+    margin: 3px;
+    background-color: #fff;
+    padding: 6px;
 }
 
 li.column-multivalue {
@@ -264,13 +271,12 @@ li.column-multivalue {
     align-items: center;
 }
 
-.one-line > label, .one-line > div.option-info {
+.one-line label {
     width: calc(100% - 1em);
 }
 
 .sidebar span.description {
     width: 100%;
-    font-size: 14px;
 }
 
 .resource-type-select ~ .mapping {

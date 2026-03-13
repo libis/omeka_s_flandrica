@@ -1,0 +1,31 @@
+<section class="section search-section">
+    <div class="container">
+        <div class="columns">
+            <div class="column is-two-thirds">
+                <form class="has-icons-right" action="<?php echo $block->page()->site()->url();?>/zoek-<?php echo $block->dataValue('type');?>">
+                  <div class="field has-addons">
+                    <div class="control">
+                      <input class="input is-info is-medium" type="text" name="q" id="q" placeholder="Zoek <?php echo lcfirst($block->dataValue('type'));?>" value="">
+                      <?php if($block->dataValue('type') == 'schoolerfgoed'):?>
+                        <input type='hidden' name="facet[resource_template_id][0]" value="<?php echo ucfirst($block->dataValue('type'));?>"/>
+                      <?php endif;?>
+                    </div>
+                    <div class="control">
+                      <button type="submit" class="button is-info is-medium">
+                        <span class="icon is-large">
+                          <i class="fas fa-search"></i>
+                        </span>
+                      </button>
+                    </div>
+
+                  </div>
+                </form>
+                <?php if($block->dataValue('type') == 'schoolerfgoed'):?>
+                  <a style="margin-top:1rem;" class="button is-info" href="<?php echo $block->page()->site()->url();?>/zoek-<?php echo $block->dataValue('type');?>?q=<?php echo "&facet[resource_template_id][0]=Slim erfgoed - ".ucfirst($block->dataValue('type'));?>">Toon alles</a>
+                <?php else:?>
+                  <a style="margin-top:1rem;" class="button is-info" href="<?php echo $block->page()->site()->url();?>/zoek-<?php echo $block->dataValue('type');?>?q=">Toon alles</a>
+                <?php endif;?>
+            </div>
+        </div>
+    </div>
+</section>

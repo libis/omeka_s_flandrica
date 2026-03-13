@@ -2,10 +2,24 @@
 
 namespace Common\Form\Element;
 
+use Omeka\Api\Manager as ApiManager;
 use Omeka\Api\Representation\UserRepresentation;
 
 trait TraitGroupByOwner
 {
+    use TraitPrependValuesOptions;
+
+    /**
+     * @var ApiManager
+     */
+    protected $apiManager;
+
+    public function setApiManager(ApiManager $apiManager): self
+    {
+        $this->apiManager = $apiManager;
+        return $this;
+    }
+
     /**
      * Fix prepending value "0" and owner without resource.
      *
@@ -18,14 +32,21 @@ trait TraitGroupByOwner
             $query = [];
         }
 
-        $response = $this->getApiManager()->search($this->getResourceName(), $query);
+        $resourceReps = $this->getApiManager()->search($this->getResourceName(), $query)->getContent();
+
+        // Provide a way to filter the resource representations prior to
+        // building the value options.
+        $callback = $this->getOption('filter_resource_representations');
+        if (is_callable($callback)) {
+            $resourceReps = $callback($resourceReps);
+        }
 
         $valueOptions = [];
 
         if ($this->getOption('disable_group_by_owner')) {
             // Group alphabetically by resource label without grouping by owner.
             $resources = [];
-            foreach ($response->getContent() as $resource) {
+            foreach ($resourceReps as $resource) {
                 $resources[$this->getValueLabel($resource)][] = $resource->id();
             }
             ksort($resources);
@@ -37,7 +58,7 @@ trait TraitGroupByOwner
         } else {
             // Group alphabetically by owner email.
             $resourceOwners = [];
-            foreach ($response->getContent() as $resource) {
+            foreach ($resourceReps as $resource) {
                 $owner = $resource->owner();
                 $index = $owner ? $owner->email() : null;
                 $resourceOwners[$index]['owner'] = $owner;
@@ -65,10 +86,7 @@ trait TraitGroupByOwner
                 $valueOptions[$index] = ['label' => $label, 'options' => $options];
             }
         }
-        $prependValueOptions = $this->getOption('prepend_value_options');
-        if (is_array($prependValueOptions)) {
-            $valueOptions = $prependValueOptions + $valueOptions;
-        }
-        return $valueOptions;
+
+        return $this->prependValuesOptions($valueOptions);
     }
 }

@@ -1,0 +1,14 @@
+@media all {
+    .oai-pmh-harvester .subhead::before {
+        content: "";
+    }
+
+    form.oai-pmh-harvester .datetime-date {
+        width: 12em;
+        margin-right: 12px;
+    }
+
+    form fieldset.hidden {
+        display: none;
+    }
+}

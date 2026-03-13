@@ -1,32 +1,55 @@
 {
     "name": "daniel-km/omeka-s-module-common",
-    "type": "library",
-    "description": "Module for Omeka S that manages internal features used in various modules: bulk functions, form elements, view helpers, one-time methods for install, etc.",
+    "type": "omeka-s-module",
+    "description": "Module for Omeka S: Manage internal features used in various modules: bulk functions, form elements, view helpers, one-time methods for install, etc.",
+    "keywords": [
+        "Omeka S",
+        "Omeka S module",
+        "development",
+        "library"
+    ],
     "license": "CECILL-2.1",
+    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-Common",
     "authors": [
         {
             "name": "Daniel Berthereau",
             "email": "Daniel.packagist@Berthereau.net"
         }
     ],
-    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-Common",
     "support": {
         "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-Common/-/issues",
         "forum": "https://forum.omeka.org/"
     },
-    "keywords": [
-        "Omeka S",
-        "Omeka S module",
-        "development"
-    ],
+    "_require (not set until Omeka S merges PR #2412)": {
+        "omeka/omeka-s": "^4.0"
+    },
     "autoload": {
         "psr-4": {
             "Common\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "CommonTest\\": "tests/CommonTest/"
+        }
+    },
+    "require": {
+        "sempia/common-symlink": "^1.0",
+        "sempia/external-assets": "^1.0"
+    },
     "config": {
         "platform": {
             "php": "7.4"
+        },
+        "allow-plugins": {
+            "sempia/common-symlink": true,
+            "sempia/external-assets": true
+        }
+    },
+    "extra": {
+        "installer-name": "Common",
+        "external-assets": {
+            "asset/vendor/jquery-autocomplete/jquery.autocomplete.min.js": "https://gitlab.com/Daniel-KM/jQuery-Autocomplete/-/raw/master/dist/jquery.autocomplete.min.js"
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace AdvancedSearch\Form\Admin;
 
-use AdvancedSearch\Form\Element as AdvancedSearchElement;
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Laminas\Form\Form;
@@ -36,15 +36,15 @@ class SearchSuggesterForm extends Form
         if ($isAdd) {
             $this
                 ->add([
-                    'name' => 'o:engine',
+                    'name' => 'o:search_engine',
                     'type' => Element\Select::class,
                     'options' => [
                         'label' => 'Search engine', // @translate
-                        'value_options' => $this->getEnginesOptions(),
+                        'value_options' => $this->getSearchEngineOptions(),
                         'empty_option' => 'Select a search engine below…', // @translate
                     ],
                     'attributes' => [
-                        'id' => 'engine',
+                        'id' => 'search_engine',
                         'required' => true,
                     ],
                 ]);
@@ -54,16 +54,18 @@ class SearchSuggesterForm extends Form
 
         $this
             ->add([
-                'name' => 'o:engine',
-                'type' => AdvancedSearchElement\OptionalSelect::class,
+                'name' => 'o:search_engine',
+                'type' => CommonElement\OptionalSelect::class,
                 'options' => [
                     'label' => 'Search engine', // @translate
-                    'value_options' => $this->getEnginesOptions(),
+                    'value_options' => $this->getSearchEngineOptions(),
                     'empty_option' => 'Select a search engine below…', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'engine',
+                    'id' => 'search_engine',
+                    'readonly' => true,
                     'disabled' => true,
+                    'info' => 'For Solr, the suggester can be set in the config.', // @translate
                 ],
             ]);
 
@@ -81,14 +83,6 @@ class SearchSuggesterForm extends Form
 
         $isInternal = (bool) $this->getOption('is_internal');
         if (!$isInternal) {
-            $fieldset
-                ->add([
-                    'name' => 'note',
-                    'type' => AdvancedSearchElement\Note::class,
-                    'options' => [
-                        'text' => 'Only the internal adapter can have settings for now. For external suggesters, use the direct url in the search config.', // @translate
-                    ],
-                ]);
             return;
         }
 
@@ -108,7 +102,7 @@ class SearchSuggesterForm extends Form
             ])
             ->add([
                 'name' => 'mode_index',
-                'type' => AdvancedSearchElement\OptionalRadio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Mode to index values', // @translate
                     'value_options' => [
@@ -127,7 +121,7 @@ class SearchSuggesterForm extends Form
             ])
             ->add([
                 'name' => 'mode_search',
-                'type' => AdvancedSearchElement\OptionalRadio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Mode to search suggestions', // @translate
                     'value_options' => [
@@ -170,7 +164,7 @@ class SearchSuggesterForm extends Form
             ])
             ->add([
                 'name' => 'fields',
-                'type' => AdvancedSearchElement\OptionalSelect::class,
+                'type' => CommonElement\OptionalSelect::class,
                 'options' => [
                     'label' => 'Limit query to specific fields', // @translate
                     'info' => 'With the internal search engine, it is not recommended to use full text content.', // @translate
@@ -186,7 +180,7 @@ class SearchSuggesterForm extends Form
             ])
             ->add([
                 'name' => 'excluded_fields',
-                'type' => AdvancedSearchElement\OptionalSelect::class,
+                'type' => CommonElement\OptionalSelect::class,
                 'options' => [
                     'label' => 'Exclude fields', // @translate
                     'info' => 'Allow to skip the full text content, that may be useless for suggestions.', // @translate
@@ -209,14 +203,15 @@ class SearchSuggesterForm extends Form
         return $this;
     }
 
-    protected function getEnginesOptions(): array
+    protected function getSearchEngineOptions(): array
     {
         $options = [];
 
-        $engines = $this->apiManager->search('search_engines')->getContent();
-        foreach ($engines as $engine) {
-            $options[$engine->id()] =
-            sprintf('%s (%s)', $engine->name(), $engine->adapterLabel());
+        /** @var \AdvancedSearch\Api\Representation\SearchEngineRepresentation[] $searchEngines */
+        $searchEngines = $this->apiManager->search('search_engines')->getContent();
+        foreach ($searchEngines as $searchEngine) {
+            $options[$searchEngine->id()] =
+            sprintf('%s (%s)', $searchEngine->name(), $searchEngine->engineAdapterLabel());
         }
 
         return $options;
@@ -225,14 +220,10 @@ class SearchSuggesterForm extends Form
     protected function getAvailableFields(): array
     {
         /** @var \AdvancedSearch\Api\Representation\SearchEngineRepresentation $searchEngine */
-        $searchEngine = $this->getOption('engine');
-        if (!$searchEngine) {
-            return [];
-        }
-
-        $searchAdapter = $searchEngine->adapter();
-        return empty($searchAdapter)
-            ? []
-            : $searchAdapter->setSearchEngine($searchEngine)->getAvailableFieldsForSelect();
+        $searchEngine = $this->getOption('search_engine');
+        $engineAdapter = $searchEngine ? $searchEngine->engineAdapter() : null;
+        return $engineAdapter
+            ? $engineAdapter->getAvailableFieldsForSelect()
+            : [];
     }
 }

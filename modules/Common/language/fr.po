@@ -7,70 +7,56 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-29 00:00+0000\n"
-"PO-Revision-Date: 2024-07-29 00:00+0000\n"
+"POT-Creation-Date: 2026-02-09 00:00+0000\n"
+"PO-Revision-Date: 2026-02-09 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.6\n"
 
-#: src/Stdlib/PsrMessage.php:199
+#: src/Mvc/Controller/Plugin/JSend.php:78
+msgid "Check your input for invalid data."
+msgstr "Vérifiez votre saisie ou des données incorrectes."
+
+#: src/Mvc/Controller/Plugin/JSend.php:97
+msgid "An internal error has occurred."
+msgstr "Une erreur interne s’est produite."
+
+#: src/Mvc/Controller/Plugin/JSend.php:112
+#, php-format
+msgid "The status \"%s\" is not supported by jSend."
+msgstr "Le statut « %s » n’est pas pris en charge par jSend."
+
+#: src/Mvc/Controller/Plugin/JSend.php:156
+msgid "Not found."
+msgstr "Non trouvé."
+
+#: src/Stdlib/PsrMessage.php:165
 msgid "default"
 msgstr "défaut"
 
-#: TraitModule.php:78 TraitModule.php:921
-#, php-format
-msgid "This module requires the module \"%s\"."
-msgstr "Ce module requiert le module « %s »."
-
-#: TraitModule.php:83
-#, php-format
-msgid "This module requires modules \"%s\"."
-msgstr "Ce module requiert les modules \"%s\"."
-
-#: TraitModule.php:92
-msgid "This module has resources that cannot be installed."
-msgstr "Ce module a des ressources qui ne peuvent pas être installées."
-
-#: TraitModule.php:100
+#: Module.php:70
 msgid ""
-"This module cannot install its tables, because they exist already. Try to "
-"remove them first."
+"The php extension \"intl\" is not available. It is recommended to install it "
+"to manage diacritics and non-latin characters and to translate dates, "
+"numbers and more."
 msgstr ""
-"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
-"de les supprimer manuellement."
+"L’extension php « intl » n’est pas disponible. Il est recommandé de  pour "
+"gérer les caractères diacritiques et non-latin et pour traduire les dates, "
+"les nombres et plus."
 
-#: TraitModule.php:406
-#, php-format
-msgid "The module removed tables \"%s\" from a previous broken install."
+#: Module.php:183
+msgid "A background job has been started to add database indexes."
 msgstr ""
-"Le module a supprimé les tables « %s » depuis une installation échouée."
+"Une tâche en arrière plan a été lancée pour ajouter des index à la base de "
+"données."
 
-#: TraitModule.php:916
-#, php-format
-msgid "This module requires the module \"%1$s\", version %2$s or above."
-msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
-
-#: TraitModule.php:1033
-#, php-format
-msgid ""
-"The module \"%s\" was automatically deactivated because the dependencies are "
-"unavailable."
-msgstr ""
-"Le module « %s » a été automatiquement désactivé car ses dépendances ne sont "
-"plus disponibles."
-
-#: Module.php:157
-msgid "Some indexes were added to tables to improve performance."
-msgstr ""
-"Certains index ont été ajoutés aux tables pour améliorer la performance."
-
-#: Module.php:177
+#: Module.php:205
 msgid "The module Generic is no longer needed and can be removed."
-msgstr "Le module Generic n’est plus nécessaire et peux être supprimé."
+msgstr "Le module Generic n’est plus nécessaire et peut être supprimé."
 
 #: src/Mvc/Controller/Plugin/SpecifyMediaType.php:150
 msgid ""
@@ -97,24 +83,125 @@ msgstr ""
 "Attention : certains fichiers contiennent des caractères unicode incorrects "
 "et ne peuvent pas être traités directement."
 
+#: src/Mvc/Controller/Plugin/PrepareMessage.php:106
+msgid "Empty message."
+msgstr "Message vide."
+
+#: src/Mvc/Controller/Plugin/PrepareMessage.php:113
+msgid "Too long message."
+msgstr "Message trop long."
+
+#: src/Mvc/Controller/Plugin/PrepareMessage.php:140
+msgid "Too long subject."
+msgstr "Sujet trop long."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:87
+msgid "Email not sent: the content is missing (subject: {subject})."
+msgstr "Mail non envoyé : pas de contenu (sujet : {subject})."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:99
+msgid "Email not sent: there is no recipient (subject: {subject})."
+msgstr "Mail non envoyé : pas de destinataire (sujet : {subject})."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:128
+msgid ""
+"Email not sent: the sender \"{sender}\" is not valid (subject: {subject})."
+msgstr ""
+"Mail non envoyé : l’expéditeur « {sender} » est invalide (sujet : {subject})."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:135
+msgid ""
+"Email not sent: the sender email \"{sender}\" is invalid (subject: "
+"{subject})."
+msgstr ""
+"Mail non envoyé : le mail de l’expéditeur « {sender} » est invalide (sujet : "
+"{subject})."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:151
+msgid ""
+"Email not sent: this is a spam with \"{keyword}\" (To: {to}; From: {from}): "
+"{body}"
+msgstr ""
+"Mail non envoyé : c’est un spam avec « {keyword} » (pour : {to}, de : "
+"{from}) : {body}"
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:198
+msgid "Email not sent: the cc emails {list} are invalid (subject: {subject})."
+msgstr ""
+"Mail non envoyé : les mails en copie « {list} » sont invalides (sujet : "
+"{subject})."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:210
+msgid "Email not sent: the bcc emails {list} are invalid (subject: {subject})."
+msgstr ""
+"Mail non envoyé : les mails en copie cachée « {list} » sont invalides "
+"(sujet : {subject})."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:222
+msgid ""
+"Email not sent: the reply-to emails {list} are invalid (subject: {subject})."
+msgstr ""
+"Mail non envoyé : les mails répondre-à « {list} » sont invalides (sujet : "
+"{subject})."
+
+#: src/Mvc/Controller/Plugin/SendEmail.php:238
+msgid "An email was sent to {recipients} with subject: {subject}"
+msgstr "Un mail a été envoyé à {recipients} avec le sujet : {subject}."
+
 #: src/View/Helper/MediaTypeSelect.php:40
-#: src/Service/Form/Element/MediaTypeSelectFactory.php:28
+#: src/Service/Form/Element/MediaTypeSelectFactory.php:35
 msgid "Select media type…"
 msgstr "Choisir un type de média…"
 
-#: src/I18n/Translator.php:50
+#: src/I18n/Translator.php:45
 msgid "A message to translate should be stringable."
 msgstr "Un message à traduire doit être convertible en chaîne."
 
-#: src/Validator/Ini.php:28
+#: src/Job/AddDatabaseIndexes.php:48
+msgid "All database indexes already exist."
+msgstr "Tous les index de la base de données existent déjà."
+
+#: src/Job/AddDatabaseIndexes.php:53
+msgid "Adding {count} database indexes: {list}"
+msgstr "Ajout de {count} index dans la base de données : {list}"
+
+#: src/Job/AddDatabaseIndexes.php:63
+msgid "Adding index on table `{table}` for column `{column}`."
+msgstr "Ajout d’un index sur la table `{table}` pour la colonne `{column}`."
+
+#: src/Job/AddDatabaseIndexes.php:71
+msgid "Successfully added index on table `{table}` for column `{column}`."
+msgstr ""
+"Index ajouté avec succès dans la table `{table}` pour la colonne `{column}`."
+
+#: src/Job/AddDatabaseIndexes.php:76
+msgid "Unable to add index on table `{table}` for column `{column}`: {msg}"
+msgstr ""
+"Impossible d’ajouter un index dans la table « {table} » pour la colonne "
+"`{column}` : {msg}"
+
+#: src/Job/AddDatabaseIndexes.php:84
+msgid "Successfully added {count} database indexes: {list}"
+msgstr "{count} index ajoutés avec succès : {list}"
+
+#: src/Validator/Ini.php:38
 msgid "The string is not formatted as ini"
 msgstr "La chaîne n’est pas formaté en ini"
 
-#: src/Validator/Ini.php:29
+#: src/Validator/Ini.php:39
 msgid "The string is incorrectly formatted"
 msgstr "La chaîne est mal formatée"
 
-#: src/Validator/Ini.php:30
+#: src/Validator/Ini.php:40
+msgid "The string contains invalid characters like double quotes"
+msgstr ""
+"La chaîne contient des caractères invalides tels que les guillemets droits"
+
+#: src/Validator/Ini.php:41
+msgid "The string contains invalid characters"
+msgstr "La chaîne contient des caractères invalides"
+
+#: src/Validator/Ini.php:42
 msgid "Invalid type given. String expected"
 msgstr "Type incorrect. Chaîne attendue"
 
@@ -143,9 +230,57 @@ msgstr "Le chemin n’est pas à l’intérieur du chemin prévu"
 msgid "[No site]"
 msgstr "[Aucun site]"
 
-#: src/Form/Element/IniTextarea.php:106
-msgid "Invalid ini string"
-msgstr "Chaîne ini incorrecte"
+#: src/Form/Element/IniTextarea.php:142
+msgid "Invalid ini string or values with double quotes"
+msgstr "Chaîne ini invalide ou valeurs avec des guillemets droits"
+
+#: src/Form/Element/IniTextarea.php:186
+msgid "The field {label} has an issue: {msg}"
+msgstr "Le champ {label} a un problème : {msg}"
+
+#: src/Form/SendMessageForm.php:87
+msgid "Message"
+msgstr "Message"
+
+#: src/Form/SendMessageForm.php:107
+msgid "Mark not submitted"
+msgstr "Marquer non soumis"
+
+#: src/Form/SendMessageForm.php:122
+msgid "Add myself as"
+msgstr "M’ajouter en"
+
+#: src/Form/SendMessageForm.php:124
+msgid "cc"
+msgstr "cc"
+
+#: src/Form/SendMessageForm.php:125
+msgid "bcc"
+msgstr "ccc"
+
+#: src/Form/SendMessageForm.php:126
+msgid "Reply to"
+msgstr "Répondre à"
+
+#: src/Form/SendMessageForm.php:142
+msgid "Add specific emails as cc"
+msgstr "Ajouter des mails spécifiques en cc"
+
+#: src/Form/SendMessageForm.php:143
+msgid "Use \"=\" to separate multiple emails."
+msgstr "Utiliser « = » pour séparer plusieurs adresses mail."
+
+#: src/Form/SendMessageForm.php:159
+msgid "Add specific emails as bcc"
+msgstr "Ajouter des mails spécifiques en ccc"
+
+#: src/Form/SendMessageForm.php:175
+msgid "Add specific emails as reply-to"
+msgstr "Ajouter des mails spécifiques en répondre-à"
+
+#: src/Form/SendMessageForm.php:190
+msgid "Send message"
+msgstr "Envoyer le message"
 
 #: src/File/Validator.php:29
 msgid ""
@@ -163,67 +298,7 @@ msgstr ""
 "Erreur lors de la validation de « {filename} ». Il est impossible "
 "d’enregistrer les fichiers avec l’extension « {extension} »."
 
-#: src/Service/Form/Element/MediaIngesterSelectFactory.php:26
-msgid "Select media ingesters…"
-msgstr "Choisir un ingéreur de média…"
-
-#: src/Service/Form/Element/MediaRendererSelectFactory.php:31
-msgid "Select media renderers…"
-msgstr "Choisir un rendu pour le média…"
-
-#: src/Stdlib/EasyMeta.php:61
-msgid "annotation"
-msgstr "annotation"
-
-#: src/Stdlib/EasyMeta.php:66
-msgid "resource"
-msgstr "ressource"
-
-#: src/Stdlib/EasyMeta.php:67
-msgid "property"
-msgstr "propriété"
-
-#: src/Stdlib/EasyMeta.php:68
-msgid "resource class"
-msgstr "classe de ressource"
-
-#: src/Stdlib/EasyMeta.php:74
-msgid "annotations"
-msgstr "annotations"
-
-#: src/Stdlib/EasyMeta.php:75
-msgid "assets"
-msgstr "fichiers"
-
-#: src/Stdlib/EasyMeta.php:76
-msgid "items"
-msgstr "contenus"
-
-#: src/Stdlib/EasyMeta.php:77
-msgid "item sets"
-msgstr "collections"
-
-#: src/Stdlib/EasyMeta.php:79
-msgid "resources"
-msgstr "ressources"
-
-#: src/Stdlib/EasyMeta.php:80
-msgid "properties"
-msgstr "propriétés"
-
-#: src/Stdlib/EasyMeta.php:81
-msgid "resource classes"
-msgstr "classes de ressource"
-
-#: src/Stdlib/EasyMeta.php:82
-msgid "resource templates"
-msgstr "modèles de ressource"
-
-#: src/Stdlib/EasyMeta.php:83
-msgid "vocabularies"
-msgstr "vocabulaires"
-
-#: ManageModuleAndResources.php:93
+#: src/ManageModuleAndResources.php:93
 msgid ""
 "An error occured when loading vocabulary \"{vocabulary}\": file has no json "
 "content."
@@ -231,7 +306,7 @@ msgstr ""
 "Une erreur est survenue en chargeant le vocabulaire « {vocabulary} » : le "
 "fichier n’a pas de contenu json."
 
-#: ManageModuleAndResources.php:100
+#: src/ManageModuleAndResources.php:100
 msgid ""
 "An error occured when adding the prefix \"{prefix}\": another vocabulary "
 "exists. Resolve the conflict before installing this module."
@@ -239,7 +314,7 @@ msgstr ""
 "Une erreur est survenue en ajoutant le préfixe « {prefix} » : un autre "
 "vocabulaire existe. Merci de résoudre le conflit avant d’installer ce module."
 
-#: ManageModuleAndResources.php:112
+#: src/ManageModuleAndResources.php:112
 msgid ""
 "A custom vocab exists for \"{name}\". Remove it or rename it before "
 "installing this module."
@@ -247,7 +322,7 @@ msgstr ""
 "Un vocabulaire personnalisé existe pour « {name} » : renommez-le ou "
 "supprimez-le avant d’installer ce module."
 
-#: ManageModuleAndResources.php:123
+#: src/ManageModuleAndResources.php:123
 msgid ""
 "A resource template exists for {template}. Rename it or remove it before "
 "installing this module."
@@ -255,11 +330,11 @@ msgstr ""
 "Un modèle de ressource nommé « {template} » existe : renommez ou supprimez-"
 "le avant d’installer ce module."
 
-#: ManageModuleAndResources.php:328
+#: src/ManageModuleAndResources.php:330
 msgid "The vocabulary \"{vocabulary}\" was already installed and was kept."
 msgstr "Le vocabulaire « {vocabulary} » a déjà été installé et a été conservé."
 
-#: ManageModuleAndResources.php:338
+#: src/ManageModuleAndResources.php:340
 msgid ""
 "An error occured when adding the prefix \"{prefix}\": another vocabulary "
 "exists with the same prefix. Resolve the conflict before installing this "
@@ -269,7 +344,7 @@ msgstr ""
 "vocabulaire existe avec le même préfixe. Merci de résoudre le conflit avant "
 "d’installer ce module."
 
-#: ManageModuleAndResources.php:350
+#: src/ManageModuleAndResources.php:352
 msgid ""
 "An error occured when adding the prefix \"{prefix}\" and the associated "
 "properties: {message}"
@@ -277,7 +352,7 @@ msgstr ""
 "Une erreur est survenue en ajoutant le préfixe « {prefix} » et les "
 "propriétés associées : {message}"
 
-#: ManageModuleAndResources.php:429 ManageModuleAndResources.php:438
+#: src/ManageModuleAndResources.php:431 src/ManageModuleAndResources.php:440
 msgid ""
 "An error occured when updating vocabulary \"{prefix}\" and the associated "
 "properties: {message}"
@@ -285,7 +360,7 @@ msgstr ""
 "Une erreur est survenue lors de la mise à jour du vocabulaire « {prefix} » "
 "et les propriétés associées : {message}"
 
-#: ManageModuleAndResources.php:532
+#: src/ManageModuleAndResources.php:535
 msgid ""
 "The following \"{name}\" of the vocabulary \"{label}\" were replaced: "
 "{members}"
@@ -293,7 +368,7 @@ msgstr ""
 "Les « {name} » suivants du vocabulaire « {label} » ont été remplacés : "
 "{members}"
 
-#: ManageModuleAndResources.php:542
+#: src/ManageModuleAndResources.php:545
 msgid ""
 "Resources, values and templates were updated, but you may check settings "
 "where the old ones were used."
@@ -301,7 +376,7 @@ msgstr ""
 "Les ressources, valeurs et modèles ont été mis à jour, mais vous pouvez "
 "vérifier les paramètres où les anciennes valeurs étaient utilisées."
 
-#: ManageModuleAndResources.php:569
+#: src/ManageModuleAndResources.php:572
 msgid ""
 "The resource template named \"{template}\" is already available and is "
 "skipped."
@@ -309,35 +384,159 @@ msgstr ""
 "Le modèle de ressource nommé « {template} » est déjà disponible et a été "
 "conservé."
 
-#: ManageModuleAndResources.php:773
+#: src/ManageModuleAndResources.php:770
 msgid "The custom vocab named \"{custom_vocab}\" is not available."
 msgstr ""
 "Le vocabulaire personnalisé nommé « {custom_vocab} » n’est pas disponible."
 
-#: ManageModuleAndResources.php:961
+#: src/ManageModuleAndResources.php:979
 msgid "No file or url set for the vocabulary."
 msgstr "Pas de fichier ou d’url pour le vocabulaire."
 
-#: ManageModuleAndResources.php:971
+#: src/ManageModuleAndResources.php:988
 msgid "The file \"{file}\" cannot be read. Check the url."
 msgstr "Le fichier « {file} » ne peut pas être lu. Merci de vérifier l’url."
 
-#: ManageModuleAndResources.php:981
+#: src/ManageModuleAndResources.php:999
 msgid "The file \"{file}\" cannot be read. Check the file."
 msgstr ""
 "Le fichier « {file} » ne peut pas être lu. Merci de vérifier le fichier."
 
-#: ManageModuleAndResources.php:1002
+#: src/ManageModuleAndResources.php:1020
 msgid "A vocabulary must have a namespace uri and a prefix."
 msgstr "Un vocabulaire doit avoir une uri pour l’espace de nom et un préfixe."
 
-#: TraitModule.php:1055
+#: src/TraitModule.php:141 src/TraitModule.php:1091
+msgid "This module requires the module \"{module}\"."
+msgstr "Ce module requiert le module « {module} »."
+
+#: src/TraitModule.php:146
+msgid "This module requires modules \"{modules}\"."
+msgstr "Ce module requiert les modules « {modules} »."
+
+#: src/TraitModule.php:155
+msgid "This module has resources that cannot be installed."
+msgstr "Ce module a des ressources qui ne peuvent pas être installées."
+
+#: src/TraitModule.php:163
+msgid ""
+"This module cannot install its tables, because they exist already. Try to "
+"remove them first."
+msgstr ""
+"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
+"de les supprimer manuellement."
+
+#: src/TraitModule.php:493
+msgid "The module removed tables \"{tables}\" from a previous broken install."
+msgstr ""
+"Le module a supprimé les tables \"{tables}\" depuis une installation échouée."
+
+#: src/TraitModule.php:1086
+msgid ""
+"This module requires the module \"{module}\", version {version} or above."
+msgstr ""
+"Ce module requiert le module « {module} », version {version} ou supérieure."
+
+#: src/TraitModule.php:1198
+msgid ""
+"The module \"{module}\" was automatically deactivated because the "
+"dependencies are unavailable."
+msgstr ""
+"Le module « {module} » a été automatiquement désactivé car ses dépendances "
+"ne sont plus disponibles."
+
+#: src/TraitModule.php:1220
 msgid "The directory \"{path}\" is not writeable."
 msgstr "Le dossier « {path} » n’est pas inscriptible."
 
-#: TraitModule.php:1066
+#: src/TraitModule.php:1231
 msgid "The directory \"{path}\" is not writeable: {error}."
 msgstr "Le dossier « {path} » n’est pas inscriptible : {error}"
+
+#: src/Service/Form/Element/MediaIngesterSelectFactory.php:26
+msgid "Select media ingesters…"
+msgstr "Choisir un ingéreur de média…"
+
+#: src/Service/Form/Element/MediaRendererSelectFactory.php:31
+msgid "Select media renderers…"
+msgstr "Choisir un rendu pour le média…"
+
+#: src/Stdlib/EasyMeta.php:73
+msgid "annotation"
+msgstr "annotation"
+
+#: src/Stdlib/EasyMeta.php:78
+msgid "resource"
+msgstr "ressource"
+
+#: src/Stdlib/EasyMeta.php:79
+msgid "property"
+msgstr "propriété"
+
+#: src/Stdlib/EasyMeta.php:80
+msgid "resource class"
+msgstr "classe de ressource"
+
+#: src/Stdlib/EasyMeta.php:88
+msgid "annotations"
+msgstr "annotations"
+
+#: src/Stdlib/EasyMeta.php:89
+msgid "assets"
+msgstr "fichiers"
+
+#: src/Stdlib/EasyMeta.php:90
+msgid "items"
+msgstr "contenus"
+
+#: src/Stdlib/EasyMeta.php:91
+msgid "item sets"
+msgstr "collections"
+
+#: src/Stdlib/EasyMeta.php:93
+msgid "resources"
+msgstr "ressources"
+
+#: src/Stdlib/EasyMeta.php:94
+msgid "properties"
+msgstr "propriétés"
+
+#: src/Stdlib/EasyMeta.php:95
+msgid "resource classes"
+msgstr "classes de ressource"
+
+#: src/Stdlib/EasyMeta.php:96
+msgid "resource templates"
+msgstr "modèles de ressource"
+
+#: src/Stdlib/EasyMeta.php:97
+msgid "vocabularies"
+msgstr "vocabulaires"
+
+#: src/Stdlib/EasyMeta.php:98
+msgid "sites"
+msgstr "sites"
+
+#: config/module.config.php:138
+msgid "An error occurred."
+msgstr "Une erreur est survenue."
+
+#: config/module.config.php:141
+msgid "OK"
+msgstr "OK"
+
+#~ msgid "Some indexes will be added to tables to improve performance: {list}."
+#~ msgstr ""
+#~ "Certains index seront ajoutés aux tables pour améliorer la performance : "
+#~ "{list}."
+
+#~ msgid "Some indexes were added to tables to improve performance: {list}."
+#~ msgstr ""
+#~ "Certains index ont été ajoutés aux tables pour améliorer la performance : "
+#~ "{list}."
+
+#~ msgid "Invalid ini string"
+#~ msgstr "Chaîne ini incorrecte"
 
 #, php-format
 #~ msgid ""

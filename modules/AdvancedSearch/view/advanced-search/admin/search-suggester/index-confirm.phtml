@@ -5,12 +5,12 @@
  * @var \Omeka\Form\ConfirmForm $form
  * @var string $wrapSidebar
  * @var string $resourceLabel
- * @var int $totalJobs
+ * @var array $listJobStatusesByIds
  */
 
 $translate = $this->plugin('translate');
 
-$resourceNames = $resource->engine()->setting('resources', []);
+$resourceTypes = $resource->searchEngine()->setting('resource_types', []);
 
 $this->form->setAttribute('action', $resource->url('index'));
 $this->form->setButtonLabel($translate('Confirm reindex'));
@@ -20,7 +20,7 @@ $this->form->setButtonLabel($translate('Confirm reindex'));
 <div id="index" class="sidebar">
     <?= $this->hyperlink('', '#', ['class' => 'sidebar-close o-icon-close', 'title' => $translate('Close')]) ?>
 <?php endif; ?>
-<?php if (count($resourceNames)): ?>
+<?php if (count($resourceTypes)): ?>
     <div id="sidebar-confirm">
         <h3><?= sprintf($translate('Reindex "%s"'), $resource->name()) ?></h3>
         <p><?= $translate('Are you sure you would like to reindex this suggester?') ?></p>
@@ -33,12 +33,12 @@ $this->form->setButtonLabel($translate('Confirm reindex'));
             <br/>
             <br/>
             <input form="<?= $form->getName() ?>" type="radio" name="process_mode" id="process_mode" value="sql"/><?= $translate('Direct sql (in particular mode "full")') ?>
-            </br/>
+            <br/>
             <input form="<?= $form->getName() ?>" type="radio" name="process_mode" id="process_mode" value="orm" checked="checked"/><?= $translate('Orm (slower but more precise index, required for old database, or small memory)') ?>
         </p>
         <p>
-        <?php if ($totalJobs): ?>
-            <?= sprintf($translate('%d running indexings.'), $totalJobs) ?><br />
+        <?php if ($listJobStatusesByIds): ?>
+	        <?= sprintf($translate('%1$d running indexings: #%2$s.'), count($listJobStatusesByIds), implode(', #', array_keys($listJobStatusesByIds))) ?><br />
             <input form="<?= $form->getName() ?>" name="force" type="checkbox" /><?= $translate('Force indexing') ?><br />
         <?php else: ?>
             <?= $translate('No running indexing: process can be launched.') ?>

@@ -1,12 +1,8 @@
 <?php
 return [
     'logger' => [
-        'log' => false,
+        'log' => true,
         'priority' => \Zend\Log\Logger::NOTICE,
-        'writers' => [
-            'stream' => false,
-            'job' => false,
-        ],
     ],
     'http_client' => [
         'sslcapath' => null,
@@ -33,5 +29,5 @@ return [
             'Omeka\File\Store' => 'Omeka\File\Store\Local',
             'Omeka\File\Thumbnailer' => 'Omeka\File\Thumbnailer\ImageMagick'
         ],
-    ],
+    ]
 ];

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 /*
- * Copyright Daniel Berthereau, 2018-2023
+ * Copyright Daniel Berthereau, 2018-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -40,16 +40,23 @@ class MainSearchFormFactory implements FactoryInterface
         $plugins = $services->get('ControllerPluginManager');
         $helpers = $services->get('ViewHelperManager');
         $currentSite = $plugins->get('currentSite')();
-        $siteSetting = $currentSite
-            ? $helpers->get('siteSetting')
+        $siteSettings = $currentSite
+            ? $services->get('Omeka\Settings\Site')
             : null;
         return (new MainSearchForm(null, $options))
             ->setBasePath($helpers->get('basePath')())
             ->setSite($currentSite)
-            ->setSiteSetting($siteSetting)
-            ->setFormElementManager($services->get('FormElementManager'))
+            ->setAcl($services->get('Omeka\Acl'))
+            ->setApi($services->get('Omeka\ApiManager'))
+            ->setEasyMeta($services->get('Common\EasyMeta'))
             ->setEntityManager($services->get('Omeka\EntityManager'))
-            ->setReferences($plugins->has('references') ? $plugins->get('references') : null)
+            ->setEscapeHtml($helpers->get('escapeHtml'))
+            ->setFormElementManager($services->get('FormElementManager'))
+            ->setItemSetsTree($services->has('ItemSetsTree') ? $services->get('ItemSetsTree') : null)
+            ->setLogger($services->get('Omeka\Logger'))
+            ->setSettings($services->get('Omeka\Settings'))
+            ->setSiteSettings($siteSettings)
+            ->setTranslator($services->get('MvcTranslator'))
         ;
     }
 }

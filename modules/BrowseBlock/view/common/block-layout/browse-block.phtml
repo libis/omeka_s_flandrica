@@ -1,0 +1,123 @@
+<?php
+$translate = $this->plugin('translate');
+$sitename = $block->page()->site()->title();
+?>
+<section class="section browse-block color-section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-three-quarters">
+          <?php if ($this->heading): ?>
+            <h2 class="title is-3 is-family-secondary"><?php echo $this->heading; ?></h2>
+            <?php if($block->dataValue('text')):?>
+              <div class="content">
+                <?php echo $block->dataValue('text');?>
+              </div>
+            <?php endif; ?>
+          <?php endif; ?>
+      </div>
+    </div>
+
+    <?php if($this->resources):?>
+    <div class="columns <?php echo $block->dataValue('columns');?>">
+      <?php
+      $headingTerm = $this->siteSetting('browse_heading_property_term', 'dcterms:title');
+      $bodyTerm = $this->siteSetting('browse_body_property_term', 'dcterms:description');
+
+      foreach ($this->resources as $resource):
+          $heading = $resource->value($headingTerm, ['default' => $translate('[Untitled]')]);
+          $body = $resource->displayDescription();
+          if($resourceType == 'item-set'):
+            $body = $resource->displayDescription();
+          endif;
+          $type = $resource->resourceTemplate();
+          if($type):
+            $type= $type->label();
+          elseif($resourceType == 'item-set'):
+            $type= 'Collectie';
+          else:
+            $type= "Object";
+          endif;
+      ?>
+      <div class="column <?php echo $block->dataValue('columns');?>">
+            <?php
+              if($resourceType == 'item-set'):
+                $media = $resource->thumbnail();
+                if($media):
+                  if(sizeof($this->resources) <= 2):
+                    $mediaurl = str_replace('http:','',$media->assetUrl('large'));
+                  else:
+                    $mediaurl = str_replace('http:','',$media->assetUrl('medium'));
+                  endif;
+                endif;
+              else:
+                $media = $resource->media();
+                if($media):
+                  if(sizeof($this->resources) <= 2):
+                    $mediaurl = str_replace('http:', '', $media[0]->thumbnailUrl('large'));
+                  else:
+                    $mediaurl = str_replace('http:', '', $media[0]->thumbnailUrl('medium'));
+                  endif;
+                else:
+                  $mediaurl = "";
+                endif;
+              endif;
+
+              $url = $resource->url();
+              if($resourceType == 'item-set'):
+                $url = $block->page()->site()->url().'/search?q=&facet[item_set_id][0]='.$resource->id();
+              endif;
+              $date = '';
+            ?>
+            <a class="card-link-wrapper" href="<?php echo $url;?>">
+            <div class="card equal-height">
+              <div class="card-bg card-bg-img-2"
+                style="background:url(<?php echo  $mediaurl;?>) no-repeat center 20%;background-color:#ccc;background-size: cover;"
+                >
+              </div>
+              <header class="card-header">
+                <p class="card-header-title title is-5 is-family-secondary">
+                    <?php echo $resource->displayTitle();?>
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content">
+                  <?php if($resource->value('dcterms:date')):?>
+                      <?php 
+                        $date = $resource->value('dcterms:date');
+                        $date = date('d-m-Y',strtotime($date));
+                      ?>
+                      <p class="datering"><?php echo $date;?></p>
+                  <?php endif;?>
+                  <?php if ($body): ?>
+                    <p>
+                      <?php $trunc = implode(" ", array_slice(explode(" ", $body), 0, 21)); ?>
+                      <?php if(strlen($body) != strlen($trunc)):?>
+                        <?php echo $trunc.' ...';?>
+                      <?php else:?>
+                        <?php echo $trunc;?>
+                      <?php endif;?>
+                    </p>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+          </a>
+      </div>
+      <?php endforeach; ?>
+    </div>
+        
+        <?php if ($this->linkText && $this->link):?>
+          <div class="has-text-right">
+              <a href="<?php echo $this->link;?>" class="button is-outlined is-white">
+                <span><?php echo $this->linkText;?></span>
+                <span class="icon is-small">
+                  <i class="fas fa-angle-right"></i>
+                </span>
+              </a>
+          </div>
+        <?php endif;?>
+    </div>
+
+  <?php endif;?>
+  </div>
+</section>

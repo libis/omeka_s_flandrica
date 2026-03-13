@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2018-2023
+ * Copyright Daniel Berthereau, 2018-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software. You can use, modify and/ or
@@ -29,20 +29,53 @@
  */
 namespace AdvancedSearch;
 
+use AdvancedSearch\Querier\QuerierInterface;
+use JsonSerializable;
+
 /**
  * @todo Replace by the solarium query, that manages everything and can be used by mysql too!
  */
-class Query implements \JsonSerializable
+class Query implements JsonSerializable
 {
+    /**
+     * @var \AdvancedSearch\Querier\QuerierInterface
+     */
+    protected $querier;
+
     /**
      * @var string
      */
     protected $query = '';
 
     /**
+     * @var string
+     */
+    protected $queryDefaultField = '';
+
+    /**
+     * @var string
+     */
+    protected $queryRefine = '';
+
+    /**
      * @var string[]
      */
-    protected $resources = [];
+    protected $resourceTypes = [];
+
+    /**
+     * @var array
+     */
+    protected $aliases = [];
+
+    /**
+     * @var array
+     */
+    protected $fieldBoosts = [];
+
+    /**
+     * @var array
+     */
+    protected $fieldsQueryArgs = [];
 
     /**
      * @var bool
@@ -50,11 +83,9 @@ class Query implements \JsonSerializable
     protected $isPublic = true;
 
     /**
-     * @var string "free", "reserved" or "forbidden".
-     *
-     * @see \AccessResource\Module
+     * @deprecated Will be removed in a future version.
      */
-    protected $accessStatus = 'free';
+    protected $recordOrFullText = 'all';
 
     /**
      * @var array
@@ -64,17 +95,17 @@ class Query implements \JsonSerializable
     /**
      * @var array
      */
-    protected $dateRangeFilters = [];
+    protected $filtersRange = [];
 
     /**
      * @var array
      */
-    protected $filterQueries = [];
+    protected $filtersQuery = [];
 
     /**
      * @var array
      */
-    protected $hiddenQueryFilters = [];
+    protected $filtersQueryHidden = [];
 
     /**
      * @var string|null
@@ -102,24 +133,6 @@ class Query implements \JsonSerializable
     protected $facets = [];
 
     /**
-     * @var int
-     * @deprecated Use individual facet array. Will be removed in a future version.
-     */
-    protected $facetLimit = 0;
-
-    /**
-     * @var string
-     * @deprecated Use individual facet array. Will be removed in a future version.
-     */
-    protected $facetOrder = '';
-
-    /**
-     * @var array
-     * @deprecated Use individual facet array. Will be removed in a future version.
-     */
-    protected $facetLanguages = [];
-
-    /**
      * @var array
      */
     protected $activeFacets = [];
@@ -127,7 +140,7 @@ class Query implements \JsonSerializable
     /**
      * @var array
      */
-    protected $excludedFields = [];
+    protected $formFilters = [];
 
     /**
      * @var array
@@ -146,6 +159,11 @@ class Query implements \JsonSerializable
     protected $suggestFields = [];
 
     /**
+     * @var array
+     */
+    protected $excludedFields = [];
+
+    /**
      * @var int
      */
     protected $siteId;
@@ -154,6 +172,25 @@ class Query implements \JsonSerializable
      * @var array
      */
     protected $options = [];
+
+    /**
+     * The querier allows to do some requests directly, lately or on demand.
+     *
+     * The querier should be the prepared one, with the prepared query stored.
+     */
+    public function setQuerier(?QuerierInterface $querier): self
+    {
+        $this->querier = $querier;
+        return $this;
+    }
+
+    /**
+     * Get the querier used to prepare this query, with prepared data stored.
+     */
+    public function getQuerier(): ?QuerierInterface
+    {
+        return $this->querier;
+    }
 
     /**
      * The query should be stringable and is always trimmed.
@@ -170,29 +207,166 @@ class Query implements \JsonSerializable
     }
 
     /**
-     * @param string[] $resources The types are generally "items" and "item_sets".
+     * The query default field should be a string and is always trimmed.
      */
-    public function setResources(array $resources): self
+    public function setQueryDefaultField($queryDefaultField): self
     {
-        $this->resources = $resources;
+        $this->queryDefaultField = trim((string) $queryDefaultField);
+        return $this;
+    }
+
+    public function getQueryDefaultField(): string
+    {
+        return $this->queryDefaultField;
+    }
+
+    /**
+     * The query used to refine should be stringable and is always trimmed.
+     *
+     * This type of query may be used with the facets.
+     */
+    public function setQueryRefine($queryRefine): self
+    {
+        $this->queryRefine = trim((string) $queryRefine);
+        return $this;
+    }
+
+    public function getQueryRefine(): string
+    {
+        return $this->queryRefine;
+    }
+
+    /**
+     * @param string[] $resourceTypes The types are generally "items" and
+     *   "item_sets". Empty array means no resource type, so any searchable
+     *   resources.
+     */
+    public function setResourceTypes(array $resourceTypes): self
+    {
+        $this->resourceTypes = $resourceTypes;
         return $this;
     }
 
     /**
-     * @param string $resources Generally "items" or "item_sets".
+     * @param string $resourceType Generally "items" or "item_sets".
      */
-    public function addResource(string $resource): self
+    public function addResourceType(string $resourceType): self
     {
-        $this->resources[] = $resource;
+        $this->resourceTypes[] = $resourceType;
         return $this;
     }
 
     /**
-     * @return string[]
+     * @return string[] May be empty when resource types are mixed.
      */
-    public function getResources(): array
+    public function getResourceTypes(): array
     {
-        return $this->resources;
+        return $this->resourceTypes;
+    }
+
+    /**
+     * @deprecated Determined from the list of resource types.
+     */
+    public function setByResourceType(bool $byResourceType): self
+    {
+        return $this;
+    }
+
+    public function getByResourceType(): bool
+    {
+        return count($this->resourceTypes) > 1;
+    }
+
+    /**
+     * Allow to manage one or multiple indexes with one alias name.
+     *
+     * Aliases allows to manage aggregated fields.
+     *
+     *  With internal engine, the fields are a list of properties.
+     *  With Solr, aliases allow to avoid to use native index names directly.
+     *  Solr doesn't need aggregated fields: all indexes can be built with
+     *  multiple fields. Nevertheless, Solr may need multiple indexes (facet,
+     *  sort, etc.) for the same metadata.
+     *
+     * @param array $aliases Associative array where the key is the alias name
+     * and the value is an array containing three keys for name, label, and
+     * fields. The fields are a list of native indexes.
+     */
+    public function setAliases(array $aliases): self
+    {
+        $this->aliases = $aliases;
+        return $this;
+    }
+
+    /**
+     * Set an alias, overriding the existing alias with the same name.
+     */
+    public function setAlias(string $alias, array $data): self
+    {
+        $this->aliases[$alias] = $data;
+        return $this;
+    }
+
+    public function getAliases(): array
+    {
+        return $this->aliases;
+    }
+
+    public function getAlias(string $alias): ?array
+    {
+        return $this->aliases[$alias] ?? null;
+    }
+
+    /**
+     * Increase or decrease the importance of fields
+     *
+     * @param array $fieldBoosts Boost is a positive float multiplier, by index.
+     */
+    public function setFieldBoosts(array $fieldBoosts): self
+    {
+        $this->fieldBoosts = $fieldBoosts;
+        return $this;
+    }
+
+    public function getFieldBoosts(): array
+    {
+        return $this->fieldBoosts;
+    }
+
+    /**
+     * Allow to manage a list of simple query arguments with a specific query.
+     *
+     * For example "author[]=Bossuet&author[]=Rabelais" can be expanded to:
+     * ```
+     *  filter => [[
+     *      join => and,
+     *      field => [
+     *          dcterms:creator,
+     *          dcterms:contributor,
+     *      ],
+     *      type => res,
+     *      val => [
+     *          Bossuet,
+     *          Rabelais,
+     *       ],
+     *  ]]
+     * ```
+     * The default expansion is: join = and, type = eq.
+     */
+    public function setFieldsQueryArgs(array $fieldsQueryArgs): self
+    {
+        $this->fieldsQueryArgs = $fieldsQueryArgs;
+        return $this;
+    }
+
+    public function getFieldsQueryArgs(): array
+    {
+        return $this->fieldsQueryArgs;
+    }
+
+    public function getFieldQueryArgs(string $field): ?array
+    {
+        return $this->fieldsQueryArgs[$field] ?? null;
     }
 
     public function setIsPublic($isPublic): self
@@ -206,20 +380,26 @@ class Query implements \JsonSerializable
         return $this->isPublic;
     }
 
-    public function setAccessStatus($accessStatus): self
+    /**
+     * @deprecated Will be removed in a future version: use a standard filter or excluded fields.
+     */
+    public function setRecordOrFullText(?string $recordOrFullText): self
     {
-        $this->accessStatus = (string) $accessStatus;
+        $this->recordOrFullText = $recordOrFullText === 'record' ? 'record' : 'all';
         return $this;
     }
 
-    public function getAccessStatus(): string
+    /**
+     * @deprecated Will be removed in a future version: use a standard filter or excluded fields.
+     */
+    public function getRecordOrFullText(): string
     {
-        return $this->accessStatus;
+        return $this->recordOrFullText;
     }
 
     /**
-     * @todo Support multi-fields (name).
      * @param array|string $value
+     * @deprecated Use addFilterQuery().
      */
     public function addFilter(string $name, $value): self
     {
@@ -227,6 +407,10 @@ class Query implements \JsonSerializable
         return $this;
     }
 
+    /**
+     * @return array
+     * @deprecated Use getFiltersQuery().
+     */
     public function getFilters(): array
     {
         return $this->filters;
@@ -234,51 +418,57 @@ class Query implements \JsonSerializable
 
     /**
      * @todo Support multi-fields (name).
+     * @todo Merge addFilterRange with addFilterQuery().
      */
-    public function addDateRangeFilter(string $name, string $from, string $to): self
+    public function addFilterRange(string $name, string $from, string $to): self
     {
-        $this->dateRangeFilters[$name][] = [
+        $this->filtersRange[$name][] = [
             'from' => trim($from),
             'to' => trim($to),
         ];
         return $this;
     }
 
-    public function getDateRangeFilters(): array
+    public function getFiltersRange(): array
     {
-        return $this->dateRangeFilters;
+        return $this->filtersRange;
     }
 
     /**
-     * Add advanced filters, that work similarly to Omeka ones.
+     * Add advanced filters, that work similarly to "filter" in SearchResources.
+     *
+     * Unlike SearchResources, the list is grouped by field first.
+     *
+     * @todo Manage filters like the SearchResources (with compatibility for old themes)?
      *
      * Note: Some types and joiners may not be managed by the querier.
-     * @todo Support multi-fields (name).
+     * @todo Support multi-fields (name) (but useless with aliases).
+     * @todo Add other keys: except, datatype (but useless with indexes and aliases). Only for internal?
      */
-    public function addFilterQuery(string $name, $value, ?string $type = 'in', ?string $join = 'and'): self
+    public function addFilterQuery(string $name, $val, ?string $type = 'in', ?string $join = 'and'): self
     {
-        $this->filterQueries[$name][] = [
-            'value' => trim((string) $value),
-            'type' => trim((string) $type),
+        $this->filtersQuery[$name][] = [
             'join' => trim((string) $join),
+            'type' => trim((string) $type),
+            'val' => is_array($val) ? array_map('trim', array_map('strval', $val)) : trim((string) $val),
         ];
         return $this;
     }
 
-    public function getFilterQueries(): array
+    public function getFiltersQuery(): array
     {
-        return $this->filterQueries;
+        return $this->filtersQuery;
     }
 
-    public function setHiddenQueryFilters(array $hiddenQueryFilters): self
+    public function setFiltersQueryHidden(array $filtersQueryHidden): self
     {
-        $this->hiddenQueryFilters = $hiddenQueryFilters;
+        $this->filtersQueryHidden = $filtersQueryHidden;
         return $this;
     }
 
-    public function getHiddenQueryFilters(): array
+    public function getFiltersQueryHidden(): array
     {
-        return $this->hiddenQueryFilters;
+        return $this->filtersQueryHidden;
     }
 
     /**
@@ -341,14 +531,20 @@ class Query implements \JsonSerializable
      *
      * @param array $facetFields Key is the field name and values are the
      * details of the facet:
-     * - field: the name
-     * - type: Checkbox, Select, SelectRange
+     * - field: the index to use
+     * - label
+     * - type: Checkbox, Select, RangeDouble, Thesaurus, Tree, etc.
      * - order
      * - limit
      * - languages
+     * - data_types
+     * - main_types
+     * - values
+     * - display_count
      * - start for range facets
      * - end for range facets
-     * - etc.
+     * - step for range facets
+     * - thesaurus for thesaurus facets.
      * Other keys may be managed via module Search Solr, but not internal sql.
      * No check is done here.
      * @see https://solr.apache.org/guide/solr/latest/query-guide/faceting.html
@@ -366,9 +562,9 @@ class Query implements \JsonSerializable
      * The option should contain the key "field" with the name.
      * No check is done here.
      */
-    public function addFacet(string $facetField, array $options = []): self
+    public function addFacet(string $facetName, array $options = []): self
     {
-        $this->facets[$facetField] = $options;
+        $this->facets[$facetName] = $options;
         return $this;
     }
 
@@ -383,101 +579,28 @@ class Query implements \JsonSerializable
     /**
      * Get options to use for a facet.
      */
-    public function getFacet(string $facetField): ?array
+    public function getFacet(string $facetName): ?array
     {
-        return $this->facets[$facetField] ?? null;
+        return $this->facets[$facetName] ?? null;
     }
 
     /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
+     * Set the list of form filters with their configuration.
+     *
+     * Used to access filter options like "first_digits" in the querier.
      */
-    public function addFacetFields(array $facetFields): self
+    public function setFormFilters(array $formFilters): self
     {
-        $this->facets = [];
-        foreach ($facetFields as $facetField) {
-            $facet = [
-                'field' => $facetField,
-                'limit' => $this->facetLimit,
-                'order' => $this->facetOrder,
-                'languages' => $this->facetLanguages,
-            ];
-            $this->facets[$facetField] = $facet;
-        }
+        $this->formFilters = $formFilters;
         return $this;
     }
 
     /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
+     * Get configuration for a form filter.
      */
-    public function addFacetField(string $facetField): self
+    public function getFormFilter(string $filterName): ?array
     {
-        $facet = [
-            'field' => $facetField,
-            'limit' => $this->facetLimit,
-            'order' => $this->facetOrder,
-            'languages' => $this->facetLanguages,
-        ];
-        $this->facets[$facetField] = $facet;
-        return $this;
-    }
-
-    /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
-     */
-    public function getFacetFields(): array
-    {
-        return array_column($this->facets, 'field');
-    }
-
-    /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
-     */
-    public function setFacetLimit(?int $facetLimit): self
-    {
-        $this->facetLimit = (int) $facetLimit;
-        return $this;
-    }
-
-    /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
-     */
-    public function getFacetLimit(): int
-    {
-        return $this->facetLimit;
-    }
-
-    /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
-     */
-    public function setFacetOrder(?string $facetOrder): self
-    {
-        $this->facetOrder = (string) $facetOrder;
-        return $this;
-    }
-
-    /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
-     */
-    public function getFacetOrder(): string
-    {
-        return $this->facetOrder;
-    }
-
-    /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
-     */
-    public function setFacetLanguages(array $facetLanguages): self
-    {
-        $this->facetLanguages = $facetLanguages;
-        return $this;
-    }
-
-    /**
-     * @deprecated Use facet fields array. Will be removed in a future version.
-     */
-    public function getFacetLanguages(): array
-    {
-        return $this->facetLanguages;
+        return $this->formFilters[$filterName] ?? null;
     }
 
     public function setActiveFacets(array $activeFacets): self
@@ -486,16 +609,16 @@ class Query implements \JsonSerializable
         return $this;
     }
 
-    public function addActiveFacet(string $facetField, $value): self
+    public function addActiveFacet(string $facetName, $value): self
     {
-        $this->activeFacets[$facetField][] = $value;
+        $this->activeFacets[$facetName][] = $value;
         return $this;
     }
 
-    public function addActiveFacetRange(string $facetField, $from, $to): self
+    public function addActiveFacetRange(string $facetName, $from, $to): self
     {
-        $this->activeFacets[$facetField]['from'] = $from === '' ? null : $from;
-        $this->activeFacets[$facetField]['to'] = $to === '' ? null : $to;
+        $this->activeFacets[$facetName]['from'] = $from === '' ? null : $from;
+        $this->activeFacets[$facetName]['to'] = $to === '' ? null : $to;
         return $this;
     }
 
@@ -504,9 +627,9 @@ class Query implements \JsonSerializable
         return $this->activeFacets;
     }
 
-    public function getActiveFacet(string $facetField): ?array
+    public function getActiveFacet(string $facetName): ?array
     {
-        return $this->activeFacets[$facetField] ?? null;
+        return $this->activeFacets[$facetName] ?? null;
     }
 
     /**
@@ -542,6 +665,7 @@ class Query implements \JsonSerializable
     /**
      * Exclude fields from main search query, for example to exclude full text.
      * It is used for suggest queries too.
+     * @todo Clarify if excluded fields should be set separately for filters and facets.
      */
     public function setExcludedFields(array $excludedFields): self
     {
@@ -566,8 +690,8 @@ class Query implements \JsonSerializable
     }
 
     /**
-     * @experimental Only used to pass the display list mode for facets for now.
-     * May be removed in a future version.
+     * @experimental Used to pass the display list mode for facets and the mode
+     * the fulltext search of the internal engine.
      */
     public function setOption(string $key, $value): self
     {
@@ -590,8 +714,8 @@ class Query implements \JsonSerializable
     {
         return $this->getQuery() === ''
             && $this->getFilters() === []
-            && $this->getDateRangeFilters() === []
-            && $this->getFilterQueries() === []
+            && $this->getFiltersRange() === []
+            && $this->getFiltersQuery() === []
             && $this->getActiveFacets() === []
         ;
     }
@@ -606,8 +730,8 @@ class Query implements \JsonSerializable
     {
         return $this->getQuery() !== ''
             || $this->getFilters() !== []
-            || $this->getDateRangeFilters() !== []
-            || $this->getFilterQueries() !== []
+            || $this->getFiltersRange() !== []
+            || $this->getFiltersQuery() !== []
         ;
     }
 
@@ -615,31 +739,28 @@ class Query implements \JsonSerializable
     {
         return [
             'query' => $this->getQuery(),
-            'resources' => $this->getResources(),
+            'query_refine' => $this->getQueryRefine(),
+            'query_default_field' => $this->getQueryDefaultField(),
+            'resource_types' => $this->getResourceTypes(),
+            'by_resource_type' => $this->getByResourceType(),
+            'aliases' => $this->getAliases(),
+            'fields_query_args' => $this->getFieldsQueryArgs(),
             'is_public' => $this->getIsPublic(),
             'filters' => $this->getFilters(),
-            'date_range_filters' => $this->getDateRangeFilters(),
-            'filter_queries' => $this->getFilterQueries(),
-            'hidden_query_filters' => $this->getHiddenQueryFilters(),
+            'filters_range' => $this->getFiltersRange(),
+            'filters_query' => $this->getFiltersQuery(),
+            'filters_query_hidden' => $this->getFiltersQueryHidden(),
             'sort' => $this->getSort(),
             'page' => $this->getPage(),
             'offset' => $this->getOffset(),
             'limit' => $this->getLimit(),
             'facets' => $this->getFacets(),
-            // Deprecated "facet_fields", "facet_limit", "facet_languages".
-            'facet_fields' => $this->getFacetFields(),
-            'facet_limit' => $this->getFacetLimit(),
-            'facet_languages' => $this->getFacetLanguages(),
             'active_facets' => $this->getActiveFacets(),
             'suggest_options' => $this->getSuggestOptions(),
             'suggest_fields' => $this->getSuggestFields(),
             'excluded_fields' => $this->getExcludedFields(),
             'site_id' => $this->getSiteId(),
-            'deprecated' => [
-                'facet_fields',
-                'facet_limit',
-                'facet_languages',
-            ],
+            'options' => $this->options,
         ];
     }
 }

@@ -1,7 +1,7 @@
 <?php
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2017-2023
+ * Copyright Daniel Berthereau, 2017-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -32,15 +32,25 @@
  * @var \AdvancedSearch\Form\Admin\SearchEngineForm $form
  */
 
-$translate = $this->plugin('translate');
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$assetUrl = $plugins->get('assetUrl');
+
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/advanced-search-manager.css', 'AdvancedSearch'));
+$this->headScript()
+    ->appendFile($assetUrl('js/advanced-search-manager.js', 'AdvancedSearch'), 'text/javascript', ['defer' => 'defer']);
+
+$this->htmlElement('body')->appendAttribute('class', 'search-admin search-engine resource edit');
+
 $form->prepare();
 ?>
 
-<?= $this->pageTitle($translate('Edit search engine')) ?>
+<?= $this->pageTitle($translate('Edit search engine'), 1, $translate('Search manager')) ?>
 
 <?= $this->form()->openTag($form) ?>
 <div id="page-actions">
-    <button type="submit"><?= $translate('Save') ?></button>
+    <button type="submit" class="button"><?= $translate('Save') ?></button>
 </div>
 <?= $this->formCollection($form) ?>
 <?php $this->trigger('view.edit.form.after'); ?>

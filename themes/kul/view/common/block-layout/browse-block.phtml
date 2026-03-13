@@ -1,0 +1,131 @@
+<?php
+$translate = $this->plugin('translate');
+$thumbnailHelper = $this->plugin('thumbnail');
+$locale = array(
+  "en-US" => "en",
+  "nl-NL" => "nl",
+);
+$lang = $locale[$this->lang()];
+$sitename = $block->page()->site()->url();
+
+?>
+<section class="section browse-block">
+  <div class="container">
+    <?php if ($this->heading): ?>
+      <h2><?php echo $this->heading; ?></h2>
+    <?php endif; ?>
+
+    <?php if($block->dataValue('text')):?>
+      <p>
+        <?php echo $block->dataValue('text');?>
+      </p>
+    <?php endif; ?>
+
+    <?php if($this->resources):?>
+      <?php
+      $headingTerm = $this->siteSetting('browse_heading_property_term', 'dcterms:title');
+      $bodyTerm = $this->siteSetting('browse_body_property_term', 'dcterms:description');
+      ?>
+      <div class="row">
+        <?php  
+        foreach ($this->resources as $resource):
+          $heading = $resource->value($headingTerm, ['default' => $translate('[Untitled]'),'lang' => $lang]);
+          $body = $resource->value('dcterms:description',['lang' => $lang]);
+          if($resourceType == 'item-set'):
+            $body = $resource->value('dcterms:description',['lang' => $lang]);
+          endif;
+          $type = $resource->resourceTemplate();
+          if($type):
+            $type= $type->label();
+          elseif($resourceType == 'item-set'):
+            $type= 'Collection';
+          else:
+            $type= "Object";
+          endif;
+        ?>          
+      
+        <?php
+          $mediaurl = "";
+
+          if($resourceType == 'item-set' && $resource->thumbnail()):
+            $media = $resource->thumbnail();            
+            if($media):
+              if(sizeof($this->resources) <= 2):
+                $mediaurl = str_replace('http:','',$media->assetUrl('large'));
+              else:
+                $mediaurl = str_replace('http:','',$media->assetUrl('medium'));
+              endif;
+            endif;
+          elseif($resource->primaryMedia()):
+            $media = $resource->primaryMedia();
+            if($media):
+              if(sizeof($this->resources) <= 2):
+                $mediaurl = str_replace('http:', '', $media->thumbnailUrl('large'));
+              else:
+                $mediaurl = str_replace('http:', '', $media->thumbnailUrl('medium'));
+              endif;
+            endif;
+          endif;
+          $url = $resource->url();
+        ?>
+        <div class="col-xs-12 col-md-<?= $block->dataValue('columns'); ?> item-blue-card">
+          <?php if(str_contains($sitename, "film-photonovel")): ?>
+            <a href="<?= $sitename."/".$translate('search') ."_FPN?facet%5Bdcterms_ispartof%5D%5B0%5D=" .$resource->title();?>">
+          <?php elseif(str_contains($sitename, "exofficina")): ?>
+            <a href="<?= $sitename."/".$translate('search') ."_EO?facet%5Bdcterms_ispartof%5D%5B0%5D=" .$resource->title();?>">
+          <?php elseif(str_contains($sitename, "graphicnovels")): ?>
+            <a href="<?= $sitename."/".$translate('search') ."_GN?facet%5Bdcterms_ispartof%5D%5B0%5D=" .$resource->title();?>">
+          <?php endif; ?>  
+          <div class="card card-gray">
+            <?php if($mediaurl):?>
+              <div class="card-img-top" style="background-image: url(<?php echo  $mediaurl;?>)">&nbsp;</div>
+            <?php endif;?>
+            <div class="card-body">
+              <h2>
+                <?php echo $resource->value('dcterms:title');?>
+              </h2>
+              <?php if($resource->value('dcterms:date')):?>
+                <h6><?php echo date('d-m-Y',strtotime($resource->value('dcterms:date')));?></h6>
+              <?php endif;?>
+              <?php $body = $resource->value('dcterms:description');?>
+              <?php if ($body): ?>
+                <?php
+                  if(strlen($body) > 200):
+                    $body = substr($body, 0, 200);
+                    $body = substr($body, 0, strrpos($body, ' ')).' ...';
+                  endif;
+                ?>
+                <p>
+                  <?php echo $body; ?>
+                </p>
+              <?php endif; ?>
+            </div>
+          </div>
+          </a>
+        </div>
+      <?php endforeach; ?>
+      </div>
+    <?php endif;?>    
+    <?php if ($this->linkText):?>
+      <div style="text-align:right;">
+        <?php if($this->linkText == 'All collections'):?>
+          <p>
+            <strong>
+              <a class="more" href="<?php echo $block->page()->site()->url().'/item-set';?>" class="butn btn-primary">
+                <?php echo $this->linkText;?>
+              </a>
+            </strong>
+          </p>
+        <?php else:?>
+          <p>
+            <strong>
+              <a class="more" href="<?php echo $block->page()->site()->url().'/page/'.strtolower($type);?>" class="btn btn-primary">
+                <?php echo $this->linkText;?>
+              </a>
+            </strong>
+          </p>
+        <?php endif;?>
+      </div>
+    <?php endif;?>
+  </div>
+</section>  

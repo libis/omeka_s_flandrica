@@ -9,41 +9,53 @@ class FacetActives extends AbstractFacet
     /**
      * Get complete data about active facets.
      *
-     * The options are the search page settings for facets, so contains all names
-     * , label and types of all facets.
+     * @param array $options Unlike AbstractFacet, options are the full config
+     * settings for facets, so contains the common options of facets and all
+     * specific settings, label and types of all facets.
+     *
+     * @todo Separate FacetActives from AbstractFacet?
      */
     protected function prepareActiveFacetData(array $activeFacets, array $options): array
     {
-        $isFacetModeDirect = ($options['mode'] ?? '') === 'link';
+        // $isFacetModeDirect = in_array($options['mode'] ?? null, ['link', 'js']);
 
-        // Normally it is useless to use facetLabel() with options.
-        /** @var \AdvancedSearch\View\Helper\FacetLabel $facetLabel */
-        $facetLabel = $this->getView()->getHelperPluginManager()->get('facetLabel');
-
-        foreach ($activeFacets as $facetField => &$facetValues) {
-            $facetFieldLabel = $options['facets'][$facetField]['label'] ?? $facetLabel($facetField);
+        foreach ($activeFacets as $facetName => &$facetValues) {
+            $facetFieldLabel = $options['facets'][$facetName]['label'] ?? $facetName;
             foreach ($facetValues as $facetKey => &$facetValue) {
-                $facetValueLabel = (string) $this->facetValueLabel($facetField, $facetValue);
+                $facetValueLabel = (string) $this->facetValueLabel($facetName, $facetValue);
                 if (!strlen($facetValueLabel)) {
-                    unset($activeFacets[$facetField][$facetKey]);
+                    unset($activeFacets[$facetName][$facetKey]);
                     continue;
                 }
 
                 $facetValueValue = (string) $facetValue;
                 $query = $this->queryBase;
 
-                if (!isset($query['facet'][$facetField]) || array_search($facetValueValue, $query['facet'][$facetField]) === false) {
+                if (!isset($query['facet'][$facetName])
+                    || array_search($facetValueValue, $query['facet'][$facetName]) === false
+                ) {
+                    unset($activeFacets[$facetName][$facetKey]);
                     continue;
                 }
 
-                $values = $query['facet'][$facetField];
-                // TODO Remove this filter to keep all active facet values?
-                $values = array_filter($values, function ($v) use ($facetValueValue) {
-                    return $v !== $facetValueValue;
-                });
-                $query['facet'][$facetField] = $values;
+                $currentValues = $query['facet'][$facetName];
 
-                $url = $isFacetModeDirect ? $this->urlHelper->__invoke($this->route, $this->params, ['query' => $query]) : '';
+                // TODO Remove this filter to keep all active facet values?
+                // Manage special filters with string keys, like Select range
+                // with from/to. In that case, remove the specific key.
+                $firstKey = key($currentValues);
+                if (!is_numeric($firstKey)) {
+                    $newValues = $currentValues;
+                    unset($newValues[$facetKey]);
+                    $newValues = array_filter($newValues, fn ($v) => $v !== null && $v !== '');
+                } else {
+                    $newValues = array_diff($currentValues, [$facetValueValue]);
+                }
+
+                $query['facet'][$facetName] = $newValues;
+
+                // Set url in all cases, even when not used (not direct mode).
+                $url = $this->urlHelper->__invoke($this->route, $this->params, ['query' => $query]);
 
                 $facetValue = [
                     'value' => $facetValue,
@@ -54,7 +66,9 @@ class FacetActives extends AbstractFacet
                     'fieldLabel' => $facetFieldLabel,
                 ];
             }
+            unset($facetValue);
         }
+        unset($facetValues);
 
         return $activeFacets;
     }

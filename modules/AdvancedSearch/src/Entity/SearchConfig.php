@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2020-2023
+ * Copyright Daniel Berthereau, 2020-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -31,13 +31,10 @@
 namespace AdvancedSearch\Entity;
 
 use DateTime;
-use Doctrine\ORM\Event\LifecycleEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Omeka\Entity\AbstractEntity;
 
 /**
  * @Entity
- * @HasLifecycleCallbacks
  */
 class SearchConfig extends AbstractEntity
 {
@@ -70,7 +67,7 @@ class SearchConfig extends AbstractEntity
      *     length=190
      * )
      */
-    protected $path;
+    protected $slug;
 
     /**
      * @var SearchEngine
@@ -110,7 +107,11 @@ class SearchConfig extends AbstractEntity
      * @var DateTime
      *
      * @Column(
-     *     type="datetime"
+     *     type="datetime",
+     *     nullable=false,
+     *     options={
+     *         "default": "CURRENT_TIMESTAMP"
+     *     }
      * )
      */
     protected $created;
@@ -141,15 +142,15 @@ class SearchConfig extends AbstractEntity
         return $this->name;
     }
 
-    public function setPath(string $path): self
+    public function setSlug(string $slug): self
     {
-        $this->path = $path;
+        $this->slug = $slug;
         return $this;
     }
 
-    public function getPath(): string
+    public function getSlug(): string
     {
-        return $this->path;
+        return $this->slug;
     }
 
     public function setEngine(SearchEngine $engine): self
@@ -205,23 +206,5 @@ class SearchConfig extends AbstractEntity
     public function getModified(): ?DateTime
     {
         return $this->modified;
-    }
-
-    /**
-     * @PrePersist
-     */
-    public function prePersist(LifecycleEventArgs $eventArgs): self
-    {
-        $this->created = new DateTime('now');
-        return $this;
-    }
-
-    /**
-     * @PreUpdate
-     */
-    public function preUpdate(PreUpdateEventArgs $eventArgs): self
-    {
-        $this->modified = new DateTime('now');
-        return $this;
     }
 }

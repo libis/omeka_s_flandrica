@@ -8,10 +8,8 @@ $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
 
 // Prepare the datetime queries.
-$datetimes = isset($query['datetime']) ? (is_array($query['datetime']) ? $query['datetime'] : [['value' => $query['datetime']]]) : [];
-$datetimes = array_filter($datetimes, function ($v) {
-    return isset($v['value']) ? trim($v['value']) !== '' : (isset($v['type']) && in_array($v['type'], ['ex', 'nex']));
-});
+$datetimes = isset($query['datetime']) ? (is_array($query['datetime']) ? $query['datetime'] : [['val' => $query['datetime']]]) : [];
+$datetimes = array_filter($datetimes, fn ($v) => isset($v['val']) ? trim($v['val']) !== '' : (isset($v['type']) && in_array($v['type'], ['ex', 'nex'])));
 // Allows to display one empty field.
 if (empty($datetimes)) $datetimes = [[]];
 
@@ -25,9 +23,9 @@ $querySelectOption = function ($value, array $search, $key, $text) {
 
 // TODO Use a widget or a validator (but allow partial date/time: year only, date only, etc.).
 $queryInputText = function (array $search, $engine) use ($translate, $escape) {
-    $value = $search['value'] ?? null;
-    return sprintf('<input type="text" class="query-datetime query-text" name="%s" value="%s" aria-label="%s" placeholder="2017-11-07 17:21:17">',
-        $escape("datetime[$engine][value]"),
+    $value = $search['val'] ?? null;
+    return sprintf('<input type="text" class="query-datetime query-text" name="%1$s" value="%2$s" aria-label="%3$s" placeholder="2017-11-07 17:21:17">',
+        $escape("datetime[$engine][val]"),
         $escape($value),
         $escape($translate('Date / time'))); // @translate
 }
@@ -42,18 +40,18 @@ $queryInputText = function (array $search, $engine) use ($translate, $escape) {
                 <?= $translate('Date / time can be full like "2018-01-23 12:34:56", or partial like "2018-12-25" or "2017-11".') // @translate ?>
             </div>
         </div>
-        <button type="button" class="add-value o-icon-add button" aria-label="<?= $translate('Add new value') ?>" title="<?= $translate('Add new value') ?>"></button>
+        <button type="button" class="button add-value o-icon-add" aria-label="<?= $translate('Add new value') ?>" title="<?= $translate('Add new value') ?>"></button>
     </div>
     <div class="inputs">
         <?php
-        $engine = 0;
+        $index = 0;
         foreach ($datetimes as $datetime):
-            $stem = 'datetime[' . $engine . ']';
-        ?>
+            $stem = 'datetime[' . $index . ']';
+            ?>
         <div class="value">
-            <select class="joiner chosen-select" name="<?= $escape($stem . '[joiner]') ?>">
-                <?= $querySelectOption('and', $datetime, 'joiner', $translate('And')) ?>
-                <?= $querySelectOption('or', $datetime, 'joiner', $translate('Or')) ?>
+            <select class="joiner chosen-select" name="<?= $escape($stem . '[join]') ?>">
+                <?= $querySelectOption('and', $datetime, 'join', $translate('And')) ?>
+                <?= $querySelectOption('or', $datetime, 'join', $translate('Or')) ?>
             </select>
             <?php
             $select = (new \Laminas\Form\Element\Select())
@@ -70,20 +68,20 @@ $queryInputText = function (array $search, $engine) use ($translate, $escape) {
             echo $this->formSelect($select);
             ?>
             <select class="query-type chosen-select" name="<?= $escape($stem . '[type]') ?>" aria-label="<?= $translate('Query type') // @translate ?>">
-                <?= $querySelectOption('gte', $datetime, 'type', $translate('after or on')) // @translate ?>
-                <?= $querySelectOption('gt', $datetime, 'type', $translate('after')) // @translate ?>
-                <?= $querySelectOption('eq', $datetime, 'type', $translate('on')) // @translate ?>
-                <?= $querySelectOption('neq', $datetime, 'type', $translate('not on')) // @translate ?>
-                <?= $querySelectOption('lte', $datetime, 'type', $translate('before or on')) // @translate ?>
-                <?= $querySelectOption('lt', $datetime, 'type', $translate('before')) // @translate ?>
+                <?= $querySelectOption('<', $datetime, 'type', $translate('before')) // @translate ?>
+                <?= $querySelectOption('≤', $datetime, 'type', $translate('before or on')) // @translate ?>
+                <?= $querySelectOption('=', $datetime, 'type', $translate('on')) // @translate ?>
+                <?= $querySelectOption('≠', $datetime, 'type', $translate('not on')) // @translate ?>
+                <?= $querySelectOption('≥', $datetime, 'type', $translate('after or on')) // @translate ?>
+                <?= $querySelectOption('>', $datetime, 'type', $translate('after')) // @translate ?>
                 <?= $querySelectOption('ex', $datetime, 'type', $translate('has any date / time')) // @translate ?>
                 <?= $querySelectOption('nex', $datetime, 'type', $translate('has no date / time')) // @translate ?>
             </select>
-            <?= $queryInputText($datetime, $engine) ?>
-            <button type="button" class="o-icon-delete remove-value button"><?= $translate('Remove date / time') // @translate ?></button>
+            <?= $queryInputText($datetime, $index) ?>
+            <button type="button" class="button o-icon-delete remove-value"><?= $translate('Remove date / time') // @translate ?></button>
         </div>
         <?php
-            $engine++;
+            ++$index;
         endforeach;
         ?>
     </div>

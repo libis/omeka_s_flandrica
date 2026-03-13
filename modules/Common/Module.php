@@ -15,10 +15,10 @@ use Omeka\Module\AbstractModule;
  * module. It replaces previous modules Generic, Next, and various controller
  * plugins and view helpers from many modules.
  *
- * This module is useless alone: it is designed to be used by other module.
+ * This module is useless alone: it is designed to be used by other modules.
  * See readme.
  *
- * @copyright Daniel Berthereau, 2018-2024
+ * @copyright Daniel Berthereau, 2018-2026
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
 class Module extends AbstractModule
@@ -31,6 +31,8 @@ class Module extends AbstractModule
     public function install(ServiceLocatorInterface $services): void
     {
         $this->setServiceLocator($services);
+        $this->preparePsrMessage();
+        $this->checkExtensionIntl();
         $this->fixIndexes();
         $this->checkGeneric();
     }
@@ -43,48 +45,82 @@ class Module extends AbstractModule
     }
 
     /**
+     * Load files required to use PsrMessage.
+     */
+    protected function preparePsrMessage(): void
+    {
+        // Polyfill core PsrMessage classes for Omeka S < 4.2.
+        if (version_compare(\Omeka\Module::VERSION, '4.2', '<')) {
+            require_once __DIR__ . '/data/compat/MessageInterface.php';
+            require_once __DIR__ . '/data/compat/PsrInterpolateInterface.php';
+            require_once __DIR__ . '/data/compat/PsrInterpolateTrait.php';
+            require_once __DIR__ . '/data/compat/PsrMessage.php';
+        }
+        require_once __DIR__ . '/src/Stdlib/PsrInterpolateInterface.php';
+        require_once __DIR__ . '/src/Stdlib/PsrInterpolateTrait.php';
+        require_once __DIR__ . '/src/Stdlib/PsrMessage.php';
+    }
+
+    protected function checkExtensionIntl(): void
+    {
+        if (!extension_loaded('intl')) {
+            /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
+            $services = $this->getServiceLocator();
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $messenger->addWarning(
+                'The php extension "intl" is not available. It is recommended to install it to manage diacritics and non-latin characters and to translate dates, numbers and more.' // @translate
+            );
+        }
+    }
+
+    /**
      * Early fix media_type, ingester and renderer indexes.
      *
      * See migration 20240219000000_AddIndexMediaType.
      */
     protected function fixIndexes(): void
     {
-        // Early fix media_type index and other common indexes.
-        // See migration 20240219000000_AddIndexMediaType.
+        /**
+         * @var \Doctrine\DBAL\Connection $connection
+         * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
+         */
         $services = $this->getServiceLocator();
         $connection = $services->get('Omeka\Connection');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
 
+        // Early fix media_type index and other common indexes.
+        // See migration 20240219000000_AddIndexMediaType.
         $sqls = <<<'SQL'
-ALTER TABLE `asset`
-CHANGE `media_type` `media_type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `name`,
-CHANGE `extension` `extension` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `storage_id`;
-
-ALTER TABLE `job`
-CHANGE `pid` `pid` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `owner_id`,
-CHANGE `status` `status` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `pid`,
-CHANGE `class` `class` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `status`;
-
-ALTER TABLE `media`
-CHANGE `ingester` `ingester` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `item_id`,
-CHANGE `renderer` `renderer` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `ingester`,
-CHANGE `media_type` `media_type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `source`,
-CHANGE `extension` `extension` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `storage_id`;
-
-ALTER TABLE `module`
-CHANGE `version` `version` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `is_active`;
-
-ALTER TABLE `resource`
-CHANGE `resource_type` `resource_type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `modified`;
-
-ALTER TABLE `resource_template_property`
-CHANGE `default_lang` `default_lang` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `is_private`;
-
-ALTER TABLE `value`
-CHANGE `type` `type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `value_resource_id`,
-CHANGE `lang` `lang` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `type`;
-
-SQL;
-        foreach (explode(";\n\n", $sqls) as $sql) {
+            ALTER TABLE `asset`
+            CHANGE `media_type` `media_type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `name`,
+            CHANGE `extension` `extension` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `storage_id`
+            ;
+            ALTER TABLE `job`
+            CHANGE `pid` `pid` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `owner_id`,
+            CHANGE `status` `status` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `pid`,
+            CHANGE `class` `class` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `status`
+            ;
+            ALTER TABLE `media`
+            CHANGE `ingester` `ingester` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `item_id`,
+            CHANGE `renderer` `renderer` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `ingester`,
+            CHANGE `media_type` `media_type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `source`,
+            CHANGE `extension` `extension` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `storage_id`
+            ;
+            ALTER TABLE `module`
+            CHANGE `version` `version` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `is_active`
+            ;
+            ALTER TABLE `resource`
+            CHANGE `resource_type` `resource_type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `modified`
+            ;
+            ALTER TABLE `resource_template_property`
+            CHANGE `default_lang` `default_lang` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `is_private`
+            ;
+            ALTER TABLE `value`
+            CHANGE `type` `type` varchar(190) COLLATE 'utf8mb4_unicode_ci' NOT NULL AFTER `value_resource_id`,
+            CHANGE `lang` `lang` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `type`
+            ;
+            SQL;
+        foreach (explode(";\n", $sqls) as $sql) {
             try {
                 $connection->executeStatement($sql);
             } catch (\Exception $e) {
@@ -94,9 +130,9 @@ SQL;
 
         if (version_compare(\Omeka\Module::VERSION, '4.1', '>=')) {
             $sql = <<<'SQL'
-ALTER TABLE `site_page`
-CHANGE `layout` `layout` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `modified`;
-SQL;
+                ALTER TABLE `site_page`
+                CHANGE `layout` `layout` varchar(190) COLLATE 'utf8mb4_unicode_ci' NULL AFTER `modified`;
+                SQL;
             try {
                 $connection->executeStatement($sql);
             } catch (\Exception $e) {
@@ -104,66 +140,49 @@ SQL;
             }
         }
 
-        $hasNewIndex = false;
+        // Add indices to speed up omeka.
 
-        try {
-            $connection->executeStatement('ALTER TABLE `fulltext_search` ADD INDEX `is_public` (`is_public`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
-        }
+        $tableColumns = [
+            ['fulltext_search' => 'is_public'],
+            ['media' => 'ingester'],
+            ['media' => 'renderer'],
+            ['media' => 'media_type'],
+            ['media' => 'extension'],
+            ['resource' => 'resource_type'],
+            ['value' => 'type'],
+            ['value' => 'lang'],
+            // Keep session last, because it may fail on a big database.
+            ['session' => 'modified'],
+        ];
 
-        try {
-            $connection->executeStatement('ALTER TABLE `media` ADD INDEX `ingester` (`ingester`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
-        }
-        try {
-            $connection->executeStatement('ALTER TABLE `media` ADD INDEX `renderer` (`renderer`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
-        }
-        try {
-            $connection->executeStatement('ALTER TABLE `media` ADD INDEX `media_type` (`media_type`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
-        }
-        try {
-            $connection->executeStatement('ALTER TABLE `media` ADD INDEX `extension` (`extension`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
-        }
-
-        try {
-            $connection->executeStatement('ALTER TABLE `resource` ADD INDEX `resource_type` (`resource_type`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
+        // Do not create index if it exists, whatever the name is.
+        $newIndices = [];
+        foreach ($tableColumns as $key => $tableColumn) {
+            $table = key($tableColumn);
+            $column = reset($tableColumn);
+            try {
+                $stmt = $connection->executeQuery("SHOW INDEX FROM `$table` WHERE `column_name` = '$column';");
+                $result = $stmt->fetchOne();
+                if ($result) {
+                    unset($tableColumns[$key]);
+                } else {
+                    $newIndices[] = "$table/$column";
+                }
+            } catch (\Exception $e) {
+                // Table does not exist yet (e.g., during test bootstrap).
+                unset($tableColumns[$key]);
+            }
         }
 
-        try {
-            $connection->executeStatement('ALTER TABLE `value` ADD INDEX `type` (`type`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
-        }
-        try {
-            $connection->executeStatement('ALTER TABLE `value` ADD INDEX `lang` (`lang`);');
-            $hasNewIndex = true;
-        } catch (\Exception $e) {
-            // Index exists.
-        }
-
-        if ($hasNewIndex) {
-            // Don't use a PsrMessage during install.
-            $message = new \Omeka\Stdlib\Message(
-                'Some indexes were added to tables to improve performance.' // @translate
+        if ($newIndices) {
+            // Dispatch background job to add indexes.
+            // The class is not available during upgrade or install.
+            require_once __DIR__ . '/src/Job/AddDatabaseIndexes.php';
+            $dispatcher = $services->get('Omeka\Job\Dispatcher');
+            $dispatcher->dispatch(\Common\Job\AddDatabaseIndexes::class);
+            $message = new \Common\Stdlib\PsrMessage(
+                'A background job has been started to add database indexes.' // @translate
             );
-            $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addSuccess($message);
         }
     }
@@ -177,10 +196,13 @@ SQL;
 
         $services = $this->getServiceLocator();
         $connection = $services->get('Omeka\Connection');
-        $connection->executeStatement('DELETE FROM module WHERE ID = "Generic";');
+        $connection->executeStatement('DELETE FROM `module` WHERE `id` = "Generic";');
 
-        // Don't use a PsrMessage during install.
-        $message = new \Omeka\Stdlib\Message(
+        if (!file_exists(OMEKA_PATH . '/modules/Generic/AbstractModule.php')) {
+            return;
+        }
+
+        $message = new \Common\Stdlib\PsrMessage(
             'The module Generic is no longer needed and can be removed.' // @translate
         );
         $messenger = $services->get('ControllerPluginManager')->get('messenger');

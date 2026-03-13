@@ -1,0 +1,67 @@
+<section class="section text-image-block">
+    <div class="container">
+      <div class="columns <?php echo ($block->dataValue('highlight') ? 'is-gapless hightlight-columns' : '');?>">
+        <?php if(!$block->dataValue('reverse')):?>
+          <div class="column <?php echo $block->dataValue('layout');?> equal-height <?php echo ($block->dataValue('highlight') ? 'hightlight' : '');?>">
+            <div class="text">
+              <?php if($block->dataValue('title')):?>
+                <h2 class="title is-3 is-family-secondary"><?php echo $block->dataValue('title');?></h2>
+              <?php endif;?>
+              <?php echo $block->dataValue('text');?>
+              <?php if($block->dataValue('link')):?>
+                  <a class="button is-primary" href="<?php echo $block->dataValue('link');?>"><?php echo $block->dataValue('label');?></a>
+              <?php endif;?>
+            </div>
+          </div>
+          <div class="column equal-height">
+            <?php if($attachments):
+              $media = $attachments[0]->media();
+              if($media):
+                $url = $media->thumbnailUrl('large');
+                $url = str_replace('http:', '', $url);
+                if($block->dataValue('itemurl')):
+                  $itemUrl = $media->item()->url();
+                  $itemUrl = str_replace('http:', '', $itemUrl);
+                  ?>
+                  <a target="_blank" href="<?php echo $itemUrl;?>"><img src="<?php echo $url;?>"></a>
+                <?php else:?>
+                  <img src="<?php echo $url;?>">
+                <?php endif;?>
+              <?php endif;?>
+            <figcaption><?php echo $attachments[0]->caption();?></figcaption>
+            <?php endif;?>
+          </div>
+        <?php else:?>
+          <div class="column equal-height">
+            <?php if($attachments):
+              $media = $attachments[0]->media();
+              if($media):
+                $url = $media->thumbnailUrl('large');
+                $url = str_replace('http:', '', $url);
+                if($block->dataValue('itemurl')):
+                  $itemUrl = $media->item()->url();
+                  $itemUrl = str_replace('http:', '', $itemUrl);
+                  ?>
+                  <a target="_blank" href="<?php echo $itemUrl;?>"><img src="<?php echo $url;?>"></a>
+                <?php else:?>
+                  <img src="<?php echo $url;?>">
+                <?php endif;?>
+              <?php endif;?>
+            <figcaption><?php echo $attachments[0]->caption();?></figcaption>
+            <?php endif;?>
+          </div>
+          <div class="column <?php echo $block->dataValue('layout');?> equal-height <?php echo ($block->dataValue('highlight') ? 'hightlight' : '');?>">
+            <div class="text">
+              <?php if($block->dataValue('title')):?>
+                <h2 class="title is-3 is-family-secondary"><?php echo $block->dataValue('title');?></h2>
+              <?php endif;?>
+              <?php echo $block->dataValue('text');?>
+              <?php if($block->dataValue('link')):?>
+                  <a class="button is-primary" href="<?php echo $block->dataValue('link');?>"><?php echo $block->dataValue('label');?></a>
+              <?php endif;?>
+            </div>
+          </div>
+        <?php endif;?>
+      </div>
+  </div>
+</section>

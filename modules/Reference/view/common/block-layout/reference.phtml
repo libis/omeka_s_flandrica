@@ -1,13 +1,13 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
  * @var array $fields
  * @var array $query
  * @var array $options
  */
 
 $plugins = $this->getHelperPluginManager();
-$escape = $plugins->get('escapeHtml');
 $translate = $plugins->get('translate');
 $references = $plugins->get('references');
 
@@ -16,10 +16,7 @@ $references = $plugins->get('references');
 $total = $references->count($fields, $query, $options)['fields'];
 ?>
 
-<div class="reference-block">
-    <?php if ($options['heading']): ?>
-    <h3><?= $escape(str_replace('{total}', $total, $translate($options['heading']))) ?></h3>
-    <?php endif; ?>
+<div class="block block-reference reference-block">
     <?php if ($total): ?>
     <?= $references->displayListForFields($fields, $query, $options) ?>
     <?php else: ?>

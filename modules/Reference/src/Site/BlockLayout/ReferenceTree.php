@@ -7,12 +7,12 @@ use Omeka\Api\Representation\SitePageBlockRepresentation;
 use Omeka\Api\Representation\SitePageRepresentation;
 use Omeka\Api\Representation\SiteRepresentation;
 use Omeka\Entity\SitePageBlock;
-use Omeka\Mvc\Controller\Plugin\Api;
 use Omeka\Site\BlockLayout\AbstractBlockLayout;
+use Omeka\Site\BlockLayout\TemplateableBlockLayoutInterface;
 use Omeka\Stdlib\ErrorStore;
 use Reference\Mvc\Controller\Plugin\ReferenceTree as ReferenceTreePlugin;
 
-class ReferenceTree extends AbstractBlockLayout
+class ReferenceTree extends AbstractBlockLayout implements TemplateableBlockLayoutInterface
 {
     /**
      * The default partial view script.
@@ -20,24 +20,13 @@ class ReferenceTree extends AbstractBlockLayout
     const PARTIAL_NAME = 'common/block-layout/reference-tree';
 
     /**
-     * @var Api
-     */
-    protected $api;
-
-    /**
      * @var ReferenceTreePlugin
      */
     protected $referenceTreePlugin;
 
-    /**
-     * @param Api $api
-     * @param ReferenceTreePlugin $ReferenceTreePlugin
-     */
     public function __construct(
-        Api $api,
         ReferenceTreePlugin $ReferenceTreePlugin
     ) {
-        $this->api = $api;
         $this->referenceTreePlugin = $ReferenceTreePlugin;
     }
 
@@ -66,13 +55,16 @@ class ReferenceTree extends AbstractBlockLayout
         parse_str(trim(ltrim((string) $data['query'], "? \t\n\r\0\x0B\u{a0}\u{202f}")), $query);
         $data['query'] = $query;
 
-        // Normalize options.
-        $data['link_to_single'] = (bool) ($data['link_to_single'] ?? true);
-        $data['custom_url'] = (bool) $data['custom_url'];
-        $data['total'] = (bool) $data['total'];
-        $data['branch'] = (bool) $data['branch'];
-        $data['expanded'] = (bool) $data['expanded'];
-        $data['query_type'] = $data['query_type'] ?? 'eq';
+        // Normalize options one time.
+        $data['search_config'] ??= null;
+        $data['link_to_single'] = !empty($data['link_to_single']);
+        $data['custom_url'] = !empty($data['custom_url']);
+        $data['total'] = !empty($data['total']);
+        $data['url_argument_reference'] = !empty($data['url_argument_reference']);
+        $data['thumbnail'] ??= null;
+        $data['branch'] = !empty($data['branch']);
+        $data['expanded'] = !empty($data['expanded']);
+        $data['query_type'] ??= 'eq';
 
         $block->setData($data);
     }
@@ -119,37 +111,31 @@ class ReferenceTree extends AbstractBlockLayout
     public function prepareRender(PhpRenderer $view): void
     {
         $assetUrl = $view->plugin('assetUrl');
-        $view->headLink()->appendStylesheet($assetUrl('vendor/jquery-simplefolders/main.css', 'Reference'));
-        $view->headScript()->appendFile($assetUrl('vendor/jquery-simplefolders/main.js', 'Reference'), 'text/javascript', ['defer' => 'defer']);
+        $view->headLink()
+            ->appendStylesheet($assetUrl('vendor/jquery-simplefolders/main.css', 'Reference'));
+        $view->headScript()
+            ->appendFile($assetUrl('vendor/jquery-simplefolders/main.js', 'Reference'), 'text/javascript', ['defer' => 'defer']);
     }
 
-    public function render(PhpRenderer $view, SitePageBlockRepresentation $block)
+    public function render(PhpRenderer $view, SitePageBlockRepresentation $block, $templateViewScript = self::PARTIAL_NAME)
     {
         $options = $block->data() + [
-            'heading' => '',
             'tree' => [],
             'query' => [],
         ];
 
-        $heading = $options['heading'];
         $tree = $options['tree'];
         $query = $options['query'];
-        unset($options['heading'], $options['tree']);
-
-        $template = $options['template'] ?? self::PARTIAL_NAME;
-        unset($options['template']);
+        unset($options['tree']);
 
         $vars = [
             'block' => $block,
-            'heading' => $heading,
             'total' => count($tree),
             'tree' => $tree,
             'query' => $query,
             'options' => $options,
         ];
 
-        return $template !== self::PARTIAL_NAME && $view->resolver($template)
-            ? $view->partial($template, $vars)
-            : $view->partial(self::PARTIAL_NAME, $vars);
+        return $view->partial($templateViewScript, $vars);
     }
 }

@@ -6,5 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Sempia\\ExternalAssets\\' => array($vendorDir . '/sempia/external-assets/src'),
+    'Sempia\\CommonSymlink\\' => array($vendorDir . '/sempia/common-symlink/src'),
     'Common\\' => array($baseDir . '/src'),
 );

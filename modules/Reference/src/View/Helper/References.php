@@ -3,29 +3,31 @@
 namespace Reference\View\Helper;
 
 use Laminas\View\Helper\AbstractHelper;
-use Reference\Mvc\Controller\Plugin\References as ReferencesPlugin;
+use Reference\Stdlib\References as ReferencesService;
+use Reference\Stdlib\ReferenceTree;
 
 class References extends AbstractHelper
 {
     /**
-     * @var ReferencesPlugin
+     * @var \Reference\Stdlib\References
      */
     protected $references;
 
     /**
-     * @param ReferencesPlugin $references
+     * @var \Reference\Stdlib\ReferenceTree
      */
-    public function __construct(ReferencesPlugin $references)
+    protected $referenceTree;
+
+    public function __construct(ReferencesService $references, ReferenceTree $referenceTree)
     {
         $this->references = $references;
+        $this->referenceTree = $referenceTree;
     }
 
     /**
      * Get the references.
      *
-     * @uses \Reference\Mvc\Controller\Plugin\References
-     *
-     * @return self
+     * @uses \Reference\Stdlib\References
      */
     public function __invoke(): self
     {
@@ -43,57 +45,77 @@ class References extends AbstractHelper
     /**
      * Get the references.
      *
-     * @uses \Reference\Mvc\Controller\Plugin\References::list()
+     * @uses \Reference\Stdlib\References::__invoke()
+     * @uses \Reference\Stdlib\References::list()
      *
-     * @param array|string $metadata Classes, properties terms, template names, or
-     * other Omeka metadata names. Similar types of metadata may be grouped to
-     * get aggregated references, for example ['Dates' => ['dcterms:date', 'dcterms:issued']],
-     * with the key used as key and label in the result.
-     * @param array $query An Omeka search query.
+     * @param array|string $metadata List of metadata to get references for.
+     * Classes, properties terms, template names, or other Omeka metadata names.
+     * Similar types of metadata may be grouped to get aggregated references,
+     * for example ['Dates' => ['dcterms:date', 'dcterms:issued']], with the key
+     * used as key and label in the result. Each value may be a comma-separated
+     * list of metadata, that will be exploded to an array of metadata to group.
+     * @param array $query An Omeka search query to limit the base pool.
      * @param array $options Options for output.
-     * - resource_name: items (default), "item_sets", "media", "resources".
-     * - sort_by: "alphabetic" (default), "total", or any available column.
-     * - sort_order: "asc" (default) or "desc".
-     * - filters: array Limit values to the specified data. Currently managed:
-     *   - "languages": list of languages. Values without language are returned
-     *     with a null, the string "null", or an empty string "" (deprecated).
-     *     It is recommended to append it when a language is set. This option is
-     *     used only for properties.
-     *   - "datatypes": array Filter property values according to the data types.
-     *     Default datatypes are "literal", "resource", "resource:item", "resource:itemset",
-     *     "resource:media" and "uri"; other existing ones are managed.
-     *     Warning: "resource" is not the same than specific resources.
-     *     Use module Bulk Edit or Bulk Check to specify all resources automatically.
-     *   - "begin": array Filter property values that begin with these strings,
-     *     generally one or more initials.
-     *   - "end": array Filter property values that end with these strings.
-     * - values: array Allow to limit the answer to the specified values.
-     * - first: false (default), or true (get first resource).
-     * - list_by_max: 0 (default), or the max number of resources for each reference
-     *   The max number should be below 1024 (mysql limit for group_concat).
-     * - fields: the fields to use for the list of resources, if any. If not
-     *   set, the output is an associative array with id as key and title as
-     *   value. If set, value is an array of the specified fields.
-     * - initial: false (default), or true (get first letter of each result), or
-     *   integer (number of first characters to get for each "initial", useful
-     *   for example to extract years from iso 8601 dates).
-     * - distinct: false (default), or true (distinct values by type).
-     * - datatype: false (default), or true (include datatype of values).
-     * - lang: false (default), or true (include language of value to result).
-     * - locale: empty (default) or a string or an ordered array Allow to get the
-     *   returned values in the first specified language when a property has
-     *   translated values. Use "null" to get a value without language.
-     *   Unlike Omeka core, it get the translated title of linked resources.
-     * TODO Check if the option include_without_meta is still needed with data types.
-     * - include_without_meta: false (default), or true (include total of
-     *   resources with no metadata).
-     * - single_reference_format: false (default), or true to keep the old output
-     *   without the deprecated warning for single references without named key.
-     * - output: "list" (default) or "associative" (possible only without added
-     *   options: first, initial, distinct, datatype, or lang).
+     * - Options to specify, filter, limit and sort references:
+     *   - resource_name (string): items (default), "item_sets", "media",
+     *     "resources".
+     *   - page (int): the page to output, the first one in most of the cases.
+     *   - per_page (int): the number of references to output.
+     *   - sort_by (string): "alphabetic" (default), "total", "values", or any
+     *     available column in the table of the database. For values, they
+     *     should be set as filters values.
+     *   - sort_order (string): "asc" (default) or "desc".
+     *   - filters (array): Limit values to the specified data. The passed
+     *     settings may be a string separated by "|" (recommended) or ",", that
+     *     will be exploded with the separator "|" if present, else ",".
+     *     - languages (array): list of languages. Values without language are
+     *       defined with a null or the string "null" (the empty string "" is
+     *       deprecated). It is recommended to append the empty language when a
+     *       language is set. This option is used only for properties.
+     *     - main_types (array): array with "literal", "resource", or "uri".
+     *       Filter property values according to the main data type. Default is
+     *       to search all data types.
+     *     - data_types (array): Filter property values according to the data
+     *       types. Default datatypes are "literal", "resource", "resource:item",
+     *       "resource:itemset", "resource:media" and "uri". Data types from
+     *       other modules are managed too.
+     *       Warning: "resource" is not the same than specific resources.
+     *       Use module Bulk Edit or Easy Admin to specify all resources
+     *       automatically.
+     *     - values (array): Allow to limit the answer to the specified values,
+     *       for example a short list of keywords.
+     *     - begin (array): Filter property values that begin with these
+     *       strings, generally one or more initials.
+     *     - end (array): Filter property values that end with these strings.
+     * - Options for output:
+     *   - first (bool): Append the id of the first resource (default false).
+     *   - list_by_max (int): 0 (default), or the max number of resources for
+     *     each reference. The max number should be below 1024, that is the hard
+     *     coded database limit of mysql and mariadb for function group_concat.
+     *   - fields (array): the fields to use for the list of resources, if any.
+     *     If not set, the output is an associative array with id as key and
+     *     title as value. If set, value is an array of the specified fields.
+     *   - initial (int): If set and not 0 or false, append the specified first
+     *     letters of each result. It is useful for example to extract years
+     *     from iso 8601 dates.
+     *   - distinct (bool): Distinct values by type (default false).
+     *   - data_type (bool): Include the data type of values (default false).
+     *   - lang (bool): Include the language of value (default false).
+     *   - locale (string|array): Allow to get the returned values in the
+     *     specified languages when a property has translated values. Use "null"
+     *     to get a value without language.
+     *     Unlike Omeka core, it get the translated title of linked resources.
+     *   - include_without_meta (bool): Include the total of resources with no
+     *     metadata (default false).
+     *   - single_reference_format (bool): Use the old output format without the
+     *     deprecated warning for single references without named key.
+     *   - output (string): "list" (default), "associative" or "values". When
+     *     options "first", "list_by_max", "initial", "distinct", "datatype", or
+     *     "lang" are used, the output is forced to "list".
      * Some options and some combinations are not managed for some metadata.
-     * @return array Associative array with total and first record ids. When a
-     * string is set as metadata, only its references are returned.
+     * @return array Associative array with total and first record ids. Unlike
+     * controller plugin, when a string is set as metadata, only its references
+     * are returned.
      */
     public function list($metadata = null, ?array $query = [], ?array $options = []): array
     {
@@ -112,7 +134,7 @@ class References extends AbstractHelper
      *
      * If total is not correct, reindex the references in main settings.
      *
-     * @uses \Reference\Mvc\Controller\Plugin\References::count()
+     * @uses \Reference\Stdlib\References::count()
      * Unlike References::count(), it has arguments and may return an integer.
      *
      * @param string|array $metadata
@@ -137,7 +159,7 @@ class References extends AbstractHelper
      *
      * The filter "begin" is skipped from the query.
      *
-     * @uses \Reference\Mvc\Controller\Plugin\References::initials()
+     * @uses \Reference\Stdlib\References::initials()
      *
      * @param string|array $metadata
      * @param array $query
@@ -160,7 +182,7 @@ class References extends AbstractHelper
     /**
      * Display list of references of one or more fields via a template.
      *
-     * @uses \Reference\Mvc\Controller\Plugin\References::list()
+     * @uses \Reference\Stdlib\References::list()
      *
      * @param array $fields
      * @param array $query An Omeka search query to limit results.
@@ -169,11 +191,14 @@ class References extends AbstractHelper
      * - template (string): the template to use (default: "common/reference")
      * - raw (bool): Show references as raw text, not links (default to false)
      * - raw_sub (bool): Show sub references as raw text, not links (default to false)
+     * - search_config (string): Link to browse or search engine slug (module
+     *   Advanced Search)
      * - link_to_single (bool): When there is one result for a term, link it
      *   directly to the resource, and not to the list page (default to config)
      * - custom_url (bool): with modules such Clean Url or Ark, use the url
      *   generator instad the standard item/id. May slow the display when there
      *   are many single references
+     * - thumbnail (string): display the thumbnail of the first reference
      * - skiplinks (bool): Add the list of letters at top and bottom of the page
      * - headings (bool): Add each letter as headers
      * - subject_property (string|int): property to use for second level list
@@ -191,20 +216,22 @@ class References extends AbstractHelper
         $firstId = $options['first'];
         unset($options['subject_property_id'], $options['subject_property_term']);
         if (!empty($options['subject_property'])) {
-            $api = $this->getView()->api();
-            $property = is_numeric($options['subject_property'])
-                ? $api->read('properties', ['id' => $options['subject_property']])->getContent()
-                : $api->searchOne('properties', ['term' => $options['subject_property']])->getContent();
-            if ($property) {
+            /** @var \Common\View\Helper\EasyMeta $easyMeta */
+            $easyMeta = $this->getView()->easyMeta();
+            $propertyId = $easyMeta->propertyId($options['subject_property']);
+            if ($propertyId) {
                 $options['first'] = true;
                 $options['subject_property'] = [
-                    'id' => $property->id(),
-                    'term' => $property->term(),
+                    'id' => $propertyId,
+                    'term' => $easyMeta->propertyTerm($propertyId),
                 ];
             } else {
                 unset($options['subject_property']);
             }
         }
+
+        // To display a thumbnail, the first resource is needed.
+        $options['first'] = @$options['first'] || @$options['thumbnail'];
 
         $ref = $this->references->__invoke($fields, $query, $options);
         $list = $ref->list();
@@ -214,6 +241,15 @@ class References extends AbstractHelper
 
         // Keep original option for key first.
         $options['first'] = $firstId;
+
+        /** @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig */
+        $plugins = $this->getView()->getHelperPluginManager();
+        if (!empty($options['search_config']) && $plugins->has('getSearchConfig')) {
+            $options['search_config'] = $plugins->get('getSearchConfig')($options['search_config'] === 'default' ? null : $options['search_config']);
+            $options['search_config'] = $options['search_config'] ? $options['search_config']->slug() : null;
+        } else {
+            $options['search_config'] = null;
+        }
 
         $template = empty($options['template']) ? 'common/reference' : $options['template'];
         unset($options['template']);
@@ -261,7 +297,7 @@ class References extends AbstractHelper
      */
     public function tree($referenceLevels, ?array $query = [], ?array $options = []): array
     {
-        return $this->references->getController()->referenceTree()->getTree($referenceLevels, $query, $options);
+        return $this->referenceTree->getTree($referenceLevels, $query, $options);
     }
 
     /**
@@ -314,13 +350,16 @@ class References extends AbstractHelper
      * @param array $query An Omeka search query to limit results. It is used in
      *   for urls in the tree too.
      * @param array $options Options to display the references.
-     * - template (string): the template to use (default: "common/reference")
+     * - template (string): the template to use (default: "common/reference-tree")
      * - term (string): Term or id to search (dcterms:subject by default).
      * - type (string): "properties" (default), "resource_classes", "item_sets"
      *   "resource_templates".
      * - resource_name: items (default), "item_sets", "media", "resources".
      * - branch: Managed terms are branches (path separated with " :: ")
      * - raw (bool): Show references as raw text, not links (default to false)
+     * - search_config (string): Link to browse or search engine slug (module
+     *   Advanced Search)
+     * - thumbnail (string): display the thumbnail of the first reference
      * - link_to_single (bool): When there is one result for a term, link it
      *   directly to the resource, and not to the list page (default to config)
      * - custom_url (bool): with modules such Clean Url or Ark, use the url
@@ -339,6 +378,8 @@ class References extends AbstractHelper
             'resource_name' => 'items',
             'branch' => null,
             'raw' => false,
+            'search_config' => '',
+            'thumbnail' => '',
             'link_to_single' => null,
             'custom_url' => false,
             'expanded' => null,
@@ -347,7 +388,22 @@ class References extends AbstractHelper
         $options['first'] = $options['link_to_single'] || $options['custom_url'];
         $options['initial'] = false;
 
+        // To display a thumbnail, the first resource is needed.
+        $firstId = $options['first'];
+        $options['first'] = @$options['first'] || @$options['thumbnail'];
+
         $result = $this->tree($referenceLevels, $query, $options);
+
+        $options['first'] = $firstId;
+
+        /** @var \AdvancedSearch\Api\Representation\SearchConfigRepresentation $searchConfig */
+        $plugins = $this->getView()->getHelperPluginManager();
+        if (!empty($options['search_config']) && $plugins->has('getSearchConfig')) {
+            $options['search_config'] = $plugins->get('getSearchConfig')($options['search_config'] === 'default' ? null : $options['search_config']);
+            $options['search_config'] = $options['search_config'] ? $options['search_config']->slug() : null;
+        } else {
+            $options['search_config'] = null;
+        }
 
         $template = empty($options['template']) ? 'common/reference-tree' : $options['template'];
         unset($options['template']);

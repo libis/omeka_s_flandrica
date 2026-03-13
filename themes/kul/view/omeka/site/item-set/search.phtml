@@ -1,0 +1,36 @@
+<?php
+$translate = $this->plugin('translate');
+$this->htmlElement('body')->appendAttribute('class', 'item-sets search');
+?>
+<section class="section breadcrumb-section">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="<?php echo $this->escapeHtml($this->url(null, ['action' => 'browse'], true)); ?>"><?php echo $translate('Item sets'); ?></a></li>
+        <li><?php echo $translate('Advanced item set Search'); ?></li>
+      </ul>
+    </nav>
+    <h2 class="title is-family-secondary" style="margin-bottom:2rem;"><?php echo $translate('Advanced item set Search'); ?></h2>
+  </div>
+</section>
+<section class="section breadcrumb-section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-9">
+        <div class="content search-form">
+          <form id="advanced-search" method="get" action="<?php echo $this->escapeHtml($this->url(null, ['action' => 'browse'], true)); ?>">
+          <?php echo $this->partial(
+              'common/advanced-search',
+              ['query' => $this->params()->fromQuery(), 'resourceType' => 'item_set']
+          ); ?>
+          <div id="page-actions">
+              <input class="button is-primary" type="submit" name="submit" value="<?php echo $this->escapeHtml($translate('Search')); ?>">
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

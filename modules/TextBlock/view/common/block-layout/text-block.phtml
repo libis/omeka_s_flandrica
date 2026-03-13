@@ -1,0 +1,32 @@
+<?php if($block->dataValue('text')):?>
+<div class="section">
+<?php else:?>
+<div class="section" style="padding-bottom:20px;">
+<?php endif?>
+    <div class="container">
+      <?php if($block->dataValue('title')):?>
+        <h2 class="title is-3"><?php echo $block->dataValue('title');?></h2>
+      <?php endif;?>
+      <?php if($block->dataValue('text') && !$block->dataValue('text2')):?>
+        <div class="column is-two-thirds">
+          <div class="text-box">
+            <?php echo $block->dataValue('text');?>
+          </div>
+        </div>
+      <?php endif;?>
+      <?php if($block->dataValue('text') && $block->dataValue('text2')):?>
+        <div class="columns">
+          <div class="column">
+            <div class="text-box">
+              <?php echo $block->dataValue('text');?>
+            </div>
+          </div>
+          <div class="column">
+            <div class="text-box">
+              <?php echo $block->dataValue('text2');?>
+            </div>
+          </div>
+        </div>
+      <?php endif;?>
+    </div>
+</div>

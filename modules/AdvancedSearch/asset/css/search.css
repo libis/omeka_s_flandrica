@@ -1,11 +1,29 @@
-@media screen {
+@media all {
+    /* From omeka main styles. */
+    .collapse + .collapsible {
+        display: block;
+        clear: both;
+    }
+    .collapsible {
+        display: none;
+    }
+
+    [hidden],
+    .hidden {
+        display: none;
+    }
+
+    /* Search form */
     .form-search {
         margin-bottom: 24px;
     }
     .form-search fieldset {
         border: 0;
-        margin: 0;
+        margin: 0 0 36px;
         padding: 0;
+    }
+    .form-search fieldset > fieldset{
+        margin: 0;
     }
     .form-search input[type="search"] {
         appearance: none;
@@ -17,12 +35,52 @@
         min-height: 36px;
         margin: 0;
     }
+    .form-search label.search-submit {
+        display: none;
+    }
+    .form-search button.search-submit {
+        float: right;
+    }
+    .form-search .chosen-container-single .chosen-single,
+    .form-search .chosen-container-multi .chosen-choices {
+        height: 36px;
+    }
+
+    /* Quick filter next to main search field */
+    .form-search select.quick-filter {
+        max-width: 100%;
+    }
+    .form-search .quick-filter,
+    .form-search .quick-filter + .chosen-container {
+        min-width: 120px;
+        max-width: 200px;
+    }
+    .form-search .quick-filter + .chosen-container .chosen-single {
+        height: 36px;
+    }
+
+    /* Search form filters */
 
     #search-filters {
-        margin: 36px 0;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 6px;
+    }
+    #search-filters > .search-filter-action {
+        display: inline-block;
+        align-self: flex-end;
+        order: 2;
+        width: fit-content;
+        margin: 6px 6px 0 0;
+    }
+    #search-filters > .search-filter-action::before {
+        content: "+";
+        font-size: larger;
+        font-size: bolder;
     }
     #search-filters .filter {
         display: flex;
+        justify-content: space-between;
         margin-bottom: 0;
         /*
         margin-left: 30%;
@@ -31,8 +89,11 @@
         */
         padding: 6px;
     }
+    #search-filters .filter[hidden] {
+        display: none;
+    }
     #search-filters .filter:first-of-type {
-        padding-top: 6px;
+        padding-top: 0.4em;
     }
     #search-filters .filter select,
     #search-filters .filter input {
@@ -42,33 +103,58 @@
         min-width: 0;
     }
     #search-filters .filter select:nth-of-type(1) {
-        min-width: 36px;
+        min-width: 3.5em;
         margin-left: 0;
     }
     #search-filters .filter select:nth-of-type(2) {
-        min-width: 72px;
+        min-width: 8em;
     }
     #search-filters .filter select:nth-of-type(3) {
-        min-width: 48px;
+        min-width: 8em;
     }
     #search-filters .filter input {
         width: calc( 100% - 200px );
         margin-right: 0;
     }
-
-    .form-search label.search-submit {
+    /* Buttons remove/add a filter. */
+    #search-filters .filter .field {
+        background-color: inherit;
+        padding: 0;
+        margin: 0 0 0 6px;
+        width: auto;
+    }
+    #search-filters .filter .field .field-meta {
         display: none;
     }
-    .form-search button.search-submit {
-        float: right;
+    #search-filters .filter > input[type=text] {
+        margin-right: 6px;
+    }
+    #search-filters .filter .field .inputs button {
+        margin: 0;
+    }
+    #search-filters .filter .field .inputs button::before {
+        content: "−";
+        font-size: larger;
+        font-size: bolder;
     }
 
+    /* Search results */
+
+    /* The wrapper divides main results and aside (see below) for facets. */
     .search-results-wrapper {
         display: flex;
+        gap: 2em;
     }
+
+    /* Search result part */
     .search-results {
         flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
     }
+
+    /* Search results header and footer */
 
     .search-results-header,
     .search-results-footer {
@@ -80,11 +166,15 @@
     .search-results .search-filters {
         width: 100%;
         flex: 0 0 100%;
+        padding-left: 0;
+    }
+    .search-results .search-filters .filter a {
+        color: inherit;
     }
     .search-results .search-filters .filter a::after {
-        content: "×";
-        float: right;
-        color: initial;
+        content: "🗙";
+        color: inherit;
+        font-weight: bold;
         margin: -3px 6px auto;
     }
 
@@ -92,111 +182,47 @@
         font-weight: bold;
     }
 
-    .search-facets {
-        flex-basis: 25%;
-        order: -1;
-        padding: 0 0.5em;
-        min-width: 240px;
-    }
-    .search-facets-active {
-        list-style: none;
-        padding-left: 0;
-    }
-    .search-facets-active li {
-        display: inline-block;
-        font-size: 13.08px;
-        margin: 0 6px 6px 0;
-        border-radius: 3px;
-        padding: 0;
-        vertical-align: top;
-    }
-    .search-facets-active li a {
-        display: inline-block;
-        border-radius: 3px 0 0 3px;
-        background-color: rgba(0,0,0,.04);
-        padding: 9px 12px 9px 8px;
-        margin-right: 9px;
-    }
-    .search-facets-active li a::after {
-        content: "x";
-        float: right;
-        padding-left: 9px;
-    }
-
-    .search-facets .search-facets-list {
-        padding-left: 0;
-    }
-    .search-facet {
-        display: block;
-    }
-    .search-facet > h3 {
-        margin-bottom: 0.5em;
-    }
-    .search-facet-items {
-        padding-left: 0;
-        list-style: none;
-    }
-    .search-facet-items li[data-level="1"] a {
-        margin-left: 12px;
-    }
-    .search-facet-items li[data-level="2"] a {
-        margin-left: 24px;
-    }
-    .search-facet-items li[data-level="3"] a {
-        margin-left: 36px;
-    }
-    .search-facet-items li[data-level="4"] a {
-        margin-left: 48px;
-    }
-    .search-facet-items li[data-level="5"] a {
-        margin-left: 60px;
-    }
-    .search-facet-items li[data-level="6"] a {
-        margin-left: 72px;
-    }
-    .search-facet-items li[data-level="7"] a {
-        margin-left: 84px;
-    }
-    .search-facet-items li[data-level="8"] a {
-        margin-left: 96px;
-    }
-    .search-facet-items li[data-level="9"] a {
-        margin-left: 108px;
-    }
-    .search-facet-items li[data-level="10"] a {
-        margin-left: 120px;
-    }
-    .search-facet-items li[data-level="11"] a {
-        margin-left: 132px;
-    }
-    .search-facet-items li[data-level="12"] a {
-        margin-left: 144px;
-    }
-    .search-facet-item {
-        display: block;
-    }
-    .search-facet-item input[type=checkbox] {
-        vertical-align: initial;
-    }
-    .search-facet-item a::before {
-        display: inline-block;
-        font-family: 'Font Awesome 5 Free';
-        width: 1.5em;
-        content: "\f0c8";
-    }
-    .search-facet-item .active a::before {
-        content: "\f14a";
-    }
+    /* Search results (list and grid) */
 
     .search-results .resource-list {
         display: flex;
+        padding-left: 0;
     }
     .search-results-count.no-total-results .row-count {
         display: none;
     }
+    .search-results .resource-list .resource-heading {
+        font-weight: bold;
+    }
+    /* Search results (list) */
     .search-results .resource-list.list {
         flex-direction: column;
     }
+    .search-results .resource-list.list .resource {
+        display: flex;
+        flex-flow: row wrap;
+        align-items: flex-start;
+        padding: 6px 0 5px;
+    }
+    .search-results .resource-list.list .resource-thumbnail {
+        margin-left: auto;
+    }
+    .search-results .resource-list.list .resource-thumbnail .resource-link img {
+        max-width: 60px;
+        max-height: 60px;
+        width: auto;
+        height: auto;
+        margin: 0 0 0 auto;
+        padding: 0;
+    }
+    .search-results .resource-list.list .resource-heading {
+        flex-basis: calc(100% - 66px);
+    }
+    .search-results .resource-list.list .resource-metadata,
+    .search-results .resource-list.list .resource-body {
+        flex-basis: 100%;
+    }
+    /* Search results (grid) */
     .search-results .resource-list.grid {
         display: flex;
         flex-wrap: wrap;
@@ -204,41 +230,349 @@
         justify-content: start;
         align-items: stretch;
         align-content: start;
-        padding-left: 0;
-        margin: 0;
-    }
-    .search-results .resource-list.grid > * {
-        flex: 0 0 auto;
-        margin: 6px;
+        gap: 18px 18px;
+        padding: initial;
+        margin: initial;
     }
     .search-results .resource-list.grid .resource {
-        width: auto;
-        display: initial;
-        padding-top: 29px;
-        padding-right: 29px;
-    }
-    .search-results ul.resource-list.grid .resource:first-child {
-        border-top: none;
+        display: flex;
+        flex-flow: column wrap;
+        flex: 1 1 200px;
+        row-gap: 6px;
+        align-items: flex-start;
+        width: 0;
+        margin: 0;
+        padding: 0 0 12px;
     }
     .search-results .resource-list.grid .resource-thumbnail {
         display: flex;
         justify-content: center;
-        padding: 29px 0;
     }
     .search-results .resource-list.grid .resource-thumbnail img {
-        height: auto;
-        max-height: 200px;
-        width: 100%;
         max-width: 200px;
+        max-height: 200px;
+        width: auto;
+        height: auto;
         margin: 0;
         padding: 0;
     }
-    .search-results .resource-list.grid .resource-metadata {
-        max-width: 224px;
+    .search-results .resource-list.grid .resource-heading {
+        justify-content: center;
     }
-    .search-results .resource-list.grid .description {
+    /* .resource-metadata is kept for now, but deprecated and replaced by resource-body. */
+    .search-results .resource-list.grid .resource-metadata,
+    .search-results .resource-list.grid .resource-body {
         display: none;
     }
+
+    /* Active facets */
+
+    .facets-active {
+        display: inline-block;
+        flex: 0 0 100%;
+        width: 100%;
+        list-style: none;
+        margin: 0 0 6px;
+        padding-left: 0;
+    }
+    .facets-active .facet-active {
+        display: inline-block;
+        font-size: 13.08px;
+        margin: 0 6px 6px 0;
+        padding: 0;
+        vertical-align: top;
+        background-color: #f0f0f0;
+        border-radius: 3px;
+    }
+    .facets-active .facet-active .facet-active-label {
+        padding: 0 6px;
+        display: inline-block;
+        background-color: rgba(0,0,0,.04);
+        border-radius: 3px 0 0 3px;
+    }
+    .facets-active .facet-active .facet-active-value {
+        padding: 0 6px;
+        color: inherit;
+    }
+    .facets-active .facet-active .facet-active-value::after {
+        content: "🗙";
+        color: inherit;
+        font-weight: bold;
+        margin: -3px 6px auto;
+    }
+
+    /* Search facets */
+
+    .search-facets {
+        flex: 0 0 18.75%;
+        min-width: 240px;
+        max-width: 400px;
+        order: -1;
+    }
+
+    .facets .facets-list {
+        padding-left: 0;
+    }
+
+    .facet {
+        display: block;
+        margin-bottom: 1em;
+    }
+
+    .facets h3,
+    .facets h4,
+    .facet h3,
+    .facet h4 {
+        margin-bottom: 0.5em;
+    }
+    .facets .facet-button {
+        display: block;
+        background: initial;
+        border: none;
+        border-bottom: 1px inset transparent;
+        box-shadow: initial;
+        text-align: initial;
+        cursor: pointer;
+        width: 100%;
+        padding: 0;
+        margin: 0 0 0.5em 0;
+        font-weight: bold;
+    }
+    .facets .facet-button:hover {
+        box-shadow: initial;
+        border-bottom: 1px inset;
+        border-radius: 0;
+    }
+    .facets .facet-button::after {
+        float: right;
+        content: '🞃';
+        position: unset;
+        width: auto;
+        height: auto;
+        padding: 0;
+        border: none;
+        background: none;
+    }
+    .facets .facet-button.collapse::after {
+        content: '🞃';
+    }
+    /* Fix for the default public theme. */
+    /*
+    .facets .facet-button.collapse + .collapsible {
+        padding: 7.5px 0 7.5px 16px;
+    }
+    */
+    .facets .facet-button.expand::after {
+        content: '🞂';
+    }
+
+    .facet-items {
+        padding-left: 0;
+        list-style: none;
+    }
+    .facet-items li:not([hidden]) {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4em;
+    }
+    .facet-items li[data-level="1"] {
+        margin-left: 1.4em;
+    }
+    .facet-items li[data-level="2"] {
+        margin-left: 2.8em;
+    }
+    .facet-items li[data-level="3"] {
+        margin-left: 4.2em;
+    }
+    .facet-items li[data-level="4"] {
+        margin-left: 5.6em;
+    }
+    .facet-items li[data-level="5"] {
+        margin-left: 7em;
+    }
+    .facet-items li[data-level="6"] {
+        margin-left: 8.4em;
+    }
+    .facet-items li[data-level="7"] {
+        margin-left: 9.8em;
+    }
+    .facet-items li[data-level="8"] {
+        margin-left: 11.2em;
+    }
+    .facet-items li[data-level="9"] {
+        margin-left: 12.6em;
+    }
+    .facet-items li[data-level="10"] {
+        margin-left: 14em;
+    }
+    .facet-items li[data-level="11"] {
+        margin-left: 15.4em;
+    }
+    .facet-items li[data-level="12"] {
+        margin-left: 16.8em;
+    }
+    .facet-item input[type=checkbox] {
+        vertical-align: initial;
+    }
+    .facet-item a {
+        color: inherit;
+    }
+    .facet-item a::before {
+        display: inline-block;
+        font-family: 'Font Awesome 5 Free';
+        width: 1.5em;
+        content: "\f0c8";
+    }
+    .facet-item.active a::before {
+        content: "\f14a";
+    }
+    .facet-item label {
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .facet-see-more {
+        /* text-align: right; */
+        margin: 0.5em 0
+    }
+    .facet-see-more-or-less {
+        display: inline-block;
+        background: initial;
+        border: none;
+        box-shadow: initial;
+        text-align: center;
+        cursor: pointer;
+        padding: 6px 10px;
+        margin: 0;
+    }
+    .facet-see-more-or-less::after {
+        margin-left: 0.4em;
+    }
+    .facet-see-more-or-less.expand::after {
+        content: "🞃";
+    }
+    .facet-see-more-or-less.collapse::after {
+        content: "🞁";
+    }
+
+    /* Search range */
+    /* Render gradient on .range-progress; native tracks are invisible to fix Chrome. */
+
+    .range-double {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+        margin: 1em auto;
+    }
+    .range-double .range-sliders {
+        position: relative;
+        height: 1em;
+        display: flex;
+        align-items: center;
+    }
+    /* Invisible track to keep thumbs interactive. Events are re-enabled below. */
+    .range-double input[type=range] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 0;
+        width: 100%;
+        position: absolute;
+        background: transparent;
+        pointer-events: none;
+    }
+    /* Chrome/WebKit-only: lift thumbs over the progress bar. */
+    @supports selector(input::-webkit-slider-thumb) {
+        .range-double .range-sliders input[type="range"] {
+            margin-top: -1em;
+        }
+    }
+    /* Allow pointer events on tracks for both engines. */
+    /* Important: do not merge these two rules and keep order. */
+    .range-double input[type=range]::-moz-range-track {
+        pointer-events: all;
+        cursor: pointer;
+        background: transparent;
+        height: 0;
+        border: 0;
+    }
+    .range-double input[type=range]::-webkit-slider-runnable-track {
+        pointer-events: all;
+        cursor: pointer;
+        background: transparent;
+        height: 0;
+        border: 0;
+    }
+    /* Thumbs remain clickable */
+    /* Important: do not merge these two rules and keep order to fix chrome. */
+    .range-double input[type=range]::-moz-range-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        pointer-events: all;
+        cursor: pointer;
+        height: 1em;
+        width: 1em;
+        border-radius: 50%;
+        background: #666;
+        border: 2px solid #fff;
+    }
+    .range-double input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        pointer-events: all;
+        cursor: pointer;
+        height: 1em;
+        width: 1em;
+        border-radius: 50%;
+        background: #666;
+        border: 2px solid #fff;
+    }
+    .range-double input.range-slider-from[type=range] {
+        z-index: 1;
+    }
+    .range-double input.range-slider-to[type=range] {
+        z-index: 0;
+    }
+    /* Visible progress bar with base track and active segment overlay */
+    .range-double .range-progress {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 0.2em;
+        border-radius: 0.1em;
+        background: #e9e9ed;
+        overflow: hidden;
+    }
+    .range-double .range-progress::before {
+        content: '';
+        position: absolute;
+        height: 100%;
+        left: var(--from, 0%);
+        right: calc(100% - var(--to, 100%));
+        background: linear-gradient(90deg, #3b82f6, #3b82f6);
+    }
+
+    .range-double .range-numerics {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1em;
+    }
+    .range-double .range-numerics-button {
+        gap: 0.4em;
+    }
+    .range-double input[type=number] {
+        border: none;
+    }
+    #search-facets .range-double .range-numerics {
+        flex-wrap: nowrap;
+    }
+    #search-facets .range-double .range-numeric input {
+        width:  100%;
+    }
+
+    /* Autocomplete */
 
     .autocomplete-suggestions {
         border: 1px solid #999999;
@@ -265,5 +599,16 @@
     .autocomplete-group strong {
         display: block;
         border-bottom: 1px solid #000;
+    }
+
+    /* Breadcrumbs */
+
+    nav.breadcrumbs > ul,
+    nav.breadcrumbs > ol {
+        list-style: none;
+    }
+    nav.breadcrumbs > ul > li,
+    nav.breadcrumbs > ol > li {
+        display: inline;
     }
 }

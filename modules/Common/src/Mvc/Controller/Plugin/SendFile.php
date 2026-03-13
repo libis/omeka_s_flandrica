@@ -25,7 +25,9 @@ class SendFile extends AbstractPlugin
      * - content_type (string): the content type to set in the headers, that is
      *   the media type of the file, or automatically defined from the file.
      * - filename (string): filename for download; default based on filepath.
-     * - disposition_mode (string): "inline" (default) or "attachment".
+     * - disposition_mode (string): "inline" (default), "attachment" or "query".
+     *   With query, the argument "download" with any value casted as true means
+     *   attachement, else inline.
      * - cache (boolean|int): set or disable cache; default 30 days  as seconds.
      * - resource (MediaRepresentation|AssetRepresentation): allow to get the
      *   media type automatically.
@@ -39,8 +41,11 @@ class SendFile extends AbstractPlugin
      */
     public function __invoke(string $filepath, array $params): ?HttpResponse
     {
-        // A security. Don't check the realpath to avoid issue on some configs.
-        if (strpos($filepath, '../') !== false
+        // Security check: reject path traversal and null bytes.
+        // Don't use realpath() to avoid issues with some server configs
+        // (symlinks, mount points).
+        if (strpos($filepath, '..') !== false
+            || strpos($filepath, "\0") !== false
             || !file_exists($filepath)
             || !is_readable($filepath)
             || is_dir($filepath)
@@ -75,10 +80,19 @@ class SendFile extends AbstractPlugin
         $filename = isset($params['filename']) && strlen(trim($params['filename']))
             ? trim($params['filename'])
             : basename($filepath);
+        // Sanitize filename to prevent header injection via CRLF.
+        $filename = str_replace(["\r", "\n", "\0", '"'], '', $filename);
 
-        $dispositionMode = ($params['disposition_mode'] ?? null) === 'attachment'
-            ? 'attachment'
-            : 'inline';
+        $dispositionMode = $params['disposition_mode'] ?? 'inline';
+        if ($dispositionMode === 'query') {
+            $dispositionMode = $this->getController()->params()->fromQuery('download')
+                ? 'attachment'
+                : 'inline';
+        } else {
+            $dispositionMode = ($params['disposition_mode'] ?? null) === 'attachment'
+                ? 'attachment'
+                : 'inline';
+        }
 
         $cache = $params['cache'] ?? false;
 
@@ -97,6 +111,7 @@ class SendFile extends AbstractPlugin
             ->addHeaderLine('Content-Transfer-Encoding: binary');
 
         if ($cache) {
+            // Cache for 30 days.
             $cacheDuration = is_bool($cache) ? 30 * 24 * 60 * 60 : (int) $cache;
             $headers
                 ->addHeaderLine(sprintf('Cache-Control: private, max-age=%1$d, post-check=%1$d, pre-check=%1$d', $cacheDuration))
@@ -127,8 +142,7 @@ class SendFile extends AbstractPlugin
                 }
             }
             // Check valid range to avoid hack.
-            $hasRange = ($start < $filesize && $end < $filesize && $start < $end)
-                && ($start > 0 || $end < ($filesize - 1));
+            $hasRange = $start >= 0 && $start <= $end && $end < $filesize;
         }
 
         // $header = new Header\ContentLength();
@@ -137,11 +151,11 @@ class SendFile extends AbstractPlugin
             $response
                 ->setStatusCode($response::STATUS_CODE_206);
             $headers
-                ->addHeaderLine(sprintf('Content-Length: %d', $end - $start + 1))
-                ->addHeaderLine(sprintf('Content-Range: bytes %1$d-%2$d/%3$d', $start, $end, $filesize));
+                ->addHeaderLine('Content-Length: ' . ($end - $start + 1))
+                ->addHeaderLine("Content-Range: bytes $start-$end/$filesize");
         } else {
             $headers
-                ->addHeaderLine(sprintf('Content-Length: %d', $filesize));
+                ->addHeaderLine('Content-Length: ' . $filesize);
         }
 
         // Fix deprecated warning in \Laminas\Http\PhpEnvironment\Response::sendHeaders() (l. 113).
@@ -161,6 +175,9 @@ class SendFile extends AbstractPlugin
 
         if ($hasRange) {
             $fp = @fopen($filepath, 'rb');
+            if ($fp === false) {
+                return null;
+            }
             $buffer = 1024 * 8;
             $pointer = $start;
             fseek($fp, $start, SEEK_SET);

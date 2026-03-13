@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2018-2023
+ * Copyright Daniel Berthereau, 2018-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -30,33 +30,33 @@
 
 namespace AdvancedSearch\Controller\Admin;
 
-use AdvancedSearch\Adapter\Manager as SearchAdapterManager;
+use AdvancedSearch\EngineAdapter\Manager as EngineAdapterManager;
 use AdvancedSearch\Form\Admin\SearchEngineConfigureForm;
 use AdvancedSearch\Form\Admin\SearchEngineForm;
+use Common\Stdlib\PsrMessage;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\Form\ConfirmForm;
-use Omeka\Stdlib\Message;
 
 class SearchEngineController extends AbstractActionController
 {
     /**
-     * @var EntityManager
+     * @var \Doctrine\ORM\EntityManager
      */
     protected $entityManager;
 
     /**
-     * @var SearchAdapterManager
+     * @var \AdvancedSearch\EngineAdapter\Manager
      */
-    protected $searchAdapterManager;
+    protected $engineAdapterManager;
 
     public function __construct(
         EntityManager $entityManager,
-        SearchAdapterManager $searchAdapterManager
+        EngineAdapterManager $engineAdapterManager
     ) {
         $this->entityManager = $entityManager;
-        $this->searchAdapterManager = $searchAdapterManager;
+        $this->engineAdapterManager = $engineAdapterManager;
     }
 
     public function addAction()
@@ -73,12 +73,12 @@ class SearchEngineController extends AbstractActionController
                 return $view;
             }
             $formData = $form->getData();
-            $engine = $this->api()->create('search_engines', $formData)->getContent();
-            $this->messenger()->addSuccess(new Message(
-                'Search index "%s" created.', // @translate
-                $engine->name()
+            $searchEngine = $this->api()->create('search_engines', $formData)->getContent();
+            $this->messenger()->addSuccess(new PsrMessage(
+                'Search index "{name}" created.', // @translate
+                ['name' => $searchEngine->name()]
             ));
-            return $this->redirect()->toUrl($engine->url('edit'));
+            return $this->redirect()->toUrl($searchEngine->url('edit'));
         }
         return $view;
     }
@@ -87,28 +87,33 @@ class SearchEngineController extends AbstractActionController
     {
         $id = $this->params('id');
 
-        /** @var \AdvancedSearch\Entity\SearchEngine $searchEngine */
+        /**
+         * @var \AdvancedSearch\Entity\SearchEngine $searchEngine
+         * @var \AdvancedSearch\EngineAdapter\EngineAdapterInterface $engineAdapter
+         * @var \AdvancedSearch\Form\Admin\SearchEngineConfigureForm $form
+         */
         $searchEngine = $this->entityManager->find(\AdvancedSearch\Entity\SearchEngine::class, $id);
-        $searchEngineAdapterName = $searchEngine->getAdapter();
-        if (!$this->searchAdapterManager->has($searchEngineAdapterName)) {
-            $this->messenger()->addError(new Message('The search adapter "%s" is not available.', // @translate
-                $searchEngineAdapterName
+        $engineAdapterName = $searchEngine->getAdapter();
+        if (!$this->engineAdapterManager->has($engineAdapterName)) {
+            $this->messenger()->addError(new PsrMessage(
+                'The engine adapter "{name}" is not available.', // @translate
+                ['name' => $engineAdapterName]
             ));
-            return $this->redirect()->toRoute('admin/search', ['action' => 'browse'], true);
+            return $this->redirect()->toRoute('admin/search-manager', ['action' => 'browse'], true);
         }
 
-        /** @var \AdvancedSearch\Adapter\AdapterInterface $adapter */
-        $adapter = $this->searchAdapterManager->get($searchEngineAdapterName);
-
+        // Passing option requires a factory to avoids the error in laminas.
+        $adapter = $this->engineAdapterManager->get($engineAdapterName);
         $form = $this->getForm(SearchEngineConfigureForm::class, [
             'search_engine_id' => $id,
         ]);
+
         $adapterFieldset = $adapter->getConfigFieldset();
         if ($adapterFieldset) {
             $adapterFieldset
                 ->setOption('search_engine_id', $id)
-                ->setName('adapter')
-                ->setLabel('Adapter settings') // @translate
+                ->setName('engine_adapter')
+                ->setLabel('Engine adapter settings') // @translate
                 ->init();
             $form->add($adapterFieldset);
         }
@@ -126,6 +131,7 @@ class SearchEngineController extends AbstractActionController
                 $this->messenger()->addError('There was an error during validation'); // @translate
                 return $view;
             }
+
             $formData = $form->getData();
             $name = $formData['o:name'];
             unset($formData['csrf'], $formData['o:name']);
@@ -134,12 +140,12 @@ class SearchEngineController extends AbstractActionController
                 ->setSettings($formData);
             $this->entityManager->persist($searchEngine);
             $this->entityManager->flush();
-            $this->messenger()->addSuccess(new Message(
-                'Search index "%s" successfully configured.',  // @translate
-                $searchEngine->getName()
+            $this->messenger()->addSuccess(new PsrMessage(
+                'Search index "{name}" successfully configured.',  // @translate
+                ['name' => $searchEngine->getName()]
             ));
             $this->messenger()->addWarning('Don’t forget to run the indexation of the search engine.'); // @translate
-            return $this->redirect()->toRoute('admin/search', ['action' => 'browse'], true);
+            return $this->redirect()->toRoute('admin/search-manager', ['action' => 'browse'], true);
         }
 
         return $view;
@@ -147,63 +153,108 @@ class SearchEngineController extends AbstractActionController
 
     public function indexConfirmAction()
     {
-        $engine = $this->api()->read('search_engines', $this->params('id'))->getContent();
+        $searchEngine = $this->api()->read('search_engines', $this->params('id'))->getContent();
 
-        $totalJobs = $this->totalJobs(\AdvancedSearch\Job\IndexSearch::class, true);
+        $listJobStatusesByIds = $this->listJobStatusesByIds(\AdvancedSearch\Job\IndexSearch::class, true);
 
         $view = new ViewModel([
             'resourceLabel' => 'search index',
-            'resource' => $engine,
-            'totalJobs' => $totalJobs,
+            'resource' => $searchEngine,
+            'listJobStatusesByIds' => $listJobStatusesByIds,
         ]);
         return $view
             ->setTerminal(true)
             ->setTemplate('advanced-search/admin/search-engine/index-confirm-details');
     }
 
+    /**
+     * Adapted:
+     * @see \AdvancedSearch\Controller\Admin\SearchEngineController::indexAction()
+     * @see \AdvancedSearch\Module::runJobIndexSearch()
+     *
+     * {@inheritDoc}
+     * @see \Laminas\Mvc\Controller\AbstractActionController::indexAction()
+     */
     public function indexAction()
     {
         $searchEngineId = (int) $this->params('id');
         $searchEngine = $this->api()->read('search_engines', $searchEngineId)->getContent();
 
+        $clearIndex = (bool) $this->params()->fromPost('clear_index');
         $startResourceId = (int) $this->params()->fromPost('start_resource_id');
-        $resourceNames = $this->params()->fromPost('resource_names') ?: [];
+        $resourcesByBatch = (int) $this->params()->fromPost('resources_by_batch');
+        $sleepAfterLoop = (int) $this->params()->fromPost('sleep_after_loop');
+        $resourceTypes = $this->params()->fromPost('resource_types')
+            ?: $searchEngine->setting('resource_types', []);
+        $resourcesLimit = (int) $this->params()->fromPost('resources_limit');
+        $resourcesOffset = (int) $this->params()->fromPost('resources_offset');
+        $visibility = $this->params()->fromPost('visibility');
+        $visibility = in_array($visibility, ['public', 'private']) ? $visibility : null;
         $force = (bool) $this->params()->fromPost('force');
 
+        // Do a quick check if the engine can index at least one resource type.
+        $canIndex = false;
+        $indexer = $searchEngine->indexer();
+        foreach ($resourceTypes as $resourceType) {
+            if ($indexer->canIndex($resourceType)) {
+                $canIndex = true;
+                break;
+            }
+        }
+        if (!$canIndex) {
+            $message = new PsrMessage(
+                'The search engine "{name}" has nothing to index.', // @translate
+                ['name' => $searchEngine->name()]
+            );
+            $this->messenger()->addWarning($message);
+            return $this->redirect()->toRoute('admin/search-manager', ['action' => 'browse'], true);
+        }
+
         $jobArgs = [];
-        $jobArgs['search_engine_id'] = $searchEngine->id();
+        $jobArgs['search_engine_ids'] = [$searchEngine->id()];
+        $jobArgs['clear_index'] = $clearIndex;
         $jobArgs['start_resource_id'] = $startResourceId;
-        $jobArgs['resource_names'] = $resourceNames;
+        $jobArgs['resources_by_batch'] = $resourcesByBatch;
+        $jobArgs['sleep_after_loop'] = $sleepAfterLoop;
+        $jobArgs['resource_types'] = $resourceTypes;
+        $jobArgs['resources_limit'] = $resourcesLimit;
+        $jobArgs['resources_offset'] = $resourcesOffset;
+        $jobArgs['visibility'] = $visibility;
         $jobArgs['force'] = $force;
-        // Synchronous dispatcher for testing purpose.
+
+        // Synchronous dispatcher for quick testing purpose.
         // $job = $this->jobDispatcher()->dispatch(\AdvancedSearch\Job\IndexSearch::class, $jobArgs, $searchEngine->getServiceLocator()->get('Omeka\Job\DispatchStrategy\Synchronous'));
         $job = $this->jobDispatcher()->dispatch(\AdvancedSearch\Job\IndexSearch::class, $jobArgs);
 
-        $urlHelper = $this->viewHelpers()->get('url');
-        $message = new Message(
-            'Indexing of "%1$s" started in job %2$s#%3$d%4$s (%5$slogs%4$s)', // @translate
-            $searchEngine->name(),
-            sprintf('<a href="%1$s">', $urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()])),
-            $job->getId(),
-            '</a>',
-            sprintf('<a href="%1$s">', class_exists('Log\Stdlib\PsrMessage') ? $urlHelper('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]) :  $urlHelper('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))
+        $urlPlugin = $this->url();
+        $message = new PsrMessage(
+            'Indexing of "{name}" started in job {link_job}#{job_id}{link_end} ({link_log}logs{link_end}).', // @translate
+            [
+                'name' => $searchEngine->name(),
+                'link_job' => sprintf('<a href="%1$s">', $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()])),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', $urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]))
+                    : sprintf('<a href="%1$s" target="_blank">', $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+            ]
         );
         $message->setEscapeHtml(false);
         $this->messenger()->addSuccess($message);
 
-        return $this->redirect()->toRoute('admin/search', ['action' => 'browse'], true);
+        return $this->redirect()->toRoute('admin/search-manager', ['action' => 'browse'], true);
     }
 
     public function deleteConfirmAction()
     {
         $response = $this->api()->read('search_engines', $this->params('id'));
-        $engine = $response->getContent();
+        $searchEngine = $response->getContent();
 
         // TODO Add a warning about the related configs, that will be deleted.
 
         $view = new ViewModel([
             'resourceLabel' => 'search engine',
-            'resource' => $engine,
+            'resource' => $searchEngine,
         ]);
         return $view
             ->setTerminal(true)
@@ -215,21 +266,21 @@ class SearchEngineController extends AbstractActionController
         if ($this->getRequest()->isPost()) {
             $form = $this->getForm(ConfirmForm::class);
             $form->setData($this->getRequest()->getPost());
-            $engineId = $this->params('id');
-            $engineName = $this->api()->read('search_engines', $engineId)->getContent()->name();
+            $searchEngineId = $this->params('id');
+            $searchEngineName = $this->api()->read('search_engines', $searchEngineId)->getContent()->name();
             if ($form->isValid()) {
-                $this->api()->delete('search_engines', $engineId);
-                $this->messenger()->addSuccess(new Message(
-                    'Search index "%s" successfully deleted', // @translate
-                    $engineName
+                $this->api()->delete('search_engines', $searchEngineId);
+                $this->messenger()->addSuccess(new PsrMessage(
+                    'Search index "{name}" successfully deleted', // @translate
+                    ['name' => $searchEngineName]
                 ));
             } else {
-                $this->messenger()->addError(new Message(
-                    'Search index "%s" could not be deleted', // @translate
-                    $engineName
+                $this->messenger()->addError(new PsrMessage(
+                    'Search index "{name}" could not be deleted', // @translate
+                    ['name' => $searchEngineName]
                 ));
             }
         }
-        return $this->redirect()->toRoute('admin/search');
+        return $this->redirect()->toRoute('admin/search-manager');
     }
 }

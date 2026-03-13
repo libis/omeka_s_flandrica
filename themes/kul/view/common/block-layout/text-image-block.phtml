@@ -1,0 +1,55 @@
+<?php
+  $url = "";
+?>
+<?php if($attachments):
+  $media = $attachments[0]->media();
+  if($media):
+    $url = $media->thumbnailUrl('large');
+    $url = str_replace('http:', '', $url);
+  endif;
+endif;?>
+<section class="text-image-block section">
+  <div class="container">
+      <?php if(!$block->dataValue('reverse')):?>
+        <div class="card card-gray card-50-50-right">
+          <?php if($block->dataValue('itemurl')):
+            $itemUrl = $media->item()->url();
+            $itemUrl = str_replace('http:', '', $itemUrl);
+          ?>
+            <a href="<?php echo $itemUrl;?>" class="card-img-right" style="background-image: url(<?= $url; ?>)"></a>
+          <?php else:?>
+            <div class="card-img-right" style="background-image: url(<?= $url; ?>)"></div>
+          <?php endif;?>
+          <div class="card-body">
+            <?php if($block->dataValue('title')):?>
+              <h2><?php echo $block->dataValue('title');?></h2>
+            <?php endif;?>  
+            <?php echo $block->dataValue('text');?>
+            <?php if($block->dataValue('link')):?>
+              <a class="btn btn-primary" href="<?php echo $block->dataValue('link');?>"><?php echo $block->dataValue('label');?></a>
+            <?php endif;?>
+          </div>
+        </div>
+      <?php else:?>
+        <div class="card card-gray card-50-50">
+          <?php if($block->dataValue('itemurl')):
+            $itemUrl = $media->item()->url();
+            $itemUrl = str_replace('http:', '', $itemUrl);
+          ?>
+            <a href="<?php echo $itemUrl;?>" class="card-img-left" style="background-image: url(<?= $url; ?>)"></a>
+          <?php else:?>
+            <div class="card-img-left" style="background-image: url(<?= $url; ?>)"></div>
+          <?php endif;?>
+          <div class="card-body">
+            <?php if($block->dataValue('title')):?>
+              <h2><?php echo $block->dataValue('title');?></h2>
+            <?php endif;?>  
+            <?php echo $block->dataValue('text');?>
+            <?php if($block->dataValue('link')):?>
+              <a class="btn btn-primary" href="<?php echo $block->dataValue('link');?>"><?php echo $block->dataValue('label');?></a>
+            <?php endif;?>
+          </div>
+        </div>
+      <?php endif; ?>
+    </div>
+</section>

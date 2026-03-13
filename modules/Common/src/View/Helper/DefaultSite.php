@@ -25,31 +25,54 @@ class DefaultSite extends AbstractHelper
      */
     protected $defaultSiteSlug = null;
 
-    public function __construct(?SiteRepresentation $site)
+    /**
+     * @var ?\Closure
+     */
+    protected $resolver;
+
+    /**
+     * @var bool
+     */
+    protected $resolved = false;
+
+    public function __construct(\Closure $resolver)
     {
-        $this->defaultSite = $site;
-        if ($site) {
-            $this->defaultSiteId = $site->id();
-            $this->defaultSiteSlug = $site->slug();
-        }
+        $this->resolver = $resolver;
     }
 
     public function __invoke(?string $metadata = null)
     {
+        if (!$this->resolved) {
+            $this->resolve();
+        }
+
         if ($metadata === 'slug') {
             return $this->defaultSiteSlug;
         } elseif ($metadata === 'id') {
             return $this->defaultSiteId;
         } elseif ($metadata === 'id_slug') {
             return $this->defaultSiteId
-            ? [$this->defaultSiteId => $this->defaultSiteSlug]
-            : [];
+                ? [$this->defaultSiteId => $this->defaultSiteSlug]
+                : [];
         } elseif ($metadata === 'slug_id') {
             return $this->defaultSiteId
-            ? [$this->defaultSiteSlug => $this->defaultSiteId]
-            : [];
+                ? [$this->defaultSiteSlug => $this->defaultSiteId]
+                : [];
         } else {
             return $this->defaultSite;
+        }
+    }
+
+    protected function resolve(): void
+    {
+        $this->resolved = true;
+        $site = ($this->resolver)();
+        // Free the closure and its captured services.
+        $this->resolver = null;
+        if ($site) {
+            $this->defaultSite = $site;
+            $this->defaultSiteId = $site->id();
+            $this->defaultSiteSlug = $site->slug();
         }
     }
 }

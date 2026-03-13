@@ -1,0 +1,88 @@
+<?php
+$translate = $this->plugin('translate');
+?>
+<section class="section">
+  <div class="container">
+    <?php if ($this->heading): ?>
+      <h2><?php echo $block->dataValue('heading');?></h2>
+    <?php endif; ?>
+
+    <?php if($block->dataValue('text')):?>
+      <p>
+        <?php echo $block->dataValue('text');?>
+      </p>
+    <?php endif; ?>
+
+    <div class="row">
+      <?php
+      $lang = $this->lang();
+      foreach ($pages as $page):
+        $heading = $page->page()->title();
+        $body = $page->dataValue('summary');      
+        $asset = $page->dataValue('cover');
+
+        if (!$asset) {
+            $mediaurl = "";
+        }else{
+          try {
+              $media = $this->api()->read('assets', ['id' => $asset])->getContent();
+              $mediaurl = $media->assetUrl('large');
+          } catch (NotFoundException $e) {
+              $mediaurl = "";
+          }
+        }
+
+        $url = $page->page()->url();
+        ?>
+      <div class="col-xs-12 col-md-4">
+        
+          <div class="kul-card-image card card-gray">
+            <?php if($mediaurl):?>
+              <a href="<?php echo $url;?>"><div class="card-img-top" style="background-image: url(<?php echo  $mediaurl;?>)">&nbsp;</div></a>
+            <?php endif;?>
+            <div class="card-body">
+            
+            <h2><a href="<?php echo $url;?>"><?php echo $heading;?></a></h2>
+          
+            <?php if ($body): ?>
+              <?php
+                if(strlen($body) > 200):
+                  $body = substr($body, 0, 200);
+                  $body = substr($body, 0, strrpos($body, ' ')).' ...';
+                endif;
+              ?>
+              <p>
+                <?php echo $body; ?>
+              </p>
+            <?php endif; ?>
+            <?php if($page->dataValue('credits')):?>
+             
+              <strong>                 
+              
+                <?php if($lang == "nl-NL"):?>
+                  Door <?php echo $page->dataValue('credits'); ?>
+                <?php else:?>
+                  By <?php echo $page->dataValue('credits'); ?>
+                <?php endif;?>  
+              </strong>  
+            <?php endif;?>  
+            </div>
+          </div>
+        </div>
+     
+      <?php endforeach; ?>
+    </div>
+    <?php if($block->dataValue('link')):?>
+      <div style="text-align:right">
+        
+        <p>
+              <strong>
+                <a class="more" href="<<?php echo $block->dataValue('link');?>" class="button is-white">
+                  Lees meer
+                </a>
+              </strong>
+            </p>
+      </div>  
+    <?php endif;?>                
+  </div>
+</section>

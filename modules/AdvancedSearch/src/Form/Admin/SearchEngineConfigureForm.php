@@ -2,7 +2,7 @@
 
 /*
  * Copyright BibLibre, 2016
- * Copyright Daniel Berthereau, 2017-2023
+ * Copyright Daniel Berthereau, 2017-2026
  *
  * This software is governed by the CeCILL license under French law and abiding
  * by the rules of distribution of free software.  You can use, modify and/ or
@@ -32,15 +32,9 @@ namespace AdvancedSearch\Form\Admin;
 
 use Laminas\Form\Element;
 use Laminas\Form\Form;
-use Laminas\I18n\Translator\TranslatorAwareInterface;
-use Laminas\I18n\Translator\TranslatorAwareTrait;
 
-class SearchEngineConfigureForm extends Form implements TranslatorAwareInterface
+class SearchEngineConfigureForm extends Form
 {
-    use TranslatorAwareTrait;
-
-    protected $apiManager;
-
     public function init(): void
     {
         $this
@@ -56,37 +50,57 @@ class SearchEngineConfigureForm extends Form implements TranslatorAwareInterface
                 ],
             ])
             ->add([
-                'name' => 'resources',
+                'name' => 'resource_types',
                 'type' => Element\MultiCheckbox::class,
                 'options' => [
-                    'label' => 'Resources indexed', // @translate
-                    'value_options' => $this->getResourcesOptions(),
+                    'label' => 'Resources indexed and searchable', // @translate
+                    'label_attributes' => ['style' => 'display: block'],
+                    'value_options' => $this->getResourcesTypes(),
                 ],
                 'attributes' => [
-                    'id' => 'resources',
-                    'value' => ['items'],
+                    'id' => 'resource_types',
+                    'value' => [
+                        'items',
+                    ],
                 ],
-            ]);
+            ])
+            ->add([
+                'name' => 'visibility',
+                'type' => Element\Radio::class,
+                'options' => [
+                    'label' => 'Visibility', // @translate
+                    'value_options' => [
+                        'all' => 'Public and private', // @translate
+                        'public' => 'Public only', // @translate
+                        'private' => 'Private only', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'visibility',
+                    'value' => 'all',
+                ],
+            ])
+        ;
     }
 
     /**
-     * Get the list of resource types.
+     * Get the list of the resource types to search.
      *
-     * @todo There may be other resources types to index for search: media, external resources types. See git history of this file.
-     *
-     * @return array
+     * @todo Get list from engine? See git commit 28b1787.
      */
-    protected function getResourcesOptions(): array
+    protected function getResourcesTypes(): array
     {
+        // Set the order for the results: item sets before items.
         return [
-            'items' => 'Items',
+            'resources' => 'Resources (mixed)', // @translate
             'item_sets' => 'Item sets',
+            'items' => 'Items',
+            'media' => 'Media',
+            // Value annotations are managed with resources.
+            // 'value_annotations' => 'Value annotations',
+            'annotations' => 'Annotations',
+            // Not managed for now.
+            // 'site_pages' => 'Site pages',
         ];
-    }
-
-    public function setApiManager($apiManager): self
-    {
-        $this->apiManager = $apiManager;
-        return $this;
     }
 }

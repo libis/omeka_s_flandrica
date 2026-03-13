@@ -2,10 +2,10 @@
 
 namespace Reference\Form;
 
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
-use Reference\Form\Element\DoubleArrayTextarea;
-use Reference\Form\Element\OptionalMultiCheckbox;
+use Reference\Form\Element as ReferenceElement;
 
 class SiteSettingsFieldset extends Fieldset
 {
@@ -23,6 +23,18 @@ class SiteSettingsFieldset extends Fieldset
         $this
             ->setAttribute('id', 'reference')
             ->setOption('element_groups', $this->elementGroups)
+            ->add([
+                'name' => 'reference_page_title',
+                'type' => Element\Text::class,
+                'options' => [
+                    'element_group' => 'references',
+                    'label' => 'Title of the page [deprecated: use page block]', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'reference_page_title',
+                    'placeholder' => 'References', // @translate
+                ],
+            ])
             ->add([
                 'name' => 'reference_resource_name',
                 'type' => Element\Radio::class,
@@ -45,7 +57,7 @@ class SiteSettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'reference_options',
-                'type' => OptionalMultiCheckbox::class,
+                'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'element_group' => 'references',
                     'label' => 'Display [deprecated: use page block]', // @translate
@@ -66,7 +78,7 @@ class SiteSettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'reference_slugs',
-                'type' => DoubleArrayTextarea::class,
+                'type' => ReferenceElement\DoubleArrayTextarea::class,
                 'options' => [
                     'element_group' => 'references',
                     'label' => 'Reference pages for selected classes and properties [deprecated: use page block]', // @translate
@@ -79,10 +91,11 @@ class SiteSettingsFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'reference_slugs',
                     'rows' => 12,
-                    'placeholder' => 'slug = term = label
-dctype:Image = dctype:Image = Image
-dcterms:subject = dcterms:subject = Subjects
-',
+                    'placeholder' => <<<'TXT'
+                        slug = term = label
+                        dctype:Image = dctype:Image = Image
+                        dcterms:subject = dcterms:subject = Subjects
+                        TXT,
                 ],
             ])
         ;
